@@ -14,3 +14,5 @@
 - **2026-09-15 10:53:00**: feat(maintenance): add maintenance ticket workflow with photo uploads
 
 - **2026-08-22 14:47:00**: refactor(ui): update property occupancy status cards with Tailwind CSS
+
+- **2025-10-01 10:28:38**: feat(billing): add automated recurring invoice generation engine
