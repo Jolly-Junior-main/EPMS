@@ -22,3 +22,5 @@
 - **2025-10-01 19:27:24**: feat(billing): add automated recurring invoice generation engine
 
 - **2025-10-02 16:31:44**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2025-10-03 15:55:10**: feat(reports): add financial audit summary export to PDF and Excel
