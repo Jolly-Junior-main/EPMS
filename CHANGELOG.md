@@ -34,3 +34,5 @@
 - **2025-10-07 15:17:37**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2025-10-07 19:24:55**: feat(billing): add automated recurring invoice generation engine
+
+- **2025-10-08 12:39:25**: perf(db): optimize Firestore composite indexes for property queries
