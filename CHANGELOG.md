@@ -38,3 +38,5 @@
 - **2025-10-08 12:39:25**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2025-10-09 13:52:05**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2025-10-10 11:44:52**: refactor(ui): modernize tenant profile cards with Tailwind CSS
