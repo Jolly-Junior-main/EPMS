@@ -42,3 +42,5 @@
 - **2025-10-10 11:44:52**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2025-10-10 17:29:52**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2025-10-10 20:46:50**: feat(sms): integrate automated overdue payment SMS notification gateway
