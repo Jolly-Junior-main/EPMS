@@ -48,3 +48,5 @@
 - **2025-10-11 14:30:05**: feat(billing): add automated recurring invoice generation engine
 
 - **2025-10-11 15:23:40**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2025-10-11 19:49:50**: feat(billing): add automated recurring invoice generation engine
