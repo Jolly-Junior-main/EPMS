@@ -86,3 +86,5 @@
 - **2025-10-21 13:51:16**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2025-10-23 12:35:00**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2025-10-23 19:31:05**: feat(tenants): build tenant onboarding workflow and digital lease wizard
