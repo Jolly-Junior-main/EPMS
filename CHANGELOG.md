@@ -88,3 +88,5 @@
 - **2025-10-23 12:35:00**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2025-10-23 19:31:05**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2025-10-24 19:23:37**: perf(db): optimize Firestore composite indexes for property queries
