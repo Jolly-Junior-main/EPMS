@@ -92,3 +92,5 @@
 - **2025-10-24 19:23:37**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2025-10-25 08:16:16**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-10-26 08:02:24**: feat(billing): add automated recurring invoice generation engine
