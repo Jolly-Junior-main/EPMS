@@ -106,3 +106,5 @@
 - **2025-10-28 15:50:38**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2025-10-28 17:47:02**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-10-28 19:35:17**: feat(receipts): implement cryptographic hash vault for payment audit verification
