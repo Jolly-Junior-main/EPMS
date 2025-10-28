@@ -108,3 +108,5 @@
 - **2025-10-28 17:47:02**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2025-10-28 19:35:17**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2025-10-28 20:58:32**: feat(billing): add automated recurring invoice generation engine
