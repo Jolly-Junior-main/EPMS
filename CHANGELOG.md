@@ -102,3 +102,5 @@
 - **2025-10-27 21:33:43**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2025-10-28 12:26:50**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2025-10-28 15:50:38**: feat(reports): add financial audit summary export to PDF and Excel
