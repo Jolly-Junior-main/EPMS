@@ -124,3 +124,5 @@
 - **2025-10-30 17:27:45**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2025-10-31 11:00:11**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2025-10-31 14:18:41**: feat(auth): implement Firebase multi-tenant authentication & RBAC
