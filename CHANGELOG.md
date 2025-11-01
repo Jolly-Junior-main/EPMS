@@ -130,3 +130,5 @@
 - **2025-10-31 20:33:07**: feat(billing): add automated recurring invoice generation engine
 
 - **2025-11-01 09:25:26**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2025-11-01 13:48:03**: feat(sms): integrate automated overdue payment SMS notification gateway
