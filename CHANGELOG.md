@@ -132,3 +132,5 @@
 - **2025-11-01 09:25:26**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2025-11-01 13:48:03**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2025-11-01 20:24:24**: refactor(ui): modernize tenant profile cards with Tailwind CSS
