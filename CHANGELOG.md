@@ -142,3 +142,5 @@
 - **2025-11-02 20:46:43**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2025-11-03 12:05:53**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2025-11-03 13:38:02**: feat(billing): add automated recurring invoice generation engine
