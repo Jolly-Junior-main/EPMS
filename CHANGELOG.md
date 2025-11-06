@@ -152,3 +152,5 @@
 - **2025-11-06 12:47:44**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2025-11-06 15:40:02**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2025-11-06 16:25:55**: feat(maintenance): add maintenance dispatch tracker with photo verification
