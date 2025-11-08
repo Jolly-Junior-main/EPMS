@@ -156,3 +156,5 @@
 - **2025-11-06 16:25:55**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2025-11-07 14:14:29**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2025-11-08 08:44:11**: feat(auth): implement Firebase multi-tenant authentication & RBAC
