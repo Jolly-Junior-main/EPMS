@@ -164,3 +164,5 @@
 - **2025-11-09 09:47:41**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2025-11-09 11:40:22**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2025-11-09 18:41:44**: feat(reports): add financial audit summary export to PDF and Excel
