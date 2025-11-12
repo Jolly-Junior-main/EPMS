@@ -172,3 +172,5 @@
 - **2025-11-11 18:10:33**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2025-11-12 13:25:21**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-11-12 14:07:19**: feat(tenants): build tenant onboarding workflow and digital lease wizard
