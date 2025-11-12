@@ -170,3 +170,5 @@
 - **2025-11-10 16:48:39**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2025-11-11 18:10:33**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2025-11-12 13:25:21**: feat(reports): add financial audit summary export to PDF and Excel
