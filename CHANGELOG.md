@@ -178,3 +178,5 @@
 - **2025-11-12 15:19:30**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2025-11-13 09:15:57**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-11-13 14:58:43**: feat(sms): integrate automated overdue payment SMS notification gateway
