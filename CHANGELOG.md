@@ -184,3 +184,5 @@
 - **2025-11-13 19:09:26**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2025-11-14 11:03:48**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2025-11-15 08:20:06**: feat(sms): integrate automated overdue payment SMS notification gateway
