@@ -188,3 +188,5 @@
 - **2025-11-15 08:20:06**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2025-11-15 14:15:49**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2025-11-15 18:09:18**: feat(billing): add automated recurring invoice generation engine
