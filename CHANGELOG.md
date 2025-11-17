@@ -196,3 +196,5 @@
 - **2025-11-16 17:28:51**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2025-11-16 18:58:17**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-11-17 12:56:26**: feat(reports): add financial audit summary export to PDF and Excel
