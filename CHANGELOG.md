@@ -202,3 +202,5 @@
 - **2025-11-17 17:20:22**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2025-11-18 16:12:25**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2025-11-18 20:02:40**: refactor(ui): modernize tenant profile cards with Tailwind CSS
