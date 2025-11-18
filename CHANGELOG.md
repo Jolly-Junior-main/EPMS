@@ -200,3 +200,5 @@
 - **2025-11-17 12:56:26**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2025-11-17 17:20:22**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-11-18 16:12:25**: perf(db): optimize Firestore composite indexes for property queries
