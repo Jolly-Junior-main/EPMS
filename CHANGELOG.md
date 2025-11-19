@@ -204,3 +204,5 @@
 - **2025-11-18 16:12:25**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2025-11-18 20:02:40**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2025-11-19 08:55:14**: feat(auth): implement Firebase multi-tenant authentication & RBAC
