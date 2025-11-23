@@ -210,3 +210,5 @@
 - **2025-11-21 09:54:03**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2025-11-22 10:43:34**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2025-11-23 10:16:49**: feat(maintenance): add maintenance dispatch tracker with photo verification
