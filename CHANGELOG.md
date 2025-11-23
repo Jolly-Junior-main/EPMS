@@ -212,3 +212,5 @@
 - **2025-11-22 10:43:34**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2025-11-23 10:16:49**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2025-11-23 17:34:29**: refactor(ui): modernize tenant profile cards with Tailwind CSS
