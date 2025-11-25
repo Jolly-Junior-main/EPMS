@@ -218,3 +218,5 @@
 - **2025-11-23 19:59:12**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2025-11-25 16:59:48**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2025-11-25 18:23:09**: feat(billing): add automated recurring invoice generation engine
