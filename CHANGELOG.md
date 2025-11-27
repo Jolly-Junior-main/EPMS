@@ -230,3 +230,5 @@
 - **2025-11-27 12:20:07**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2025-11-27 13:50:31**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2025-11-27 15:44:24**: feat(auth): implement Firebase multi-tenant authentication & RBAC
