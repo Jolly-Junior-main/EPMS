@@ -236,3 +236,5 @@
 - **2025-11-27 17:43:32**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2025-11-28 08:52:19**: feat(billing): add automated recurring invoice generation engine
+
+- **2025-11-28 13:44:50**: feat(maintenance): add maintenance dispatch tracker with photo verification
