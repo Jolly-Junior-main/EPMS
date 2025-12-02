@@ -260,3 +260,5 @@
 - **2025-12-02 08:19:37**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2025-12-02 11:29:28**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2025-12-02 20:08:06**: feat(maintenance): add maintenance dispatch tracker with photo verification
