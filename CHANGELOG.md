@@ -258,3 +258,5 @@
 - **2025-12-01 19:31:36**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2025-12-02 08:19:37**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2025-12-02 11:29:28**: feat(tenants): build tenant onboarding workflow and digital lease wizard
