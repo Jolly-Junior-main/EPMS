@@ -268,3 +268,5 @@
 - **2025-12-04 12:55:14**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2025-12-05 12:00:08**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-12-05 14:46:32**: feat(tenants): build tenant onboarding workflow and digital lease wizard
