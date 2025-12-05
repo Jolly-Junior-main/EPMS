@@ -266,3 +266,5 @@
 - **2025-12-03 19:55:11**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2025-12-04 12:55:14**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2025-12-05 12:00:08**: feat(reports): add financial audit summary export to PDF and Excel
