@@ -274,3 +274,5 @@
 - **2025-12-05 18:35:33**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2025-12-05 19:56:30**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2025-12-06 12:26:08**: feat(sms): integrate automated overdue payment SMS notification gateway
