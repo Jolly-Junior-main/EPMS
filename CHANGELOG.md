@@ -278,3 +278,5 @@
 - **2025-12-06 12:26:08**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2025-12-06 13:40:09**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2025-12-06 18:47:49**: refactor(ui): modernize tenant profile cards with Tailwind CSS
