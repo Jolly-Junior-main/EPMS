@@ -276,3 +276,5 @@
 - **2025-12-05 19:56:30**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2025-12-06 12:26:08**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2025-12-06 13:40:09**: feat(reports): add financial audit summary export to PDF and Excel
