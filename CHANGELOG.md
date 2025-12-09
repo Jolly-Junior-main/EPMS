@@ -292,3 +292,5 @@
 - **2025-12-08 20:26:01**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2025-12-09 08:19:34**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2025-12-09 12:09:34**: feat(sms): integrate automated overdue payment SMS notification gateway
