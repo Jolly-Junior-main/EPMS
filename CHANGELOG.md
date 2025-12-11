@@ -308,3 +308,5 @@
 - **2025-12-10 20:11:41**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2025-12-11 09:57:55**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2025-12-11 10:54:30**: feat(tenants): build tenant onboarding workflow and digital lease wizard
