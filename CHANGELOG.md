@@ -306,3 +306,5 @@
 - **2025-12-10 17:00:41**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2025-12-10 20:11:41**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2025-12-11 09:57:55**: feat(maintenance): add maintenance dispatch tracker with photo verification
