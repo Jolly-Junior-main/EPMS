@@ -312,3 +312,5 @@
 - **2025-12-11 10:54:30**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2025-12-11 13:33:25**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2025-12-11 14:09:29**: feat(receipts): implement cryptographic hash vault for payment audit verification
