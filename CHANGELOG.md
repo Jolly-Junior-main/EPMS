@@ -310,3 +310,5 @@
 - **2025-12-11 09:57:55**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2025-12-11 10:54:30**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2025-12-11 13:33:25**: feat(auth): implement Firebase multi-tenant authentication & RBAC
