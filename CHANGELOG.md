@@ -318,3 +318,5 @@
 - **2025-12-11 17:53:23**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2025-12-12 08:00:53**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2025-12-12 12:27:35**: feat(maintenance): add maintenance dispatch tracker with photo verification
