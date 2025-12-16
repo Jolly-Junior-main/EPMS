@@ -326,3 +326,5 @@
 - **2025-12-14 15:41:54**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2025-12-16 09:33:08**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2025-12-16 17:42:44**: feat(billing): add automated recurring invoice generation engine
