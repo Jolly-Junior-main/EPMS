@@ -338,3 +338,5 @@
 - **2025-12-18 08:38:47**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2025-12-18 13:20:49**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2025-12-18 15:48:33**: perf(db): optimize Firestore composite indexes for property queries
