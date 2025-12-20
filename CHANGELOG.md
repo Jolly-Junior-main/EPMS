@@ -350,3 +350,5 @@
 - **2025-12-19 17:59:41**: feat(billing): add automated recurring invoice generation engine
 
 - **2025-12-20 09:47:50**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2025-12-20 20:52:40**: feat(sms): integrate automated overdue payment SMS notification gateway
