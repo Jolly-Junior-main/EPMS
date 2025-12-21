@@ -358,3 +358,5 @@
 - **2025-12-21 15:10:25**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2025-12-21 18:40:57**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2025-12-21 19:31:35**: feat(receipts): implement cryptographic hash vault for payment audit verification
