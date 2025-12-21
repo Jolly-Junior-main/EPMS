@@ -352,3 +352,5 @@
 - **2025-12-20 09:47:50**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2025-12-20 20:52:40**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2025-12-21 11:46:31**: feat(maintenance): add maintenance dispatch tracker with photo verification
