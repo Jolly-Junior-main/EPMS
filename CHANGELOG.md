@@ -374,3 +374,5 @@
 - **2025-12-27 12:13:30**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2025-12-27 16:08:55**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2025-12-27 20:41:56**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
