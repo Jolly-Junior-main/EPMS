@@ -370,3 +370,5 @@
 - **2025-12-24 20:50:40**: feat(billing): add automated recurring invoice generation engine
 
 - **2025-12-25 11:27:40**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2025-12-27 12:13:30**: feat(reports): add financial audit summary export to PDF and Excel
