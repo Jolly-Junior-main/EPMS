@@ -384,3 +384,5 @@
 - **2025-12-29 19:53:56**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-01-01 08:06:57**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-01-01 15:56:54**: feat(reports): add financial audit summary export to PDF and Excel
