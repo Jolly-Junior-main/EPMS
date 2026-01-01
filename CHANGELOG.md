@@ -386,3 +386,5 @@
 - **2026-01-01 08:06:57**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-01-01 15:56:54**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-01-01 16:21:30**: perf(db): optimize Firestore composite indexes for property queries
