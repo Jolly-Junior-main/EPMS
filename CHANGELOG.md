@@ -396,3 +396,5 @@
 - **2026-01-04 08:36:34**: feat(billing): add automated recurring invoice generation engine
 
 - **2026-01-04 17:57:19**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2026-01-04 18:53:40**: feat(billing): add automated recurring invoice generation engine
