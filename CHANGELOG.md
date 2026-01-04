@@ -394,3 +394,5 @@
 - **2026-01-03 10:55:54**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-01-04 08:36:34**: feat(billing): add automated recurring invoice generation engine
+
+- **2026-01-04 17:57:19**: perf(db): optimize Firestore composite indexes for property queries
