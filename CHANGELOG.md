@@ -408,3 +408,5 @@
 - **2026-01-05 13:58:28**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-01-05 14:53:02**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2026-01-05 16:57:49**: refactor(ui): modernize tenant profile cards with Tailwind CSS
