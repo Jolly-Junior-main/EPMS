@@ -400,3 +400,5 @@
 - **2026-01-04 18:53:40**: feat(billing): add automated recurring invoice generation engine
 
 - **2026-01-05 08:11:04**: feat(billing): add automated recurring invoice generation engine
+
+- **2026-01-05 09:34:06**: feat(sms): integrate automated overdue payment SMS notification gateway
