@@ -428,3 +428,5 @@
 - **2026-01-10 14:03:02**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2026-01-10 15:43:15**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-01-10 18:12:47**: feat(tenants): build tenant onboarding workflow and digital lease wizard
