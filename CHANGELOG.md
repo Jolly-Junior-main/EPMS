@@ -452,3 +452,5 @@
 - **2026-01-15 12:34:37**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-01-15 14:47:58**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2026-01-15 17:04:25**: feat(sms): integrate automated overdue payment SMS notification gateway
