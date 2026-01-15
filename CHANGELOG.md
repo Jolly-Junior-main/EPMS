@@ -446,3 +446,5 @@
 - **2026-01-14 12:54:45**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-01-14 18:45:19**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2026-01-15 11:09:45**: refactor(ui): modernize tenant profile cards with Tailwind CSS
