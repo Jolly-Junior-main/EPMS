@@ -462,3 +462,5 @@
 - **2026-01-16 19:25:51**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2026-01-17 08:37:32**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-01-17 10:17:27**: feat(billing): add automated recurring invoice generation engine
