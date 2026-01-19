@@ -464,3 +464,5 @@
 - **2026-01-17 08:37:32**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-01-17 10:17:27**: feat(billing): add automated recurring invoice generation engine
+
+- **2026-01-19 20:39:30**: feat(tenants): build tenant onboarding workflow and digital lease wizard
