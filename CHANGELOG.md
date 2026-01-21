@@ -466,3 +466,5 @@
 - **2026-01-17 10:17:27**: feat(billing): add automated recurring invoice generation engine
 
 - **2026-01-19 20:39:30**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2026-01-21 09:49:53**: feat(billing): add automated recurring invoice generation engine
