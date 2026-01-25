@@ -482,3 +482,5 @@
 - **2026-01-24 18:53:15**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-01-25 15:13:51**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2026-01-25 19:51:38**: feat(billing): add automated recurring invoice generation engine
