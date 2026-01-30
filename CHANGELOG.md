@@ -504,3 +504,5 @@
 - **2026-01-29 13:07:11**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2026-01-29 17:19:58**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2026-01-30 08:03:27**: feat(billing): add automated recurring invoice generation engine
