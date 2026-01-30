@@ -506,3 +506,5 @@
 - **2026-01-29 17:19:58**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-01-30 08:03:27**: feat(billing): add automated recurring invoice generation engine
+
+- **2026-01-30 13:21:56**: feat(sms): integrate automated overdue payment SMS notification gateway
