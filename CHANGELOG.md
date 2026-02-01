@@ -516,3 +516,5 @@
 - **2026-01-31 08:03:59**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-01-31 16:32:31**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-02-01 10:55:03**: feat(maintenance): add maintenance dispatch tracker with photo verification
