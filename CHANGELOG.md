@@ -542,3 +542,5 @@
 - **2026-02-07 09:41:08**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2026-02-07 13:57:54**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-02-07 15:10:38**: feat(reports): add financial audit summary export to PDF and Excel
