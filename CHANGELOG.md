@@ -544,3 +544,5 @@
 - **2026-02-07 13:57:54**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-02-07 15:10:38**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-02-08 10:56:11**: feat(maintenance): add maintenance dispatch tracker with photo verification
