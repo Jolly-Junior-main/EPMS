@@ -548,3 +548,5 @@
 - **2026-02-08 10:56:11**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2026-02-09 13:36:56**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2026-02-09 20:44:41**: feat(reports): add financial audit summary export to PDF and Excel
