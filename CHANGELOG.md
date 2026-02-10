@@ -550,3 +550,5 @@
 - **2026-02-09 13:36:56**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2026-02-09 20:44:41**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-02-10 18:17:14**: perf(db): optimize Firestore composite indexes for property queries
