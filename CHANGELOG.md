@@ -554,3 +554,5 @@
 - **2026-02-10 18:17:14**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-02-11 08:46:57**: feat(billing): add automated recurring invoice generation engine
+
+- **2026-02-11 10:43:33**: refactor(ui): modernize tenant profile cards with Tailwind CSS
