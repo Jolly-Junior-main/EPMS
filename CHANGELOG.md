@@ -552,3 +552,5 @@
 - **2026-02-09 20:44:41**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2026-02-10 18:17:14**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2026-02-11 08:46:57**: feat(billing): add automated recurring invoice generation engine
