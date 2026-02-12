@@ -560,3 +560,5 @@
 - **2026-02-11 13:01:22**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2026-02-12 08:20:42**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2026-02-12 13:36:27**: perf(db): optimize Firestore composite indexes for property queries
