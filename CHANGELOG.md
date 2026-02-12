@@ -562,3 +562,5 @@
 - **2026-02-12 08:20:42**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-02-12 13:36:27**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2026-02-12 15:50:47**: refactor(ui): modernize tenant profile cards with Tailwind CSS
