@@ -564,3 +564,5 @@
 - **2026-02-12 13:36:27**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-02-12 15:50:47**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2026-02-12 18:35:16**: feat(tenants): build tenant onboarding workflow and digital lease wizard
