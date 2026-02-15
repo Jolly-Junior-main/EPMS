@@ -574,3 +574,5 @@
 - **2026-02-13 16:18:52**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2026-02-14 15:37:22**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2026-02-15 10:42:14**: refactor(ui): modernize tenant profile cards with Tailwind CSS
