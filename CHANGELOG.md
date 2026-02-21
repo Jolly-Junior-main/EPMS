@@ -606,3 +606,5 @@
 - **2026-02-20 19:05:18**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2026-02-21 10:46:09**: feat(billing): add automated recurring invoice generation engine
+
+- **2026-02-21 18:57:59**: refactor(ui): modernize tenant profile cards with Tailwind CSS
