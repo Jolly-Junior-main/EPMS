@@ -614,3 +614,5 @@
 - **2026-02-22 13:31:11**: feat(billing): add automated recurring invoice generation engine
 
 - **2026-02-22 14:12:31**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2026-02-24 11:16:02**: feat(auth): implement Firebase multi-tenant authentication & RBAC
