@@ -616,3 +616,5 @@
 - **2026-02-22 14:12:31**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-02-24 11:16:02**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-02-25 11:44:35**: feat(sms): integrate automated overdue payment SMS notification gateway
