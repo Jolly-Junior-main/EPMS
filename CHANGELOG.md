@@ -634,3 +634,5 @@
 - **2026-02-28 14:34:04**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2026-02-28 20:40:02**: feat(billing): add automated recurring invoice generation engine
+
+- **2026-03-01 17:48:02**: feat(auth): implement Firebase multi-tenant authentication & RBAC
