@@ -638,3 +638,5 @@
 - **2026-03-01 17:48:02**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-03-02 20:02:15**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-03-03 20:16:23**: refactor(ui): modernize tenant profile cards with Tailwind CSS
