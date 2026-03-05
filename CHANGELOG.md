@@ -648,3 +648,5 @@
 - **2026-03-04 20:36:51**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2026-03-05 08:43:11**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2026-03-05 10:21:44**: perf(db): optimize Firestore composite indexes for property queries
