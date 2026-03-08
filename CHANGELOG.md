@@ -658,3 +658,5 @@
 - **2026-03-06 19:31:53**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2026-03-07 08:37:30**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-03-08 19:01:58**: feat(maintenance): add maintenance dispatch tracker with photo verification
