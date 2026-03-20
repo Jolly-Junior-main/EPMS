@@ -698,3 +698,5 @@
 - **2026-03-20 10:34:12**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-03-20 12:46:54**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-03-20 13:03:16**: feat(sms): integrate automated overdue payment SMS notification gateway
