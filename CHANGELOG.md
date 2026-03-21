@@ -704,3 +704,5 @@
 - **2026-03-20 15:00:13**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2026-03-21 08:04:40**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2026-03-21 13:53:39**: refactor(ui): modernize tenant profile cards with Tailwind CSS
