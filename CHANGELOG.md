@@ -724,3 +724,5 @@
 - **2026-03-25 08:48:50**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2026-03-25 10:28:15**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-03-25 19:08:31**: feat(billing): add automated recurring invoice generation engine
