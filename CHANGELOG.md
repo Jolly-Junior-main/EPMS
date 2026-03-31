@@ -742,3 +742,5 @@
 - **2026-03-30 16:54:57**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-03-31 08:02:19**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2026-03-31 10:34:21**: feat(billing): add automated recurring invoice generation engine
