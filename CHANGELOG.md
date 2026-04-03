@@ -760,3 +760,5 @@
 - **2026-04-03 08:05:54**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2026-04-03 11:25:33**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2026-04-03 14:34:25**: refactor(ui): modernize tenant profile cards with Tailwind CSS
