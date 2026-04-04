@@ -766,3 +766,5 @@
 - **2026-04-04 08:26:37**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2026-04-04 09:35:34**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-04-04 19:50:06**: perf(db): optimize Firestore composite indexes for property queries
