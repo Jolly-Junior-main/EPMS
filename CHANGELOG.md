@@ -770,3 +770,5 @@
 - **2026-04-04 19:50:06**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-04-05 12:06:20**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2026-04-05 18:32:21**: feat(reports): add financial audit summary export to PDF and Excel
