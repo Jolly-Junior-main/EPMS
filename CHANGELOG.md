@@ -784,3 +784,5 @@
 - **2026-04-07 11:28:37**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2026-04-08 12:54:51**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2026-04-08 19:24:58**: feat(billing): add automated recurring invoice generation engine
