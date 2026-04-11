@@ -792,3 +792,5 @@
 - **2026-04-10 11:24:53**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2026-04-10 13:12:14**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2026-04-11 08:41:31**: perf(db): optimize Firestore composite indexes for property queries
