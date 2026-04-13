@@ -806,3 +806,5 @@
 - **2026-04-12 18:02:08**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2026-04-12 20:53:38**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
+
+- **2026-04-13 13:21:01**: perf(db): optimize Firestore composite indexes for property queries
