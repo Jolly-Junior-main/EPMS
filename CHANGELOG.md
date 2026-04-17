@@ -834,3 +834,5 @@
 - **2026-04-17 12:21:02**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-04-17 15:07:29**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-04-17 20:36:50**: refactor(ui): modernize tenant profile cards with Tailwind CSS
