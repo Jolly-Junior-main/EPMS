@@ -850,3 +850,5 @@
 - **2026-04-20 11:02:13**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-04-20 12:32:15**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-04-20 19:05:08**: perf(db): optimize Firestore composite indexes for property queries
