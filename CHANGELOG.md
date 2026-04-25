@@ -872,3 +872,5 @@
 - **2026-04-24 19:08:53**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2026-04-25 10:18:20**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2026-04-25 13:15:36**: feat(reports): add financial audit summary export to PDF and Excel
