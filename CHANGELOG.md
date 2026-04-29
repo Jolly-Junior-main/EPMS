@@ -888,3 +888,5 @@
 - **2026-04-28 19:08:47**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-04-29 19:19:45**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2026-04-29 20:49:35**: feat(auth): implement Firebase multi-tenant authentication & RBAC
