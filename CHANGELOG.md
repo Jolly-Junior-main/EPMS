@@ -892,3 +892,5 @@
 - **2026-04-29 20:49:35**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-04-30 13:30:16**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2026-04-30 16:58:55**: perf(db): optimize Firestore composite indexes for property queries
