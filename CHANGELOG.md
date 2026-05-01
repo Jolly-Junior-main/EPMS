@@ -896,3 +896,5 @@
 - **2026-04-30 16:58:55**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-04-30 17:40:42**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-05-01 17:17:59**: feat(sms): integrate automated overdue payment SMS notification gateway
