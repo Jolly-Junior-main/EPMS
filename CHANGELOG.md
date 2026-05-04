@@ -910,3 +910,5 @@
 - **2026-05-03 18:16:37**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2026-05-04 09:36:04**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2026-05-04 12:43:05**: feat(tenants): build tenant onboarding workflow and digital lease wizard
