@@ -912,3 +912,5 @@
 - **2026-05-04 09:36:04**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2026-05-04 12:43:05**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2026-05-04 20:52:25**: refactor(ui): modernize tenant profile cards with Tailwind CSS
