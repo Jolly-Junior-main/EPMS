@@ -918,3 +918,5 @@
 - **2026-05-06 18:34:28**: feat(auth): implement Firebase multi-tenant authentication & RBAC
 
 - **2026-05-07 17:01:09**: feat(auth): implement Firebase multi-tenant authentication & RBAC
+
+- **2026-05-07 19:19:16**: feat(billing): add automated recurring invoice generation engine
