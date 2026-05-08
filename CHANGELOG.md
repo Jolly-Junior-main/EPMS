@@ -922,3 +922,5 @@
 - **2026-05-07 19:19:16**: feat(billing): add automated recurring invoice generation engine
 
 - **2026-05-08 08:37:03**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-05-08 14:15:10**: feat(tenants): build tenant onboarding workflow and digital lease wizard
