@@ -950,3 +950,5 @@
 - **2026-05-12 13:38:11**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2026-05-13 14:28:47**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2026-05-13 15:46:34**: feat(sms): integrate automated overdue payment SMS notification gateway
