@@ -960,3 +960,5 @@
 - **2026-05-15 10:12:13**: feat(receipts): implement cryptographic hash vault for payment audit verification
 
 - **2026-05-15 13:49:07**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2026-05-16 15:59:26**: feat(maintenance): add maintenance dispatch tracker with photo verification
