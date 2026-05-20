@@ -974,3 +974,5 @@
 - **2026-05-19 15:36:55**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-05-20 08:18:42**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-05-20 10:52:09**: feat(auth): implement Firebase multi-tenant authentication & RBAC
