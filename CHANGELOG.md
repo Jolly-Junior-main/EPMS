@@ -984,3 +984,5 @@
 - **2026-05-21 13:23:26**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-05-21 16:58:12**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2026-05-22 20:34:05**: feat(tenants): build tenant onboarding workflow and digital lease wizard
