@@ -988,3 +988,5 @@
 - **2026-05-22 20:34:05**: feat(tenants): build tenant onboarding workflow and digital lease wizard
 
 - **2026-05-23 12:30:33**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2026-05-23 13:46:50**: refactor(ui): modernize tenant profile cards with Tailwind CSS
