@@ -996,3 +996,5 @@
 - **2026-05-24 16:55:25**: feat(reports): add financial audit summary export to PDF and Excel
 
 - **2026-05-24 20:54:16**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2026-05-25 10:49:39**: feat(tenants): build tenant onboarding workflow and digital lease wizard
