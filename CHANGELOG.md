@@ -1004,3 +1004,5 @@
 - **2026-05-27 12:07:55**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2026-05-28 13:56:21**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2026-05-29 13:42:10**: feat(auth): implement Firebase multi-tenant authentication & RBAC
