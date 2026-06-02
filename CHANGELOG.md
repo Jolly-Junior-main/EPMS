@@ -1022,3 +1022,5 @@
 - **2026-06-01 19:48:42**: refactor(ui): modernize tenant profile cards with Tailwind CSS
 
 - **2026-06-01 21:31:57**: feat(receipts): implement cryptographic hash vault for payment audit verification
+
+- **2026-06-02 19:10:33**: feat(reports): add financial audit summary export to PDF and Excel
