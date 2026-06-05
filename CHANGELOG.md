@@ -1034,3 +1034,5 @@
 - **2026-06-05 08:13:50**: feat(sms): integrate automated overdue payment SMS notification gateway
 
 - **2026-06-05 11:49:00**: feat(reports): add financial audit summary export to PDF and Excel
+
+- **2026-06-05 16:43:36**: feat(auth): implement Firebase multi-tenant authentication & RBAC
