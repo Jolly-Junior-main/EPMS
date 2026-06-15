@@ -1070,3 +1070,5 @@
 - **2026-06-13 17:17:13**: feat(billing): add automated recurring invoice generation engine
 
 - **2026-06-15 10:48:09**: refactor(ui): modernize tenant profile cards with Tailwind CSS
+
+- **2026-06-15 17:56:06**: feat(tenants): build tenant onboarding workflow and digital lease wizard
