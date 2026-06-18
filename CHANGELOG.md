@@ -1088,3 +1088,5 @@
 - **2026-06-18 13:28:28**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-06-18 15:38:22**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2026-06-18 17:33:21**: feat(tenants): build tenant onboarding workflow and digital lease wizard
