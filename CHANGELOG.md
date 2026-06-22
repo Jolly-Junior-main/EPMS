@@ -1104,3 +1104,5 @@
 - **2026-06-22 08:34:43**: feat(analytics): add real-time monthly revenue and occupancy rate dashboard
 
 - **2026-06-22 11:04:08**: feat(sms): integrate automated overdue payment SMS notification gateway
+
+- **2026-06-22 15:25:49**: perf(db): optimize Firestore composite indexes for property queries
