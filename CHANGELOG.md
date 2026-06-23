@@ -1108,3 +1108,5 @@
 - **2026-06-22 15:25:49**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-06-22 18:01:09**: perf(db): optimize Firestore composite indexes for property queries
+
+- **2026-06-23 08:08:34**: feat(tenants): build tenant onboarding workflow and digital lease wizard
