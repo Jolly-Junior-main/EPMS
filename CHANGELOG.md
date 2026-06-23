@@ -1110,3 +1110,5 @@
 - **2026-06-22 18:01:09**: perf(db): optimize Firestore composite indexes for property queries
 
 - **2026-06-23 08:08:34**: feat(tenants): build tenant onboarding workflow and digital lease wizard
+
+- **2026-06-23 12:57:29**: feat(auth): implement Firebase multi-tenant authentication & RBAC
