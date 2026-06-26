@@ -1124,3 +1124,5 @@
 - **2026-06-25 19:05:02**: feat(maintenance): add maintenance dispatch tracker with photo verification
 
 - **2026-06-26 10:05:10**: feat(maintenance): add maintenance dispatch tracker with photo verification
+
+- **2026-06-26 16:38:44**: refactor(ui): modernize tenant profile cards with Tailwind CSS
