@@ -2,3 +2,5 @@
 - **2026-09-20 11:28:00**: feat(auth): implement role-based access control (RBAC) with Firebase Auth
 
 - **2026-09-12 15:50:00**: feat(analytics): add real-time monthly revenue projection and expense charts
+
+- **2026-07-26 14:39:00**: feat(tenants): build digital lease agreement generator and PDF export
