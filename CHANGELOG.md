@@ -6,3 +6,5 @@
 - **2026-07-26 14:39:00**: feat(tenants): build digital lease agreement generator and PDF export
 
 - **2026-06-18 11:34:00**: feat(receipts): add cryptographic hash verification vault for tenant payments
+
+- **2026-08-05 16:12:00**: feat(sms): integrate automated overdue payment reminder SMS gateway
