@@ -1,0 +1,6 @@
+{
+  "name": "Enterprise Property Management System",
+  "description": "Full-stack Firebase-powered Enterprise PMS for commercial & residential complexes with RBAC, revenue analytics, Red List aging tracker, digital receipt verification vault, and automated SMS engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

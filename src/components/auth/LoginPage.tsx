@@ -1,0 +1,304 @@
+import React, { useState } from 'react';
+import { usePMS } from '../../context/PMSContext';
+import { UserRole } from '../../types/pms';
+import {
+  Building2,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  ArrowRight,
+  Sparkles,
+  KeyRound,
+  CheckCircle2,
+  AlertCircle,
+  Smartphone,
+  Layers,
+  Terminal
+} from 'lucide-react';
+
+interface RoleCredentialPreset {
+  role: UserRole;
+  label: string;
+  sublabel: string;
+  email: string;
+  pass: string;
+  name: string;
+  title: string;
+  destinationRoute: string;
+  permissions: string[];
+}
+
+const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
+  admin: {
+    role: 'admin',
+    label: 'Super Admin',
+    sublabel: 'Tech Partner & Architect',
+    email: 'admin@boleplaza.et',
+    pass: 'AdminPass2026!',
+    name: 'Dawit Alemu',
+    title: 'Lead Firebase Cloud Architect',
+    destinationRoute: '/admin',
+    permissions: ['System Monitoring', 'Firebase Security Rules', 'Cloud Functions v2', 'API Gateway Logs']
+  },
+  owner: {
+    role: 'owner',
+    label: 'Building Owner',
+    sublabel: 'Executive & Asset Owner',
+    email: 'owner@boleplaza.et',
+    pass: 'OwnerPass2026!',
+    name: 'Abebe Mengesha',
+    title: 'Managing Director & Property Owner',
+    destinationRoute: '/owner',
+    permissions: ['Revenue Analytics', 'Receipt Verification Vault', 'The Red List Overdue', 'Financial Ledger']
+  },
+  manager: {
+    role: 'manager',
+    label: 'Property Manager',
+    sublabel: 'Daily Field Operations',
+    email: 'manager@boleplaza.et',
+    pass: 'ManagerPass2026!',
+    name: 'Hanna Tadesse',
+    title: 'Senior Property Operations Manager',
+    destinationRoute: '/manager',
+    permissions: ['Tenant Directory', 'Lease Documents', 'Invoice Dispatch', 'Bank Payment Logging']
+  }
+};
+
+export const LoginPage: React.FC = () => {
+  const { login } = usePMS();
+
+  const [selectedPreset, setSelectedPreset] = useState<UserRole>('owner');
+  const [email, setEmail] = useState<string>(PRESET_ACCOUNTS.owner.email);
+  const [password, setPassword] = useState<string>(PRESET_ACCOUNTS.owner.pass);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [simulatedCustomClaims, setSimulatedCustomClaims] = useState<boolean>(true);
+
+  // Handle Preset Switching
+  const handleSelectPreset = (role: UserRole) => {
+    setSelectedPreset(role);
+    setEmail(PRESET_ACCOUNTS[role].email);
+    setPassword(PRESET_ACCOUNTS[role].pass);
+    setErrorMessage(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await login(email, password);
+      if (!result.success) {
+        setErrorMessage(result.error || 'Invalid credentials. Please verify your email and password.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'An error occurred during authentication.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const currentPreset = PRESET_ACCOUNTS[selectedPreset];
+
+  return (
+    <div className="min-h-screen bg-[#F2F2F7] flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-sans selection:bg-[#007AFF] selection:text-white">
+      {/* Background Decorative Ambient Spheres */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Top iOS Status Indicator Pill */}
+      <div className="mb-6 animate-in fade-in slide-in-from-top-3 duration-300">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-xs font-semibold text-[#1C1C1E]">
+          <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
+          <span>Firebase Authentication &amp; Custom Claims RBAC Active</span>
+        </div>
+      </div>
+
+      {/* Main Centered Floating iOS Login Card */}
+      <div className="w-full max-w-md backdrop-blur-2xl bg-white/80 border border-black/[0.06] rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.08)] p-7 sm:p-8 space-y-6 relative z-10 animate-in fade-in zoom-in-95 duration-200">
+        {/* iOS App Icon & Brand Header */}
+        <div className="text-center space-y-2">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#007AFF] to-[#5856D6] text-white flex items-center justify-center shadow-[0_8px_20px_rgba(0,122,255,0.35)] ring-4 ring-white/60">
+            <Building2 className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">
+              Enterprise PMS
+            </h1>
+            <p className="text-xs text-[#8E8E93] mt-0.5">
+              Role-Based Authentication &amp; Asset Management Portal
+            </p>
+          </div>
+        </div>
+
+        {/* Error Callout */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-2xl bg-[#FF3B30]/10 border border-[#FF3B30]/20 text-[#FF3B30] text-xs font-medium flex items-center gap-2.5 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#FF3B30]" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-3">
+            {/* Username / Email Input */}
+            <div>
+              <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider block mb-1 px-1">
+                Account Email / Username
+              </label>
+              <div className="relative flex items-center">
+                <Mail className="w-4 h-4 text-[#8E8E93] absolute left-4 pointer-events-none" />
+                <input
+                  id="login-email-input"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@boleplaza.et"
+                  className="w-full bg-[#F2F2F7] focus:bg-white text-[#1C1C1E] rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-[#007AFF] outline-none transition-all border border-black/[0.04] font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider block mb-1 px-1">
+                Password
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="w-4 h-4 text-[#8E8E93] absolute left-4 pointer-events-none" />
+                <input
+                  id="login-password-input"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-[#F2F2F7] focus:bg-white text-[#1C1C1E] rounded-xl pl-11 pr-11 py-3.5 text-sm focus:ring-2 focus:ring-[#007AFF] outline-none transition-all border border-black/[0.04] font-medium font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 p-1 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors rounded-lg"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Options Row */}
+          <div className="flex items-center justify-between text-xs px-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-[#3A3A3C]">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded text-[#007AFF] focus:ring-[#007AFF] border-black/[0.15]"
+              />
+              <span>Remember this device</span>
+            </label>
+            <span className="text-[#007AFF] font-medium hover:underline cursor-pointer">
+              Forgot password?
+            </span>
+          </div>
+
+          {/* Primary iOS System Blue Sign-In Button */}
+          <button
+            id="login-submit-btn"
+            type="submit"
+            disabled={isLoading}
+            className={`w-full bg-[#007AFF] text-white font-semibold rounded-xl py-3.5 hover:bg-[#0066D6] active:scale-[0.98] transition-all shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 text-sm ${
+              isLoading ? 'opacity-70 cursor-wait' : ''
+            }`}
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Authenticating with Firebase...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In to {currentPreset.label}</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Segmented Interactive Role Switcher / Demo Helper */}
+        <div className="pt-4 border-t border-black/[0.06] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
+              Quick Role Switcher (Demo Testing)
+            </span>
+            <span className="text-[10px] text-[#007AFF] font-mono font-medium">
+              Target: {currentPreset.destinationRoute}
+            </span>
+          </div>
+
+          {/* iOS Segmented Control */}
+          <div className="grid grid-cols-3 gap-1 bg-[#767680]/12 p-1 rounded-2xl">
+            {(['owner', 'manager', 'admin'] as UserRole[]).map((r) => {
+              const preset = PRESET_ACCOUNTS[r];
+              const isSelected = selectedPreset === r;
+              return (
+                <button
+                  key={r}
+                  id={`preset-btn-${r}`}
+                  type="button"
+                  onClick={() => handleSelectPreset(r)}
+                  className={`py-2 px-2 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center ${
+                    isSelected
+                      ? 'bg-white text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
+                      : 'text-[#8E8E93] hover:text-[#1C1C1E]'
+                  }`}
+                >
+                  <span className="leading-tight">{preset.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Role Access Scope Preview Banner */}
+          <div className="p-3 bg-[#F2F2F7] rounded-2xl text-[11px] text-[#3A3A3C] space-y-1.5">
+            <div className="flex items-center justify-between font-semibold">
+              <span className="text-[#1C1C1E] flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#007AFF]" />
+                {currentPreset.name} ({currentPreset.title})
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] uppercase">
+                role: {currentPreset.role}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1 pt-1">
+              {currentPreset.permissions.map((perm, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-0.5 rounded-md bg-white text-[#1C1C1E] border border-black/[0.04] text-[10px] font-medium"
+                >
+                  • {perm}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Security & Token Info */}
+        <div className="text-center">
+          <p className="text-[10px] text-[#8E8E93] leading-relaxed">
+            Protected by Firebase Auth &amp; Custom Claims RBAC token verification. 
+            Unauthorized access attempts are logged to the security audit trail.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
