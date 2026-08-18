@@ -30,7 +30,8 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
     getRevenueMetrics,
     invoices,
     payments,
-    getRedList
+    getRedList,
+    t
   } = usePMS();
 
   const metrics = getRevenueMetrics();
@@ -47,15 +48,15 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-[#007AFF]/10 text-[#007AFF] flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#007AFF] animate-pulse" />
-              LIVE FIRESTORE AGGREGATES
+              {t('live_aggregates')}
             </span>
-            <span className="text-xs text-[#8E8E93] font-medium">Addis Ababa Portfolio</span>
+            <span className="text-xs text-[#8E8E93] font-medium">{t('portfolio_title')}</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E]">
-            {currentUser.role === 'owner' ? 'Owner Executive Revenue Vault' : 'Property Management Console'}
+            {currentUser.role === 'owner' ? t('dash_title_owner') : t('dash_title_manager')}
           </h2>
           <p className="text-xs md:text-sm text-[#8E8E93] max-w-2xl">
-            {selectedPropObj ? selectedPropObj.name : 'Cross-Complex Commercial & Residential Portfolio'} • Real-time lease reconciliation and automated SMS compliance.
+            {selectedPropObj ? selectedPropObj.name : t('all_complexes')} • {t('dash_subtitle_default')}
           </p>
         </div>
 
@@ -64,18 +65,18 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
           <button
             id="dash-open-vault-btn"
             onClick={() => onNavigate('vault')}
-            className="px-4 py-2.5 rounded-2xl bg-[#007AFF] hover:bg-[#0071E3] text-white text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.25)] flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 rounded-2xl bg-[#007AFF] hover:bg-[#0071E3] text-white text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.25)] flex items-center gap-2 active:scale-95 cursor-pointer"
           >
             <ShieldCheck className="w-4 h-4 text-white" />
-            Verify Bank Slips ({metrics.pendingVerificationCount})
+            {t('dash_verify_slips_btn')} ({metrics.pendingVerificationCount})
           </button>
           <button
             id="dash-open-redlist-btn"
             onClick={() => onNavigate('redlist')}
-            className="px-4 py-2.5 rounded-2xl bg-[#FF3B30] hover:bg-[#E02E24] text-white text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(255,59,48,0.25)] flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 rounded-2xl bg-[#FF3B30] hover:bg-[#E02E24] text-white text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(255,59,48,0.25)] flex items-center gap-2 active:scale-95 cursor-pointer"
           >
             <AlertOctagon className="w-4 h-4 text-white" />
-            The Red List ({metrics.redListCount})
+            {t('dash_red_list_btn')} ({metrics.redListCount})
           </button>
         </div>
       </div>
@@ -89,18 +90,18 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
             </div>
             <div>
               <div className="text-sm font-bold text-[#1C1C1E]">
-                {unverifiedPayments.length} Digital Payment {unverifiedPayments.length === 1 ? 'Receipt' : 'Receipts'} Submitted for Owner Verification
+                {unverifiedPayments.length} {t('dash_pending_alert_title')}
               </div>
               <div className="text-xs text-[#8E8E93] mt-0.5">
-                Bank transfer slips waiting for clearance in the digital Verification Vault.
+                {t('dash_pending_alert_sub')}
               </div>
             </div>
           </div>
           <button
             onClick={() => onNavigate('vault')}
-            className="px-4 py-2 bg-[#FF9500] hover:bg-[#E08500] text-white rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shadow-[0_2px_8px_rgba(255,149,0,0.3)] active:scale-95"
+            className="px-4 py-2 bg-[#FF9500] hover:bg-[#E08500] text-white rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shadow-[0_2px_8px_rgba(255,149,0,0.3)] active:scale-95 cursor-pointer"
           >
-            Inspect Slips <ArrowRight className="w-3.5 h-3.5" />
+            {t('dash_review_now')} <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -110,7 +111,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
         {/* Total Expected Revenue (System Blue) */}
         <div className="bg-white rounded-3xl p-5 border border-black/[0.04] shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#8E8E93] mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">Expected Revenue</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">{t('dash_metric_expected')}</span>
             <div className="w-9 h-9 rounded-2xl bg-[#007AFF]/10 text-[#007AFF] flex items-center justify-center">
               <FileText className="w-4 h-4" />
             </div>
@@ -121,7 +122,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
               <span className="text-xs font-medium text-[#8E8E93] ml-1">ETB</span>
             </div>
             <div className="text-xs text-[#8E8E93] mt-1.5 flex items-center gap-1 font-medium">
-              <span>Active billing cycles</span>
+              <span>{metrics.totalTenantsCount} {t('dash_metric_active_tenants')}</span>
             </div>
           </div>
         </div>
@@ -129,7 +130,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
         {/* Gross Collected Capital (System Green) */}
         <div className="bg-white rounded-3xl p-5 border border-black/[0.04] shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">Gross Collected</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">{t('dash_metric_collected')}</span>
             <div className="w-9 h-9 rounded-2xl bg-[#34C759]/10 text-[#34C759] flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4" />
             </div>
@@ -141,7 +142,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
             </div>
             <div className="text-xs text-[#34C759] mt-1.5 flex items-center gap-1 font-semibold">
               <TrendingUp className="w-3.5 h-3.5" />
-              <span>{metrics.collectionRatePercent}% reconciled</span>
+              <span>{metrics.collectionRatePercent}% {t('dash_metric_collection_rate')}</span>
             </div>
           </div>
         </div>
@@ -149,7 +150,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
         {/* Net Outstanding Balance (System Orange) */}
         <div className="bg-white rounded-3xl p-5 border border-black/[0.04] shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#8E8E93] mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">Net Outstanding</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">{t('dash_metric_uncollected')}</span>
             <div className="w-9 h-9 rounded-2xl bg-[#FF9500]/10 text-[#FF9500] flex items-center justify-center">
               <Clock className="w-4 h-4" />
             </div>
@@ -160,7 +161,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
               <span className="text-xs font-medium text-[#8E8E93] ml-1">ETB</span>
             </div>
             <div className="text-xs text-[#8E8E93] mt-1.5 flex items-center gap-1 font-medium">
-              <span>Pending settlement</span>
+              <span>{metrics.portfolioOccupancyPercent}% {t('dash_metric_occupancy')}</span>
             </div>
           </div>
         </div>
@@ -168,7 +169,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
         {/* Delinquent Capital on Red List (System Red) */}
         <div className="bg-white rounded-3xl p-5 border border-black/[0.04] shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">Delinquent Risk</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">{t('nav_redlist')}</span>
             <div className="w-9 h-9 rounded-2xl bg-[#FF3B30]/10 text-[#FF3B30] flex items-center justify-center">
               <AlertOctagon className="w-4 h-4" />
             </div>

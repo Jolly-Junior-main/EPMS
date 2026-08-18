@@ -26,7 +26,8 @@ export const SMSEngineConsole: React.FC = () => {
     sendCustomSMS,
     tenants,
     invoices,
-    units
+    units,
+    t
   } = usePMS();
 
   const [isRunningCron, setIsRunningCron] = useState(false);
@@ -72,50 +73,35 @@ export const SMSEngineConsole: React.FC = () => {
           <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-[#007AFF]/20 text-[#0A84FF] border border-[#007AFF]/30 flex items-center gap-1.5 font-mono">
               <Radio className="w-3.5 h-3.5 animate-pulse text-[#0A84FF]" />
-              FIREBASE CLOUD FUNCTIONS v2 CRON ENGINE
+              {t('nav_sms')}
             </span>
             <span className="text-xs text-[#8E8E93] font-mono hidden sm:inline">Trigger: onSchedule('every day 08:00') EAT</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
-            Automated SMS Rent Reminder Engine
+            {t('sms_title')}
           </h2>
-          <p className="text-xs md:text-sm text-[#8E8E93] mt-1 max-w-2xl">
-            Executes multi-query daily reminder workflows: 7-day advance notices (Query 1) and due-today settlement warnings (Query 2) over Telecom REST API channels.
+          <p className="text-xs md:text-sm text-white/60 mt-0.5 max-w-2xl">
+            {t('sms_subtitle')}
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          <button
-            id="sms-run-cron-btn"
-            onClick={handleTriggerDailyCron}
-            disabled={isRunningCron}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all shadow-md flex items-center gap-2 active:scale-95 ${
-              isRunningCron
-                ? 'bg-white/10 text-white/70 cursor-wait'
-                : 'bg-[#007AFF] hover:bg-[#0062CC] text-white shadow-[0_4px_12px_rgba(0,122,255,0.3)]'
-            }`}
-          >
-            {isRunningCron ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Executing Queries in Cloud Function...
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 fill-white" />
-                Trigger Daily 08:00 Cycle Now
-              </>
-            )}
-          </button>
-
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             id="sms-manual-dispatch-btn"
             onClick={() => setIsManualModalOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 flex items-center gap-2 transition-all active:scale-95"
+            className="px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white rounded-2xl text-xs font-semibold transition-all border border-white/10 flex items-center gap-2 active:scale-95 cursor-pointer"
           >
-            <Send className="w-4 h-4" />
-            Manual Broadcast
+            <Send className="w-4 h-4 text-[#0A84FF]" />
+            {t('sms_send_custom_btn')}
+          </button>
+          <button
+            id="trigger-sms-engine-btn"
+            onClick={handleTriggerDailyCron}
+            disabled={isRunningCron}
+            className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0071E3] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.3)] flex items-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
+          >
+            <Play className="w-4 h-4" />
+            {isRunningCron ? 'Triggering...' : t('sms_run_engine_btn')}
           </button>
         </div>
       </div>

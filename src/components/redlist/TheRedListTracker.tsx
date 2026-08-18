@@ -24,7 +24,8 @@ export const TheRedListTracker: React.FC = () => {
     currentUser,
     properties,
     selectedPropertyId,
-    setSelectedPropertyId
+    setSelectedPropertyId,
+    t
   } = usePMS();
 
   const redListItems = getRedList();
@@ -66,26 +67,26 @@ export const TheRedListTracker: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-[#FF3B30]/10 text-[#FF3B30] flex items-center gap-1.5">
               <AlertOctagon className="w-3.5 h-3.5" />
-              CRITICAL RECOVERY ENCLAVE
+              {t('nav_redlist')}
             </span>
-            <span className="text-xs text-[#8E8E93] font-mono">Overdue Aging Query: status == 'delinquent'</span>
+            <span className="text-xs text-[#8E8E93] font-mono">Overdue Aging Query</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E] flex items-center gap-2">
-            The Red List: Delinquency &amp; Aging Tracker
+            {t('redlist_title')}
           </h2>
           <p className="text-xs md:text-sm text-[#8E8E93] max-w-2xl">
-            Real-time isolation of overdue commercial &amp; residential tenants with automatic aging calculations, statutory late fee compounding, and direct SMS debt recovery workflows.
+            {t('redlist_subtitle')}
           </p>
         </div>
 
         {/* Aggregate Delinquent Widget Counter */}
         <div className="bg-[#1C1C1E] text-white p-5 rounded-3xl text-right shadow-md border border-white/10 shrink-0">
-          <div className="text-[11px] font-medium text-white/60 uppercase">Capital At Risk on Red List</div>
+          <div className="text-[11px] font-medium text-white/60 uppercase">{t('dash_overdue_delinquent')}</div>
           <div className="text-2xl font-bold text-[#FF453A] tracking-tight">
             {totalDelinquentSum.toLocaleString('en-US', { minimumFractionDigits: 2 })}{' '}
             <span className="text-xs font-bold text-white/90 ml-1">ETB</span>
           </div>
-          <div className="text-[11px] text-white/60 mt-0.5">{filteredItems.length} accounts flagged</div>
+          <div className="text-[11px] text-white/60 mt-0.5">{filteredItems.length} {t('redlist_critical_badge')}</div>
         </div>
       </div>
 

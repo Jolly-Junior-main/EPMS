@@ -29,7 +29,8 @@ export const TenantsManager: React.FC = () => {
     addTenant,
     updateTenant,
     deleteTenant,
-    uploadTenantDocument
+    uploadTenantDocument,
+    t
   } = usePMS();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -65,15 +66,15 @@ export const TenantsManager: React.FC = () => {
 
   const isOwnerOrAdmin = ['owner', 'admin'].includes(currentUser.role);
 
-  const filteredTenants = tenants.filter((t) => {
+  const filteredTenants = tenants.filter((t_item) => {
     const matchesSearch =
-      t.legalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.phone.includes(searchTerm) ||
-      t.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (t.businessTradeName && t.businessTradeName.toLowerCase().includes(searchTerm.toLowerCase()));
+      t_item.legalName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t_item.phone.includes(searchTerm) ||
+      t_item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (t_item.businessTradeName && t_item.businessTradeName.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (!matchesSearch) return false;
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+    if (statusFilter !== 'all' && t_item.status !== statusFilter) return false;
     return true;
   });
 
@@ -100,24 +101,24 @@ export const TenantsManager: React.FC = () => {
     setIsAddModalOpen(true);
   };
 
-  const handleOpenEditModal = (t: Tenant) => {
-    setEditingTenant(t);
+  const handleOpenEditModal = (t_tenant: Tenant) => {
+    setEditingTenant(t_tenant);
     setFormData({
-      legalName: t.legalName,
-      businessTradeName: t.businessTradeName || '',
-      phone: t.phone,
-      email: t.email,
-      assignedUnitId: t.assignedUnitId,
-      propertyId: t.propertyId,
-      leaseStartDate: t.leaseStartDate,
-      leaseEndDate: t.leaseEndDate,
-      status: t.status,
-      monthlyRentETB: t.monthlyRentETB,
-      securityDepositETB: t.securityDepositETB,
-      tinNumber: t.tinNumber || '',
-      contactPerson: t.contactPerson || '',
-      emergencyContact: t.emergencyContact || '',
-      notes: t.notes || ''
+      legalName: t_tenant.legalName,
+      businessTradeName: t_tenant.businessTradeName || '',
+      phone: t_tenant.phone,
+      email: t_tenant.email,
+      assignedUnitId: t_tenant.assignedUnitId,
+      propertyId: t_tenant.propertyId,
+      leaseStartDate: t_tenant.leaseStartDate,
+      leaseEndDate: t_tenant.leaseEndDate,
+      status: t_tenant.status,
+      monthlyRentETB: t_tenant.monthlyRentETB,
+      securityDepositETB: t_tenant.securityDepositETB,
+      tinNumber: t_tenant.tinNumber || '',
+      contactPerson: t_tenant.contactPerson || '',
+      emergencyContact: t_tenant.emergencyContact || '',
+      notes: t_tenant.notes || ''
     });
     setIsAddModalOpen(true);
   };
@@ -132,8 +133,8 @@ export const TenantsManager: React.FC = () => {
     setIsAddModalOpen(false);
   };
 
-  const handleDeleteTenant = (t: Tenant) => {
-    setTenantToDelete(t);
+  const handleDeleteTenant = (t_tenant: Tenant) => {
+    setTenantToDelete(t_tenant);
   };
 
   const confirmDeleteTenant = () => {
@@ -143,9 +144,9 @@ export const TenantsManager: React.FC = () => {
     }
   };
 
-  const handleUploadDocSubmit = (e: React.FormEvent) => {
+  const handleUploadDocument = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTenantForDocs || !docName) return;
+    if (!selectedTenantForDocs || !docName.trim()) return;
 
     setIsUploadingDoc(true);
     setTimeout(() => {
@@ -159,7 +160,7 @@ export const TenantsManager: React.FC = () => {
       });
 
       // Refresh current active modal tenant
-      const updated = tenants.find((t) => t.tenantId === selectedTenantForDocs.tenantId);
+      const updated = tenants.find((t_item) => t_item.tenantId === selectedTenantForDocs.tenantId);
       if (updated) setSelectedTenantForDocs(updated);
 
       setDocName('');
@@ -174,22 +175,22 @@ export const TenantsManager: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-[#007AFF]/10 text-[#007AFF] font-mono">
-              FIRESTORE /tenants COLLECTION
+              {t('nav_tenants')}
             </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E]">Tenant &amp; Lease Directory</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E]">{t('tenants_title')}</h2>
           <p className="text-xs md:text-sm text-[#8E8E93] mt-0.5">
-            Operational CRUD, lease lifecycle dates, and Firebase Storage document vaults.
+            {t('tenants_subtitle')}
           </p>
         </div>
 
         <button
           id="add-tenant-btn"
           onClick={handleOpenAddModal}
-          className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.3)] flex items-center gap-2 active:scale-95"
+          className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.3)] flex items-center gap-2 active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          Register New Tenant
+          {t('tenants_add_btn')}
         </button>
       </div>
 
@@ -199,7 +200,7 @@ export const TenantsManager: React.FC = () => {
           <Search className="w-4 h-4 text-[#8E8E93] absolute left-3.5" />
           <input
             type="text"
-            placeholder="Search by legal entity, trade name, or phone..."
+            placeholder={t('tenants_search_placeholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-black/[0.06] bg-[#F2F2F7] text-[#1C1C1E] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#007AFF] font-medium"
@@ -209,17 +210,17 @@ export const TenantsManager: React.FC = () => {
         <div className="flex items-center gap-1 bg-[#767680]/12 p-1 rounded-xl">
           <button
             onClick={() => setStatusFilter('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer ${
               statusFilter === 'all'
                 ? 'bg-white text-[#1C1C1E] shadow-[0_2px_6px_rgba(0,0,0,0.12)]'
                 : 'text-[#8E8E93] hover:text-[#1C1C1E]'
             }`}
           >
-            All ({tenants.length})
+            {t('tenants_status_all')} ({tenants.length})
           </button>
           <button
             onClick={() => setStatusFilter('active')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer ${
               statusFilter === 'active'
                 ? 'bg-white text-[#34C759] shadow-[0_2px_6px_rgba(0,0,0,0.12)]'
                 : 'text-[#8E8E93] hover:text-[#1C1C1E]'

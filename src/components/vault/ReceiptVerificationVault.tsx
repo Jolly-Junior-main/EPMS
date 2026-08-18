@@ -31,7 +31,8 @@ export const ReceiptVerificationVault: React.FC = () => {
     tenants,
     units,
     verifyPayment,
-    auditLogs
+    auditLogs,
+    t
   } = usePMS();
 
   const [selectedPaymentId, setSelectedPaymentId] = useState<string>(() => {
@@ -88,15 +89,15 @@ export const ReceiptVerificationVault: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-[#007AFF]/10 text-[#007AFF] flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5" />
-              OWNER AUDIT VAULT
+              {t('nav_vault')}
             </span>
             <span className="text-xs text-[#8E8E93] font-mono">Firebase Storage &amp; RBAC Protected</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E] flex items-center gap-2">
-            Digital Receipt Verification Vault
+            {t('vault_title')}
           </h2>
           <p className="text-xs md:text-sm text-[#8E8E93] max-w-2xl">
-            Side-by-side audit workspace pairing ledger records on the left with high-resolution bank vouchers on the right.
+            {t('vault_subtitle')}
           </p>
         </div>
 
@@ -127,27 +128,27 @@ export const ReceiptVerificationVault: React.FC = () => {
         <div className="flex items-center gap-1 bg-[#767680]/12 p-1 rounded-xl">
           <button
             onClick={() => setFilterTab('unverified')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer ${
               filterTab === 'unverified'
                 ? 'bg-white text-[#1C1C1E] shadow-[0_2px_6px_rgba(0,0,0,0.12)]'
                 : 'text-[#8E8E93] hover:text-[#1C1C1E]'
             }`}
           >
-            Awaiting Verification ({payments.filter((p) => p.verificationStatus === 'unverified').length})
+            {t('vault_pending_tab')} ({payments.filter((p) => p.verificationStatus === 'unverified').length})
           </button>
           <button
             onClick={() => setFilterTab('verified')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer ${
               filterTab === 'verified'
                 ? 'bg-white text-[#34C759] shadow-[0_2px_6px_rgba(0,0,0,0.12)]'
                 : 'text-[#8E8E93] hover:text-[#1C1C1E]'
             }`}
           >
-            Verified ({payments.filter((p) => p.verificationStatus === 'verified').length})
+            {t('vault_verified_tab')} ({payments.filter((p) => p.verificationStatus === 'verified').length})
           </button>
           <button
             onClick={() => setFilterTab('rejected')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer ${
               filterTab === 'rejected'
                 ? 'bg-white text-[#FF3B30] shadow-[0_2px_6px_rgba(0,0,0,0.12)]'
                 : 'text-[#8E8E93] hover:text-[#1C1C1E]'
@@ -157,13 +158,13 @@ export const ReceiptVerificationVault: React.FC = () => {
           </button>
           <button
             onClick={() => setFilterTab('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer ${
               filterTab === 'all'
-                ? 'bg-white text-[#1C1C1E] shadow-[0_2px_6px_rgba(0,0,0,0.12)]'
+                ? 'bg-white text-[#007AFF] shadow-[0_2px_6px_rgba(0,0,0,0.12)]'
                 : 'text-[#8E8E93] hover:text-[#1C1C1E]'
             }`}
           >
-            All Slips ({payments.length})
+            {t('vault_filter_all')} ({payments.length})
           </button>
         </div>
 

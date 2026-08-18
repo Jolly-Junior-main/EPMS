@@ -28,7 +28,8 @@ export const InvoicesPaymentsLedger: React.FC<{ onNavigateToVault?: () => void }
     currentUser,
     createInvoice,
     deleteInvoice,
-    logPayment
+    logPayment,
+    t
   } = usePMS();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,7 +61,7 @@ export const InvoicesPaymentsLedger: React.FC<{ onNavigateToVault?: () => void }
   });
 
   const filteredInvoices = invoices.filter((inv) => {
-    const tenant = tenants.find((t) => t.tenantId === inv.tenantId);
+    const tenant = tenants.find((t_t) => t_t.tenantId === inv.tenantId);
     const unit = units.find((u) => u.unitId === inv.unitId);
 
     const matchesSearch =
@@ -76,11 +77,7 @@ export const InvoicesPaymentsLedger: React.FC<{ onNavigateToVault?: () => void }
 
   const handleCreateInvoiceSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createInvoice({
-      ...invoiceForm,
-      dueDate: new Date(invoiceForm.dueDate).toISOString(),
-      issuedDate: new Date(invoiceForm.issuedDate).toISOString()
-    });
+    createInvoice(invoiceForm);
     setIsCreateInvoiceModalOpen(false);
   };
 
@@ -89,7 +86,7 @@ export const InvoicesPaymentsLedger: React.FC<{ onNavigateToVault?: () => void }
     const targetInvoice = invoices.find((i) => i.invoiceId === paymentForm.invoiceId);
     if (!targetInvoice) return;
 
-    const tenant = tenants.find((t) => t.tenantId === targetInvoice.tenantId);
+    const tenant = tenants.find((t_t) => t_t.tenantId === targetInvoice.tenantId);
     const unit = units.find((u) => u.unitId === targetInvoice.unitId);
 
     const receiptSvg = generateBankReceiptSvg({
@@ -130,29 +127,30 @@ export const InvoicesPaymentsLedger: React.FC<{ onNavigateToVault?: () => void }
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-[#007AFF]/10 text-[#007AFF] font-mono">
-              FIRESTORE /invoices &amp; /payments
+              {t('nav_invoices')}
             </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E]">Invoices &amp; Financial Ledger</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E]">{t('invoices_title')}</h2>
           <p className="text-xs md:text-sm text-[#8E8E93] mt-0.5">
-            Issue billing notices, record bank transfer advice, and track clearance states.
+            {t('invoices_subtitle')}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsLogPaymentModalOpen(true)}
-            className="px-4 py-2.5 bg-[#34C759] hover:bg-[#2EB150] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(52,199,89,0.3)] flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 bg-[#34C759] hover:bg-[#2EB150] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(52,199,89,0.3)] flex items-center gap-2 active:scale-95 cursor-pointer"
           >
             <CreditCard className="w-4 h-4" />
-            Log Payment Slip
+            {t('invoices_log_payment_btn')}
           </button>
           <button
+            id="create-invoice-btn"
             onClick={() => setIsCreateInvoiceModalOpen(true)}
-            className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.3)] flex items-center gap-2 active:scale-95"
+            className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.3)] flex items-center gap-2 active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            Issue New Invoice
+            {t('invoices_create_btn')}
           </button>
         </div>
       </div>

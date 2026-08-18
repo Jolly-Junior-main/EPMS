@@ -31,7 +31,8 @@ function PMSAppContent() {
     clearNotification,
     guardError,
     dismissGuardError,
-    switchUser
+    switchUser,
+    t
   } = usePMS();
 
   // If not authenticated, render the iOS-themed Login Page
@@ -186,10 +187,10 @@ function PMSAppContent() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span className="font-medium text-[#3A3A3C] flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#34C759]" />
-            Enterprise PMS • Multi-Role Authentication Active [{currentUser.role.toUpperCase()}]
+            {t('footer_role_active')} [{currentUser.role.toUpperCase()}]
           </span>
           <span className="text-[11px] font-medium text-[#8E8E93]">
-            Firebase Auth &amp; Custom Claims RBAC • Protected Routes (/admin, /owner, /manager)
+            Firebase Storage &amp; Custom Claims RBAC Protected
           </span>
         </div>
       </footer>
