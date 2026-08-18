@@ -242,3 +242,56 @@ export async function updateUnitInFirestore(unitId: string, updates: Partial<Uni
   const ref = doc(db, COLLECTIONS.UNITS, unitId);
   await updateDoc(ref, updates);
 }
+
+export async function deleteInvoiceFromFirestore(invoiceId: string): Promise<void> {
+  const ref = doc(db, COLLECTIONS.INVOICES, invoiceId);
+  await deleteDoc(ref);
+}
+
+export async function deletePaymentFromFirestore(paymentId: string): Promise<void> {
+  const ref = doc(db, COLLECTIONS.PAYMENTS, paymentId);
+  await deleteDoc(ref);
+}
+
+export async function resetFirestoreToDefaults(): Promise<void> {
+  const batch = writeBatch(db);
+
+  // 1. Properties
+  for (const prop of MOCK_PROPERTIES) {
+    const ref = doc(db, COLLECTIONS.PROPERTIES, prop.propertyId);
+    batch.set(ref, prop);
+  }
+
+  // 2. Units
+  for (const unit of MOCK_UNITS) {
+    const ref = doc(db, COLLECTIONS.UNITS, unit.unitId);
+    batch.set(ref, unit);
+  }
+
+  // 3. Tenants
+  for (const tenant of MOCK_TENANTS) {
+    const ref = doc(db, COLLECTIONS.TENANTS, tenant.tenantId);
+    batch.set(ref, tenant);
+  }
+
+  // 4. Invoices
+  for (const inv of MOCK_INVOICES) {
+    const ref = doc(db, COLLECTIONS.INVOICES, inv.invoiceId);
+    batch.set(ref, inv);
+  }
+
+  // 5. Payments
+  for (const pay of MOCK_PAYMENTS) {
+    const ref = doc(db, COLLECTIONS.PAYMENTS, pay.paymentId);
+    batch.set(ref, pay);
+  }
+
+  // 6. SMS Logs
+  for (const sms of MOCK_SMS_LOGS) {
+    const ref = doc(db, COLLECTIONS.SMS_LOGS, sms.id);
+    batch.set(ref, sms);
+  }
+
+  await batch.commit();
+}
+

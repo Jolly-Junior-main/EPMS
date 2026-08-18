@@ -22,7 +22,7 @@ interface RoleCredentialPreset {
   role: UserRole;
   label: string;
   sublabel: string;
-  email: string;
+  username: string;
   pass: string;
   name: string;
   title: string;
@@ -31,38 +31,38 @@ interface RoleCredentialPreset {
 }
 
 const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
-  admin: {
-    role: 'admin',
-    label: 'Super Admin',
-    sublabel: 'Tech Partner & Architect',
-    email: 'admin@boleplaza.et',
-    pass: 'AdminPass2026!',
-    name: 'Dawit Alemu',
-    title: 'Lead Firebase Cloud Architect',
-    destinationRoute: '/admin',
-    permissions: ['System Monitoring', 'Firebase Security Rules', 'Cloud Functions v2', 'API Gateway Logs']
-  },
   owner: {
     role: 'owner',
-    label: 'Building Owner',
+    label: 'Owner',
     sublabel: 'Executive & Asset Owner',
-    email: 'owner@boleplaza.et',
-    pass: 'OwnerPass2026!',
+    username: 'Owner',
+    pass: 'Owner',
     name: 'Abebe Mengesha',
     title: 'Managing Director & Property Owner',
     destinationRoute: '/owner',
     permissions: ['Revenue Analytics', 'Receipt Verification Vault', 'The Red List Overdue', 'Financial Ledger']
   },
+  admin: {
+    role: 'admin',
+    label: 'Administrator',
+    sublabel: 'Tech Partner & Architect',
+    username: 'Admin',
+    pass: 'Admin',
+    name: 'Dawit Alemu',
+    title: 'Lead Firebase Cloud Architect',
+    destinationRoute: '/admin',
+    permissions: ['System Monitoring', 'Firebase Security Rules', 'Real-Time Database Sync', 'API Gateway Logs']
+  },
   manager: {
     role: 'manager',
-    label: 'Property Manager',
+    label: 'Management',
     sublabel: 'Daily Field Operations',
-    email: 'manager@boleplaza.et',
-    pass: 'ManagerPass2026!',
+    username: 'Manage',
+    pass: 'Manage',
     name: 'Hanna Tadesse',
     title: 'Senior Property Operations Manager',
     destinationRoute: '/manager',
-    permissions: ['Tenant Directory', 'Lease Documents', 'Invoice Dispatch', 'Bank Payment Logging']
+    permissions: ['Tenant Directory', 'Lease Documents', 'Invoice Dispatch', 'Payment Receipt Logging', 'SMS Engine']
   }
 };
 
@@ -70,18 +70,17 @@ export const LoginPage: React.FC = () => {
   const { login } = usePMS();
 
   const [selectedPreset, setSelectedPreset] = useState<UserRole>('owner');
-  const [email, setEmail] = useState<string>(PRESET_ACCOUNTS.owner.email);
+  const [username, setUsername] = useState<string>(PRESET_ACCOUNTS.owner.username);
   const [password, setPassword] = useState<string>(PRESET_ACCOUNTS.owner.pass);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [simulatedCustomClaims, setSimulatedCustomClaims] = useState<boolean>(true);
 
   // Handle Preset Switching
   const handleSelectPreset = (role: UserRole) => {
     setSelectedPreset(role);
-    setEmail(PRESET_ACCOUNTS[role].email);
+    setUsername(PRESET_ACCOUNTS[role].username);
     setPassword(PRESET_ACCOUNTS[role].pass);
     setErrorMessage(null);
   };
@@ -92,9 +91,9 @@ export const LoginPage: React.FC = () => {
     setErrorMessage(null);
 
     try {
-      const result = await login(email, password);
+      const result = await login(username, password);
       if (!result.success) {
-        setErrorMessage(result.error || 'Invalid credentials. Please verify your email and password.');
+        setErrorMessage(result.error || 'Invalid credentials. Please verify your username and password.');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'An error occurred during authentication.');
@@ -115,7 +114,7 @@ export const LoginPage: React.FC = () => {
       <div className="mb-6 animate-in fade-in slide-in-from-top-3 duration-300">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-xs font-semibold text-[#1C1C1E]">
           <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
-          <span>Firebase Authentication &amp; Custom Claims RBAC Active</span>
+          <span>Firebase Real-Time Multi-Browser Sync Active</span>
         </div>
       </div>
 
@@ -131,7 +130,7 @@ export const LoginPage: React.FC = () => {
               Enterprise PMS
             </h1>
             <p className="text-xs text-[#8E8E93] mt-0.5">
-              Role-Based Authentication &amp; Asset Management Portal
+              Strict Role-Separated Property Management Portal
             </p>
           </div>
         </div>
@@ -150,17 +149,17 @@ export const LoginPage: React.FC = () => {
             {/* Username / Email Input */}
             <div>
               <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider block mb-1 px-1">
-                Account Email / Username
+                Username
               </label>
               <div className="relative flex items-center">
                 <Mail className="w-4 h-4 text-[#8E8E93] absolute left-4 pointer-events-none" />
                 <input
-                  id="login-email-input"
-                  type="email"
+                  id="login-username-input"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@boleplaza.et"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Owner / Admin / Manage"
                   className="w-full bg-[#F2F2F7] focus:bg-white text-[#1C1C1E] rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-[#007AFF] outline-none transition-all border border-black/[0.04] font-medium"
                 />
               </div>
@@ -203,11 +202,11 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded text-[#007AFF] focus:ring-[#007AFF] border-black/[0.15]"
               />
-              <span>Remember this device</span>
+              <span>Remember this session</span>
             </label>
-            <span className="text-[#007AFF] font-medium hover:underline cursor-pointer">
-              Forgot password?
-            </span>
+            <div className="text-[11px] text-[#8E8E93]">
+              Credentials: <span className="font-mono text-[#007AFF] font-bold">{currentPreset.username} / {currentPreset.pass}</span>
+            </div>
           </div>
 
           {/* Primary iOS System Blue Sign-In Button */}
@@ -226,18 +225,18 @@ export const LoginPage: React.FC = () => {
               </>
             ) : (
               <>
-                <span>Sign In to {currentPreset.label}</span>
+                <span>Sign In as {currentPreset.label}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
         </form>
 
-        {/* Segmented Interactive Role Switcher / Demo Helper */}
+        {/* Quick Role Selector Buttons */}
         <div className="pt-4 border-t border-black/[0.06] space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
-              Quick Role Switcher (Demo Testing)
+              Quick Role Credentials
             </span>
             <span className="text-[10px] text-[#007AFF] font-mono font-medium">
               Target: {currentPreset.destinationRoute}
@@ -245,8 +244,8 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {/* iOS Segmented Control */}
-          <div className="grid grid-cols-3 gap-1 bg-[#767680]/12 p-1 rounded-2xl">
-            {(['owner', 'manager', 'admin'] as UserRole[]).map((r) => {
+          <div className="grid grid-cols-3 gap-1.5 bg-[#767680]/12 p-1 rounded-2xl">
+            {(['owner', 'admin', 'manager'] as UserRole[]).map((r) => {
               const preset = PRESET_ACCOUNTS[r];
               const isSelected = selectedPreset === r;
               return (
@@ -255,13 +254,14 @@ export const LoginPage: React.FC = () => {
                   id={`preset-btn-${r}`}
                   type="button"
                   onClick={() => handleSelectPreset(r)}
-                  className={`py-2 px-2 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center ${
+                  className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center ${
                     isSelected
-                      ? 'bg-white text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.12)]'
+                      ? 'bg-white text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.12)] ring-1 ring-black/5'
                       : 'text-[#8E8E93] hover:text-[#1C1C1E]'
                   }`}
                 >
-                  <span className="leading-tight">{preset.label}</span>
+                  <span className="font-bold text-xs">{preset.label}</span>
+                  <span className="text-[10px] font-mono text-[#8E8E93] font-normal">{preset.username}</span>
                 </button>
               );
             })}
@@ -275,7 +275,7 @@ export const LoginPage: React.FC = () => {
                 {currentPreset.name} ({currentPreset.title})
               </span>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] uppercase">
-                role: {currentPreset.role}
+                {currentPreset.username} / {currentPreset.pass}
               </span>
             </div>
             <div className="flex flex-wrap gap-1 pt-1">
@@ -291,11 +291,10 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Security & Token Info */}
+        {/* Security & Real-Time Sync Info */}
         <div className="text-center">
           <p className="text-[10px] text-[#8E8E93] leading-relaxed">
-            Protected by Firebase Auth &amp; Custom Claims RBAC token verification. 
-            Unauthorized access attempts are logged to the security audit trail.
+            Connected to Cloud Firestore backend. Changes made by Owner, Administrator, or Management are synchronized live across all browsers.
           </p>
         </div>
       </div>

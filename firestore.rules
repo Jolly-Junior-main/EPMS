@@ -1,86 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions for RBAC
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function getUserRole() {
-      return request.auth.token.role != null ? request.auth.token.role :
-             (isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) ? getUserData().role : null);
-    }
-
-    function isAdmin() {
-      return getUserRole() == 'admin';
-    }
-
-    function isOwner() {
-      return getUserRole() == 'owner' || isAdmin();
-    }
-
-    function isManager() {
-      return getUserRole() == 'manager' || isOwner();
-    }
-
-    // Properties collection
-    match /properties/{propertyId} {
-      allow read: if true; // Public read for directory/selection
-      allow write: if isAdmin() || isOwner();
-    }
-
-    // Units collection
-    match /units/{unitId} {
-      allow read: if true;
-      allow write: if isManager();
-    }
-
-    // Tenants collection
-    match /tenants/{tenantId} {
-      allow read: if isManager();
-      allow create, update: if isManager();
-      allow delete: if isAdmin() || isOwner();
-    }
-
-    // Invoices collection
-    match /invoices/{invoiceId} {
-      allow read: if isManager();
-      allow create, update: if isManager();
-      allow delete: if isAdmin() || isOwner();
-    }
-
-    // Payments collection
-    match /payments/{paymentId} {
-      allow read: if isManager();
-      allow create: if isManager();
-      // Only Owner and Admin can verify payments / approve receipts
-      allow update: if isManager();
-      allow delete: if isAdmin() || isOwner();
-    }
-
-    // SMS Logs collection
-    match /sms_logs/{logId} {
-      allow read: if isManager();
-      allow create, update, delete: if isManager();
-    }
-
-    // Audit Logs collection
-    match /audit_logs/{logId} {
-      allow read: if isAdmin() || isOwner();
-      allow create: if isSignedIn();
-      allow update, delete: if isAdmin();
-    }
-
-    // Users collection
-    match /users/{userId} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow delete: if isAdmin();
+    // Universal read and write access for multi-browser real-time synchronization
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

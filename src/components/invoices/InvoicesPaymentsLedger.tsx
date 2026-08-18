@@ -15,6 +15,7 @@ import {
   Building,
   User,
   ArrowRight,
+  Trash2,
   X
 } from 'lucide-react';
 
@@ -26,6 +27,7 @@ export const InvoicesPaymentsLedger: React.FC<{ onNavigateToVault?: () => void }
     units,
     currentUser,
     createInvoice,
+    deleteInvoice,
     logPayment
   } = usePMS();
 
@@ -279,30 +281,44 @@ export const InvoicesPaymentsLedger: React.FC<{ onNavigateToVault?: () => void }
                     </td>
 
                     <td className="px-5 py-4 text-right">
-                      {inv.paymentStatus === 'submitted_for_verification' && onNavigateToVault ? (
-                        <button
-                          onClick={onNavigateToVault}
-                          className="px-3.5 py-1.5 bg-[#FF9500] hover:bg-[#E08500] text-white rounded-xl text-xs font-semibold flex items-center gap-1 ml-auto shadow-[0_2px_8px_rgba(255,149,0,0.3)] active:scale-95 transition-all"
-                        >
-                          Verify in Vault <ArrowRight className="w-3 h-3" />
-                        </button>
-                      ) : inv.paymentStatus === 'pending' ? (
+                      <div className="flex items-center justify-end gap-2">
+                        {inv.paymentStatus === 'submitted_for_verification' && onNavigateToVault ? (
+                          <button
+                            onClick={onNavigateToVault}
+                            className="px-3.5 py-1.5 bg-[#FF9500] hover:bg-[#E08500] text-white rounded-xl text-xs font-semibold flex items-center gap-1 shadow-[0_2px_8px_rgba(255,149,0,0.3)] active:scale-95 transition-all"
+                          >
+                            Verify in Vault <ArrowRight className="w-3 h-3" />
+                          </button>
+                        ) : inv.paymentStatus === 'pending' ? (
+                          <button
+                            onClick={() => {
+                              setPaymentForm({
+                                ...paymentForm,
+                                invoiceId: inv.invoiceId,
+                                amountPaid: inv.amountDue
+                              });
+                              setIsLogPaymentModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#007AFF] rounded-xl text-xs font-semibold active:scale-95 transition-all"
+                          >
+                            Log Payment
+                          </button>
+                        ) : (
+                          <span className="text-[#8E8E93] text-xs font-mono">Reconciled</span>
+                        )}
+
                         <button
                           onClick={() => {
-                            setPaymentForm({
-                              ...paymentForm,
-                              invoiceId: inv.invoiceId,
-                              amountPaid: inv.amountDue
-                            });
-                            setIsLogPaymentModalOpen(true);
+                            if (window.confirm(`Are you sure you want to delete invoice ${inv.invoiceNumber}? This will be deleted live in Firestore across all browsers.`)) {
+                              deleteInvoice(inv.invoiceId);
+                            }
                           }}
-                          className="px-3 py-1.5 bg-[#F2F2F7] hover:bg-[#E5E5EA] text-[#007AFF] rounded-xl text-xs font-semibold active:scale-95 transition-all"
+                          title="Delete Invoice"
+                          className="p-1.5 text-[#8E8E93] hover:text-[#FF3B30] hover:bg-[#FF3B30]/10 rounded-lg transition-colors active:scale-95"
                         >
-                          Log Payment
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      ) : (
-                        <span className="text-[#8E8E93] text-xs font-mono">Reconciled</span>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 );

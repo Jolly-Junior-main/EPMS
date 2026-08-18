@@ -28,7 +28,10 @@ import {
   saveTenantToFirestore,
   deleteTenantFromFirestore,
   saveInvoiceToFirestore,
+  deleteInvoiceFromFirestore,
   savePaymentToFirestore,
+  deletePaymentFromFirestore,
+  resetFirestoreToDefaults,
   saveSMSLogToFirestore,
   saveAuditLogToFirestore,
   updateUnitInFirestore
@@ -42,7 +45,7 @@ interface PMSContextType {
   activeRoleRoute: string; // '/admin' | '/owner' | '/manager'
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
+  login: (usernameOrEmail: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
   logout: () => void;
   switchUser: (role: UserRole) => void;
   guardError: { attemptedRoute: string; requiredRole: string; currentRole: string; message: string } | null;
@@ -68,6 +71,7 @@ interface PMSContextType {
   
   // Invoices & Payments
   createInvoice: (invoice: Omit<Invoice, 'invoiceId' | 'invoiceNumber'>) => { success: boolean; error?: string };
+  deleteInvoice: (invoiceId: string) => { success: boolean; error?: string };
   logPayment: (payment: Omit<Payment, 'paymentId' | 'submittedAt' | 'verificationStatus' | 'submittedBy'>) => { success: boolean; error?: string };
   
   // Verification Vault (Owner / Admin Exclusive)
@@ -91,7 +95,7 @@ interface PMSContextType {
     redListCount: number;
   };
   
-  resetToSampleData: () => void;
+  resetToSampleData: () => Promise<void>;
 }
 
 const PMSContext = createContext<PMSContextType | undefined>(undefined);
@@ -182,34 +186,34 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const unsubscribe = subscribeToPMSCollections({
       onTenants: (list) => {
-        if (list.length > 0 && isMounted) {
+        if (isMounted) {
           setTenants(list);
           setIsFirestoreConnected(true);
           setSyncStatus('synced');
         }
       },
       onUnits: (list) => {
-        if (list.length > 0 && isMounted) {
+        if (isMounted) {
           setUnits(list);
         }
       },
       onInvoices: (list) => {
-        if (list.length > 0 && isMounted) {
+        if (isMounted) {
           setInvoices(list);
         }
       },
       onPayments: (list) => {
-        if (list.length > 0 && isMounted) {
+        if (isMounted) {
           setPayments(list);
         }
       },
       onSMSLogs: (list) => {
-        if (list.length > 0 && isMounted) {
+        if (isMounted) {
           setSmsLogs(list);
         }
       },
       onAuditLogs: (list) => {
-        if (list.length > 0 && isMounted) {
+        if (isMounted) {
           setAuditLogs(list);
         }
       },
@@ -249,28 +253,41 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // -------------------------------------------------------------
   // Firebase Authentication & Role Route Redirection
   // -------------------------------------------------------------
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
+  const login = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
     // Artificial latency for authentic iOS / Firebase feel
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const inputUser = usernameOrEmail.trim().toLowerCase();
+    const inputPass = password.trim();
     
-    // Find matching user
+    // Find matching user and validate credentials
     let matchedUser: UserProfile | undefined;
     let matchedRole: UserRole | undefined;
 
-    if (normalizedEmail.includes('admin') || normalizedEmail === 'dawit.alemu@sysadmin.et') {
-      matchedUser = MOCK_USERS.admin;
-      matchedRole = 'admin';
-    } else if (normalizedEmail.includes('owner') || normalizedEmail === 'abebe.mengesha@boleplaza.et') {
-      matchedUser = MOCK_USERS.owner;
-      matchedRole = 'owner';
-    } else if (normalizedEmail.includes('manager') || normalizedEmail === 'hanna.tadesse@boleplaza.et') {
-      matchedUser = MOCK_USERS.manager;
-      matchedRole = 'manager';
+    if (inputUser === 'owner' || inputUser === 'abebe.mengesha@boleplaza.et' || inputUser.includes('owner')) {
+      if (inputPass.toLowerCase() === 'owner' || inputPass === 'Owner' || inputPass === 'OwnerPass2026!') {
+        matchedUser = MOCK_USERS.owner;
+        matchedRole = 'owner';
+      } else {
+        return { success: false, error: 'Incorrect password for Owner account. (Password: Owner)' };
+      }
+    } else if (inputUser === 'admin' || inputUser === 'dawit.alemu@sysadmin.et' || inputUser.includes('admin') || inputUser.includes('administrator')) {
+      if (inputPass.toLowerCase() === 'admin' || inputPass === 'Admin' || inputPass === 'AdminPass2026!') {
+        matchedUser = MOCK_USERS.admin;
+        matchedRole = 'admin';
+      } else {
+        return { success: false, error: 'Incorrect password for Administrator account. (Password: Admin)' };
+      }
+    } else if (inputUser === 'manage' || inputUser === 'manager' || inputUser === 'management' || inputUser === 'hanna.tadesse@boleplaza.et' || inputUser.includes('manage')) {
+      if (inputPass.toLowerCase() === 'manage' || inputPass.toLowerCase() === 'manager' || inputPass === 'Manage' || inputPass === 'ManagerPass2026!') {
+        matchedUser = MOCK_USERS.manager;
+        matchedRole = 'manager';
+      } else {
+        return { success: false, error: 'Incorrect password for Management account. (Password: Manage)' };
+      }
     } else {
       // Check exact match in MOCK_USERS values
-      const found = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === normalizedEmail);
+      const found = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === inputUser);
       if (found) {
         matchedUser = found;
         matchedRole = found.role;
@@ -278,7 +295,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     if (!matchedUser || !matchedRole) {
-      return { success: false, error: 'User record not found in Firestore. Check your email or use one of the role presets below.' };
+      return { success: false, error: 'User record not found in Firestore. Please use credentials: Owner/Owner, Admin/Admin, or Manage/Manage.' };
     }
 
     // Authenticate and set session
@@ -386,14 +403,22 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
-  const resetToSampleData = () => {
-    localStorage.clear();
-    setUnits(MOCK_UNITS);
-    setTenants(MOCK_TENANTS);
-    setInvoices(MOCK_INVOICES);
-    setPayments(MOCK_PAYMENTS);
-    setSmsLogs(MOCK_SMS_LOGS);
-    showToast('Reset all collections to initial enterprise sample state.', 'success');
+  const resetToSampleData = async () => {
+    try {
+      setSyncStatus('syncing');
+      await resetFirestoreToDefaults();
+      localStorage.clear();
+      setUnits(MOCK_UNITS);
+      setTenants(MOCK_TENANTS);
+      setInvoices(MOCK_INVOICES);
+      setPayments(MOCK_PAYMENTS);
+      setSmsLogs(MOCK_SMS_LOGS);
+      setSyncStatus('synced');
+      showToast('Enterprise PMS database reset to default records across all browsers.', 'success');
+    } catch (err) {
+      console.warn('Reset error:', err);
+      showToast('Database reset applied locally.', 'info');
+    }
   };
 
   // -------------------------------------------------------------
@@ -457,9 +482,9 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deleteTenant = (tenantId: string) => {
-    if (!canPerformOwnerAction()) {
-      showToast('Firebase RBAC Violation: Only Owner or Admin can delete tenant records.', 'error');
-      return { success: false, error: 'Permission denied: Owner role required.' };
+    if (!canPerformManagerAction()) {
+      showToast('Firebase RBAC Violation: Insufficient permissions to delete tenant.', 'error');
+      return { success: false, error: 'Permission denied.' };
     }
 
     const tenant = tenants.find((t) => t.tenantId === tenantId);
@@ -477,7 +502,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updateUnitInFirestore(tenant.assignedUnitId, { status: 'vacant', currentTenantId: undefined }).catch((err) => console.warn('Firestore unit free:', err));
     }
 
-    showToast(`Deleted tenant "${tenant.legalName}".`, 'info');
+    showToast(`Deleted tenant "${tenant.legalName}" from Firestore.`, 'info');
     return { success: true };
   };
 
@@ -529,6 +554,21 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     saveInvoiceToFirestore(newInvoice).catch((err) => console.warn('Firestore invoice save:', err));
 
     showToast(`Generated invoice ${invoiceNumber} for ${invoiceData.amountDue.toLocaleString()} ETB.`, 'success');
+    return { success: true };
+  };
+
+  const deleteInvoice = (invoiceId: string) => {
+    if (!canPerformManagerAction()) {
+      showToast('Firebase RBAC Violation: Insufficient permissions to delete invoice.', 'error');
+      return { success: false, error: 'Permission denied.' };
+    }
+
+    const inv = invoices.find((i) => i.invoiceId === invoiceId);
+    if (!inv) return { success: false, error: 'Invoice not found' };
+
+    setInvoices((prev) => prev.filter((i) => i.invoiceId !== invoiceId));
+    deleteInvoiceFromFirestore(invoiceId).catch((err) => console.warn('Firestore invoice delete:', err));
+    showToast(`Deleted invoice ${inv.invoiceNumber} from Firestore.`, 'info');
     return { success: true };
   };
 
@@ -932,6 +972,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         deleteTenant,
         uploadTenantDocument,
         createInvoice,
+        deleteInvoice,
         logPayment,
         verifyPayment,
         runAutomatedSMSEngine,
