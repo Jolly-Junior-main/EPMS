@@ -1,4 +1,4 @@
-import { Tenant, Unit, Invoice, Payment, SMSLog, Property, UserProfile } from '../types/pms';
+import { Tenant, Unit, Invoice, Payment, SMSLog, Property, UserProfile, MaintenanceRequest, LeaseRenewalRequest } from '../types/pms';
 
 export const MOCK_USERS: Record<string, UserProfile> = {
   owner: {
@@ -30,6 +30,16 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
     title: 'Lead Firebase Cloud Architect',
     complexAccess: ['prop_bole_01', 'prop_kazanchis_02', 'prop_sarbet_03']
+  },
+  tenant: {
+    uid: 'ten_001',
+    name: 'Almaz Kebede',
+    email: 'almaz.kebede@bolecafe.et',
+    role: 'tenant',
+    phone: '+251 91 123 4567',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    title: 'Tenant • Bole Coffee Roastery (G-01)',
+    complexAccess: ['prop_bole_01']
   }
 };
 
@@ -854,5 +864,80 @@ export const MOCK_SMS_LOGS: SMSLog[] = [
     dispatchedAt: '2026-08-13T14:30:00Z',
     httpStatusCode: 200,
     gatewayMessageId: 'ETH-SMS-984420-OK'
+  }
+];
+
+export const MOCK_MAINTENANCE_REQUESTS: MaintenanceRequest[] = [
+  {
+    requestId: 'maint_001',
+    ticketNumber: 'TKT-2026-089',
+    tenantId: 'ten_001',
+    tenantName: 'Almaz Kebede (Bole Coffee Roastery)',
+    unitId: 'unit_bole_101',
+    unitNumber: 'G-01',
+    propertyId: 'prop_bole_01',
+    category: 'plumbing',
+    priority: 'high',
+    status: 'in_progress',
+    title: 'Espresso Bar Water Line Pressure Regulator Leak',
+    description: 'Main incoming high-pressure water valve supplying commercial espresso machines has a pinhole leak causing low bar pressure.',
+    reportedDate: '2026-08-16T09:30:00Z',
+    estimatedCostETB: 12500,
+    assignedTechnician: 'Kassahun Worku (Master Plumber)',
+    technicianPhone: '+251 91 555 1234',
+    scheduledDate: '2026-08-18T10:00:00Z'
+  },
+  {
+    requestId: 'maint_002',
+    ticketNumber: 'TKT-2026-092',
+    tenantId: 'ten_004',
+    tenantName: 'Afro-Nile Trading PLC',
+    unitId: 'unit_kaz_301',
+    unitNumber: 'Suite 301',
+    propertyId: 'prop_kazanchis_02',
+    category: 'hvac',
+    priority: 'medium',
+    status: 'scheduled',
+    title: 'Server Room Central AC Filter Replacement & Thermostat Calibration',
+    description: 'Room temperature drifting above 24°C during peak afternoon sun hours. Requires diagnostic of condenser fan.',
+    reportedDate: '2026-08-17T14:15:00Z',
+    estimatedCostETB: 8000,
+    assignedTechnician: 'Yonas Getachew (HVAC Specialist)',
+    technicianPhone: '+251 91 666 4321',
+    scheduledDate: '2026-08-19T14:00:00Z'
+  },
+  {
+    requestId: 'maint_003',
+    ticketNumber: 'TKT-2026-095',
+    tenantId: 'ten_008',
+    tenantName: 'Dr. Almaz Bekele',
+    unitId: 'unit_sar_301',
+    unitNumber: 'Apt 3A',
+    propertyId: 'prop_sarbet_03',
+    category: 'electrical',
+    priority: 'low',
+    status: 'completed',
+    title: 'Master Bedroom Smart Dimmer Switch Intermittent Flicker',
+    description: 'LED recessed lighting flickers when dimming below 30% intensity.',
+    reportedDate: '2026-08-12T11:00:00Z',
+    completedDate: '2026-08-14T16:00:00Z',
+    assignedTechnician: 'Mulugeta Tsegaye (Electrician)',
+    technicianPhone: '+251 91 777 9876',
+    estimatedCostETB: 3500,
+    resolutionNotes: 'Replaced neutral-wire trailing-edge dimmer module with compatible phase-cut driver. Tested 100% stable.'
+  }
+];
+
+export const MOCK_RENEWAL_REQUESTS: LeaseRenewalRequest[] = [
+  {
+    requestId: 'ren_001',
+    tenantId: 'ten_001',
+    tenantName: 'Almaz Kebede (Bole Coffee Roastery)',
+    unitNumber: 'G-01',
+    currentLeaseEndDate: '2027-01-31',
+    requestedExtensionMonths: 24,
+    notes: 'Requesting 2-year commercial lease extension with standard 5% escalation cap.',
+    status: 'pending',
+    submittedAt: '2026-08-15T10:00:00Z'
   }
 ];

@@ -1,4 +1,42 @@
-export type UserRole = 'admin' | 'owner' | 'manager';
+export type UserRole = 'admin' | 'owner' | 'manager' | 'tenant';
+
+export type MaintenancePriority = 'low' | 'medium' | 'high' | 'emergency';
+export type MaintenanceStatus = 'reported' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+export type MaintenanceCategory = 'plumbing' | 'electrical' | 'hvac' | 'elevator' | 'structural' | 'cleaning' | 'general';
+
+export interface MaintenanceRequest {
+  requestId: string;
+  ticketNumber: string;
+  tenantId: string;
+  tenantName: string;
+  unitId: string;
+  unitNumber: string;
+  propertyId: string;
+  category: MaintenanceCategory;
+  priority: MaintenancePriority;
+  status: MaintenanceStatus;
+  title: string;
+  description: string;
+  reportedDate: string;
+  estimatedCostETB?: number;
+  assignedTechnician?: string;
+  technicianPhone?: string;
+  scheduledDate?: string;
+  completedDate?: string;
+  resolutionNotes?: string;
+}
+
+export interface LeaseRenewalRequest {
+  requestId: string;
+  tenantId: string;
+  tenantName: string;
+  unitNumber: string;
+  currentLeaseEndDate: string;
+  requestedExtensionMonths: number;
+  notes?: string;
+  status: 'pending' | 'approved' | 'declined';
+  submittedAt: string;
+}
 
 export interface UserProfile {
   uid: string;

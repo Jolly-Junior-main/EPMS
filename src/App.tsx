@@ -10,6 +10,7 @@ import { TenantsManager } from './components/tenants/TenantsManager';
 import { InvoicesPaymentsLedger } from './components/invoices/InvoicesPaymentsLedger';
 import { SMSEngineConsole } from './components/sms/SMSEngineConsole';
 import { FirebaseArchitectureViewer } from './components/architecture/FirebaseArchitectureViewer';
+import { TenantPortal } from './components/portal/TenantPortal';
 import {
   CheckCircle2,
   AlertCircle,
@@ -173,6 +174,11 @@ function PMSAppContent() {
 
         {/* Firebase Security Rules & Cloud Functions Architecture */}
         {activeTab === 'rules' && <FirebaseArchitectureViewer />}
+
+        {/* Tenant Self-Service Portal */}
+        {(activeTab === 'tenant_portal' || currentUser.role === 'tenant') && (
+          <TenantPortal />
+        )}
       </main>
 
       {/* iOS Apple Styled Footer */}

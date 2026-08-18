@@ -63,6 +63,17 @@ const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
     title: 'Senior Property Operations Manager',
     destinationRoute: '/manager',
     permissions: ['Tenant Directory', 'Lease Documents', 'Invoice Dispatch', 'Payment Receipt Logging', 'SMS Engine']
+  },
+  tenant: {
+    role: 'tenant',
+    label: 'Tenant Portal',
+    sublabel: 'Commercial & Residential',
+    username: 'Tenant',
+    pass: 'Tenant',
+    name: 'Almaz Kebede',
+    title: 'Bole Coffee Roastery & Cafe',
+    destinationRoute: '/portal',
+    permissions: ['Lease & Rent Schedule', 'Upload Bank Payment Slip', 'Maintenance Dispatch', 'Digital QR Receipts']
   }
 };
 
@@ -244,8 +255,8 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {/* iOS Segmented Control */}
-          <div className="grid grid-cols-3 gap-1.5 bg-[#767680]/12 p-1 rounded-2xl">
-            {(['owner', 'admin', 'manager'] as UserRole[]).map((r) => {
+          <div className="grid grid-cols-4 gap-1 bg-[#767680]/12 p-1 rounded-2xl">
+            {(['owner', 'manager', 'tenant', 'admin'] as UserRole[]).map((r) => {
               const preset = PRESET_ACCOUNTS[r];
               const isSelected = selectedPreset === r;
               return (
@@ -254,14 +265,14 @@ export const LoginPage: React.FC = () => {
                   id={`preset-btn-${r}`}
                   type="button"
                   onClick={() => handleSelectPreset(r)}
-                  className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center ${
+                  className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center ${
                     isSelected
                       ? 'bg-white text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.12)] ring-1 ring-black/5'
                       : 'text-[#8E8E93] hover:text-[#1C1C1E]'
                   }`}
                 >
-                  <span className="font-bold text-xs">{preset.label}</span>
-                  <span className="text-[10px] font-mono text-[#8E8E93] font-normal">{preset.username}</span>
+                  <span className="font-bold text-[11px] truncate w-full">{preset.label.split(' ')[0]}</span>
+                  <span className="text-[9px] font-mono text-[#8E8E93] font-normal">{preset.username}</span>
                 </button>
               );
             })}

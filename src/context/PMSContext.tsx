@@ -10,7 +10,10 @@ import {
   SMSLog,
   Property,
   VerificationAuditLog,
-  TenantDocument
+  TenantDocument,
+  MaintenanceRequest,
+  MaintenanceStatus,
+  LeaseRenewalRequest
 } from '../types/pms';
 import {
   MOCK_USERS,
@@ -20,6 +23,8 @@ import {
   MOCK_INVOICES,
   MOCK_PAYMENTS,
   MOCK_SMS_LOGS,
+  MOCK_MAINTENANCE_REQUESTS,
+  MOCK_RENEWAL_REQUESTS,
   generateBankReceiptSvg
 } from '../data/mockData';
 import {
@@ -62,6 +67,15 @@ interface PMSContextType {
   auditLogs: VerificationAuditLog[];
   notification: { message: string; type: 'success' | 'error' | 'info' } | null;
   clearNotification: () => void;
+  
+  // Maintenance & Work Orders
+  maintenanceRequests: MaintenanceRequest[];
+  createMaintenanceRequest: (req: Omit<MaintenanceRequest, 'requestId' | 'ticketNumber' | 'reportedDate'>) => { success: boolean; error?: string };
+  updateMaintenanceStatus: (requestId: string, status: MaintenanceStatus, resolutionNotes?: string) => { success: boolean; error?: string };
+  
+  // Lease Renewal Workflow
+  renewalRequests: LeaseRenewalRequest[];
+  submitRenewalRequest: (req: Omit<LeaseRenewalRequest, 'requestId' | 'submittedAt' | 'status'>) => { success: boolean; error?: string };
   
   // Operational Actions (Manager & Owner)
   addTenant: (tenant: Omit<Tenant, 'tenantId' | 'createdAt' | 'documents'>) => { success: boolean; error?: string };
@@ -144,6 +158,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [smsLogs, setSmsLogs] = useState<SMSLog[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_sms_logs`);
     return saved ? JSON.parse(saved) : MOCK_SMS_LOGS;
+  });
+  const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_maintenance_requests`);
+    return saved ? JSON.parse(saved) : MOCK_MAINTENANCE_REQUESTS;
+  });
+  const [renewalRequests, setRenewalRequests] = useState<LeaseRenewalRequest[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_renewal_requests`);
+    return saved ? JSON.parse(saved) : MOCK_RENEWAL_REQUESTS;
   });
   const [auditLogs, setAuditLogs] = useState<VerificationAuditLog[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_audit_logs`);
@@ -285,6 +307,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } else {
         return { success: false, error: 'Incorrect password for Management account. (Password: Manage)' };
       }
+    } else if (inputUser === 'tenant' || inputUser === 'almaz.kebede@bolecafe.et' || inputUser.includes('tenant') || inputUser.includes('cafe')) {
+      if (inputPass.toLowerCase() === 'tenant' || inputPass === 'Tenant' || inputPass === 'TenantPass2026!') {
+        matchedUser = MOCK_USERS.tenant;
+        matchedRole = 'tenant';
+      } else {
+        return { success: false, error: 'Incorrect password for Tenant account. (Password: Tenant)' };
+      }
     } else {
       // Check exact match in MOCK_USERS values
       const found = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === inputUser);
@@ -295,7 +324,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     if (!matchedUser || !matchedRole) {
-      return { success: false, error: 'User record not found in Firestore. Please use credentials: Owner/Owner, Admin/Admin, or Manage/Manage.' };
+      return { success: false, error: 'User record not found in Firestore. Please use credentials: Owner/Owner, Admin/Admin, Manage/Manage, or Tenant/Tenant.' };
     }
 
     // Authenticate and set session
@@ -307,18 +336,22 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // - Super Admin (/admin): System Monitoring, API Logs, Configuration Dashboard
     // - Building Owner (/owner): Revenue Analytics, Delinquent Red List, Receipt Verification Vault
     // - Property Manager (/manager): Tenant Directory, Document Vault, Rent Schedules, Payment Logging
+    // - Tenant Portal (/portal): Lease Overview, Self-Service Slip Upload, Maintenance, Receipts
     if (matchedRole === 'admin') {
       setActiveRoleRoute('/admin');
       setActiveTab('admin_monitoring');
     } else if (matchedRole === 'owner') {
       setActiveRoleRoute('/owner');
       setActiveTab('dashboard');
-    } else {
+    } else if (matchedRole === 'manager') {
       setActiveRoleRoute('/manager');
       setActiveTab('tenants');
+    } else {
+      setActiveRoleRoute('/portal');
+      setActiveTab('tenant_portal');
     }
 
-    showToast(`Welcome, ${matchedUser.name}! Authenticated as [${matchedRole.toUpperCase()}]. Redirecting to ${matchedRole === 'admin' ? '/admin' : matchedRole === 'owner' ? '/owner' : '/manager'}`, 'success');
+    showToast(`Welcome, ${matchedUser.name}! Authenticated as [${matchedRole.toUpperCase()}]. Redirecting to ${matchedRole === 'admin' ? '/admin' : matchedRole === 'owner' ? '/owner' : matchedRole === 'manager' ? '/manager' : '/portal'}`, 'success');
     return { success: true, role: matchedRole };
   };
 
@@ -339,9 +372,12 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } else if (role === 'owner') {
         setActiveRoleRoute('/owner');
         setActiveTab('dashboard');
-      } else {
+      } else if (role === 'manager') {
         setActiveRoleRoute('/manager');
         setActiveTab('tenants');
+      } else {
+        setActiveRoleRoute('/portal');
+        setActiveTab('tenant_portal');
       }
       showToast(`Switched active profile to ${targetUser.name} [Role: ${role.toUpperCase()}]`, 'info');
     }
@@ -393,6 +429,23 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           message: 'Access Denied: The route /owner is reserved for Executive Revenue Analytics and Digital Receipt Verification approvals.'
         });
         showToast('Route Guard: Building Owner role required for /owner', 'error');
+        return false;
+      }
+      setActiveRoleRoute(targetRoute);
+      setGuardError(null);
+      return true;
+    }
+
+    // Tenant restricted from administrative management routes
+    if (currentUser.role === 'tenant') {
+      if (!targetRoute.startsWith('/portal')) {
+        setGuardError({
+          attemptedRoute: targetRoute,
+          requiredRole: 'Management / Owner',
+          currentRole: 'Commercial Tenant',
+          message: 'Access Denied: Tenants only have access to their Self-Service Portal (/portal).'
+        });
+        showToast('Route Guard: Management role required', 'error');
         return false;
       }
       setActiveRoleRoute(targetRoute);
@@ -573,11 +626,6 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const logPayment = (paymentData: Omit<Payment, 'paymentId' | 'submittedAt' | 'verificationStatus' | 'submittedBy'>) => {
-    if (!canPerformManagerAction()) {
-      showToast('Firebase RBAC Violation: Insufficient permissions to log payment.', 'error');
-      return { success: false, error: 'Permission denied' };
-    }
-
     const paymentId = `pay_${Date.now()}`;
     const newPayment: Payment = {
       ...paymentData,
@@ -609,12 +657,71 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       performedBy: currentUser.name,
       role: currentUser.role,
       timestamp: new Date().toISOString(),
-      details: `Submitted payment slip of ${paymentData.amountPaid.toLocaleString()} ETB (Ref: ${paymentData.referenceNumber}) for Owner verification.`
+      details: `${currentUser.role === 'tenant' ? 'Tenant' : 'Manager'} submitted payment slip of ${paymentData.amountPaid.toLocaleString()} ETB (Ref: ${paymentData.referenceNumber}) for Owner verification.`
     };
     setAuditLogs((prev) => [auditEntry, ...prev]);
     saveAuditLogToFirestore(auditEntry).catch((err) => console.warn('Firestore audit save:', err));
 
     showToast(`Payment slip submitted! Queued for Owner Receipt Verification Vault.`, 'success');
+    return { success: true };
+  };
+
+  // -------------------------------------------------------------
+  // Maintenance Request Handlers
+  // -------------------------------------------------------------
+  const createMaintenanceRequest = (reqData: Omit<MaintenanceRequest, 'requestId' | 'ticketNumber' | 'reportedDate'>) => {
+    const requestId = `maint_${Date.now()}`;
+    const ticketNumber = `TKT-${new Date().getFullYear()}-${String(maintenanceRequests.length + 101).padStart(3, '0')}`;
+    const newReq: MaintenanceRequest = {
+      ...reqData,
+      requestId,
+      ticketNumber,
+      reportedDate: new Date().toISOString()
+    };
+
+    setMaintenanceRequests((prev) => [newReq, ...prev]);
+    showToast(`Maintenance Ticket ${ticketNumber} created! Dispatched to facility technicians.`, 'success');
+    return { success: true };
+  };
+
+  const updateMaintenanceStatus = (requestId: string, status: MaintenanceStatus, resolutionNotes?: string) => {
+    if (!canPerformManagerAction()) {
+      showToast('Firebase RBAC Violation: Insufficient permissions to update maintenance ticket.', 'error');
+      return { success: false, error: 'Permission denied' };
+    }
+
+    const nowIso = new Date().toISOString();
+    setMaintenanceRequests((prev) =>
+      prev.map((req) =>
+        req.requestId === requestId
+          ? {
+              ...req,
+              status,
+              resolutionNotes: resolutionNotes || req.resolutionNotes,
+              completedDate: status === 'completed' ? nowIso : req.completedDate
+            }
+          : req
+      )
+    );
+
+    showToast(`Maintenance ticket updated to [${status.toUpperCase()}].`, 'success');
+    return { success: true };
+  };
+
+  // -------------------------------------------------------------
+  // Lease Renewal Workflow
+  // -------------------------------------------------------------
+  const submitRenewalRequest = (reqData: Omit<LeaseRenewalRequest, 'requestId' | 'submittedAt' | 'status'>) => {
+    const requestId = `ren_${Date.now()}`;
+    const newReq: LeaseRenewalRequest = {
+      ...reqData,
+      requestId,
+      status: 'pending',
+      submittedAt: new Date().toISOString()
+    };
+
+    setRenewalRequests((prev) => [newReq, ...prev]);
+    showToast(`Lease renewal request submitted for ${reqData.unitNumber}! Management notified.`, 'success');
     return { success: true };
   };
 
@@ -967,6 +1074,11 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         auditLogs,
         notification,
         clearNotification,
+        maintenanceRequests,
+        createMaintenanceRequest,
+        updateMaintenanceStatus,
+        renewalRequests,
+        submitRenewalRequest,
         addTenant,
         updateTenant,
         deleteTenant,

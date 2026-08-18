@@ -70,6 +70,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       ];
     }
 
+    if (currentUser.role === 'tenant') {
+      return [
+        { id: 'tenant_portal', label: 'Tenant Self-Service Portal', icon: Building2, route: '/portal' },
+      ];
+    }
+
     // Manager
     return [
       { id: 'tenants', label: 'Tenant Directory & Leases', icon: Users, route: '/manager' },
@@ -77,6 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       { id: 'sms', label: 'SMS Reminder Engine', icon: MessageSquare, route: '/manager/sms' },
       { id: 'redlist', label: 'Delinquent Records', icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/manager/redlist' },
       { id: 'dashboard', label: 'Occupancy Overview', icon: LayoutDashboard, route: '/manager/overview' },
+      { id: 'tenant_portal', label: 'Tenant Portal Preview', icon: Building2, route: '/portal' },
     ];
   };
 
@@ -162,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 Enterprise PMS
               </h1>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#007AFF]/10 text-[#007AFF] border border-[#007AFF]/20">
-                {currentUser.role === 'admin' ? 'Super Admin' : currentUser.role === 'owner' ? 'Owner Portal' : 'Manager Portal'}
+                {currentUser.role === 'admin' ? 'Super Admin' : currentUser.role === 'owner' ? 'Owner Portal' : currentUser.role === 'tenant' ? 'Tenant Self-Service' : 'Manager Portal'}
               </span>
             </div>
             <p className="text-[11px] text-[#8E8E93] font-medium tracking-tight mt-0.5">
@@ -190,6 +197,21 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
         {/* User Profile, Role Switcher & Logout */}
         <div className="flex items-center gap-3">
+          {/* Quick Persona Switcher */}
+          <div className="hidden md:flex items-center bg-[#767680]/10 rounded-2xl p-1 border border-black/[0.04] text-[11px]">
+            <span className="px-2 text-[#8E8E93] font-medium">Role:</span>
+            <select
+              value={currentUser.role}
+              onChange={(e) => switchUser(e.target.value as UserRole)}
+              className="bg-transparent text-[#1C1C1E] font-bold text-xs outline-none cursor-pointer pr-2"
+            >
+              <option value="owner">Building Owner</option>
+              <option value="manager">Property Manager</option>
+              <option value="tenant">Commercial Tenant</option>
+              <option value="admin">Super Admin</option>
+            </select>
+          </div>
+
           <div className="bg-[#767680]/10 p-1.5 rounded-2xl border border-black/[0.04] flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full ring-2 ring-white overflow-hidden shrink-0 shadow-sm ml-1">
               <img
@@ -207,10 +229,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                       ? 'bg-[#007AFF] text-white'
                       : currentUser.role === 'manager'
                       ? 'bg-[#34C759] text-white'
+                      : currentUser.role === 'tenant'
+                      ? 'bg-[#FF9500] text-white'
                       : 'bg-[#5856D6] text-white'
                   }`}
                 >
-                  {currentUser.role === 'owner' ? 'Owner' : currentUser.role}
+                  {currentUser.role === 'owner' ? 'Owner' : currentUser.role === 'tenant' ? 'Tenant' : currentUser.role}
                 </span>
               </div>
               <div className="text-[10px] text-[#8E8E93] truncate max-w-[150px]">{currentUser.email}</div>
