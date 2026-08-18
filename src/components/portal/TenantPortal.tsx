@@ -45,10 +45,19 @@ export const TenantPortal: React.FC = () => {
     submitRenewalRequest
   } = usePMS();
 
-  // Find tenant data (defaults to first tenant if logged in as admin/manager previewing)
-  const currentTenant = tenants.find((t) => t.tenantId === currentUser.uid) || tenants[0];
-  const assignedUnit = units.find((u) => u.unitId === currentTenant?.assignedUnitId) || units[0];
-  const assignedProperty = properties.find((p) => p.propertyId === currentTenant?.propertyId) || properties[0];
+  // Find tenant data strictly for the authenticated user
+  const currentTenant =
+    tenants.find((t) => t.tenantId === currentUser.uid) ||
+    tenants.find((t) => t.legalName.toLowerCase() === currentUser.name.toLowerCase()) ||
+    tenants.find((t) => t.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+    tenants[0];
+  const assignedUnit =
+    units.find((u) => u.unitId === currentTenant?.assignedUnitId) ||
+    units.find((u) => u.currentTenantId === currentTenant?.tenantId) ||
+    units[0];
+  const assignedProperty =
+    properties.find((p) => p.propertyId === currentTenant?.propertyId) ||
+    properties[0];
 
   // Active view tab inside portal
   const [portalTab, setPortalTab] = useState<'overview' | 'invoices' | 'maintenance' | 'lease'>('overview');
@@ -333,6 +342,60 @@ export const TenantPortal: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left 2 Cols: Invoices Action & Active Service Tickets */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Prominent Lease Term Countdown Widget Card */}
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#007AFF]/10 via-[#5856D6]/5 to-white border border-[#007AFF]/20 space-y-4 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#007AFF] text-white flex items-center justify-center shadow-md shadow-blue-500/25">
+                    <Clock className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] uppercase tracking-wider font-bold text-[#007AFF]">
+                        Active Commercial Lease Term
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        daysRemaining > 60
+                          ? 'bg-emerald-500/15 text-emerald-700'
+                          : daysRemaining > 30
+                          ? 'bg-amber-500/15 text-amber-700'
+                          : 'bg-red-500/15 text-red-700 animate-pulse'
+                      }`}>
+                        {daysRemaining > 60 ? 'Lease In Good Standing' : 'Expiring Soon'}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-extrabold text-[#1C1C1E] tracking-tight">
+                      {daysRemaining} Days Remaining
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsRenewalModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#007AFF] text-white text-xs font-semibold hover:bg-[#0062CC] active:scale-95 transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Request Extension
+                </button>
+              </div>
+
+              {/* Progress bar */}
+              <div className="space-y-1.5">
+                <div className="w-full h-2.5 rounded-full bg-black/[0.06] overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#007AFF] to-[#5856D6] rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, Math.max(10, 100 - (daysRemaining / 365) * 100))}%`
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-[11px] text-[#8E8E93] font-medium">
+                  <span>Commenced: {currentTenant.leaseStartDate}</span>
+                  <span>Expires: {currentTenant.leaseEndDate}</span>
+                </div>
+              </div>
+            </div>
+
             {/* Outstanding Balance Banner if any */}
             {totalOutstanding > 0 ? (
               <div className="p-6 rounded-3xl bg-gradient-to-br from-[#FF3B30]/10 via-[#FF3B30]/5 to-transparent border border-[#FF3B30]/20 space-y-4">

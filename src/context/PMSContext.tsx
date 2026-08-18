@@ -286,45 +286,98 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     let matchedUser: UserProfile | undefined;
     let matchedRole: UserRole | undefined;
 
-    if (inputUser === 'owner' || inputUser === 'abebe.mengesha@boleplaza.et' || inputUser.includes('owner')) {
+    if (inputUser === 'owner' || inputUser === 'abebe.mengesha@boleplaza.et' || (inputUser === 'owner' && inputPass.toLowerCase() === 'owner')) {
       if (inputPass.toLowerCase() === 'owner' || inputPass === 'Owner' || inputPass === 'OwnerPass2026!') {
         matchedUser = MOCK_USERS.owner;
         matchedRole = 'owner';
       } else {
         return { success: false, error: 'Incorrect password for Owner account. (Password: Owner)' };
       }
-    } else if (inputUser === 'admin' || inputUser === 'dawit.alemu@sysadmin.et' || inputUser.includes('admin') || inputUser.includes('administrator')) {
+    } else if (inputUser === 'admin' || inputUser === 'dawit.alemu@sysadmin.et') {
       if (inputPass.toLowerCase() === 'admin' || inputPass === 'Admin' || inputPass === 'AdminPass2026!') {
         matchedUser = MOCK_USERS.admin;
         matchedRole = 'admin';
       } else {
         return { success: false, error: 'Incorrect password for Administrator account. (Password: Admin)' };
       }
-    } else if (inputUser === 'manage' || inputUser === 'manager' || inputUser === 'management' || inputUser === 'hanna.tadesse@boleplaza.et' || inputUser.includes('manage')) {
+    } else if (inputUser === 'manage' || inputUser === 'manager' || inputUser === 'management' || inputUser === 'hanna.tadesse@boleplaza.et') {
       if (inputPass.toLowerCase() === 'manage' || inputPass.toLowerCase() === 'manager' || inputPass === 'Manage' || inputPass === 'ManagerPass2026!') {
         matchedUser = MOCK_USERS.manager;
         matchedRole = 'manager';
       } else {
         return { success: false, error: 'Incorrect password for Management account. (Password: Manage)' };
       }
-    } else if (inputUser === 'tenant' || inputUser === 'almaz.kebede@bolecafe.et' || inputUser.includes('tenant') || inputUser.includes('cafe')) {
-      if (inputPass.toLowerCase() === 'tenant' || inputPass === 'Tenant' || inputPass === 'TenantPass2026!') {
-        matchedUser = MOCK_USERS.tenant;
-        matchedRole = 'tenant';
-      } else {
-        return { success: false, error: 'Incorrect password for Tenant account. (Password: Tenant)' };
-      }
     } else {
-      // Check exact match in MOCK_USERS values
-      const found = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === inputUser);
-      if (found) {
-        matchedUser = found;
-        matchedRole = found.role;
+      // Dynamic Tenant Lookup: search in live tenants directory
+      const foundTenant = tenants.find((t) => {
+        const legalLower = t.legalName.toLowerCase();
+        const tradeLower = (t.businessTradeName || '').toLowerCase();
+        const contactLower = (t.contactPerson || '').toLowerCase();
+        const emailLower = t.email.toLowerCase();
+        const idLower = t.tenantId.toLowerCase();
+
+        return (
+          inputUser === legalLower ||
+          inputUser === tradeLower ||
+          inputUser === contactLower ||
+          inputUser === emailLower ||
+          inputUser === idLower ||
+          legalLower.includes(inputUser) ||
+          tradeLower.includes(inputUser) ||
+          (inputUser === 'tenant' && t.tenantId === 'ten_001')
+        );
+      });
+
+      if (foundTenant) {
+        const legalLower = foundTenant.legalName.toLowerCase();
+        const tradeLower = (foundTenant.businessTradeName || '').toLowerCase();
+        const contactLower = (foundTenant.contactPerson || '').toLowerCase();
+        const firstWordLegal = legalLower.split(' ')[0];
+        const passLower = inputPass.toLowerCase();
+
+        // Password accepted if matches tenant's name, trade name, contact person, first name, or 'tenant'
+        const isPassValid =
+          passLower === legalLower ||
+          passLower === tradeLower ||
+          passLower === contactLower ||
+          passLower === firstWordLegal ||
+          passLower === 'tenant' ||
+          passLower === 'password' ||
+          passLower.includes(firstWordLegal);
+
+        if (isPassValid) {
+          matchedUser = {
+            uid: foundTenant.tenantId,
+            name: foundTenant.legalName,
+            email: foundTenant.email,
+            role: 'tenant',
+            phone: foundTenant.phone,
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+            title: `Tenant • ${foundTenant.businessTradeName || foundTenant.legalName}`,
+            complexAccess: [foundTenant.propertyId]
+          };
+          matchedRole = 'tenant';
+        } else {
+          return {
+            success: false,
+            error: `Incorrect password for ${foundTenant.legalName}. Password is your name: "${foundTenant.legalName}".`
+          };
+        }
+      } else {
+        // Fallback check in MOCK_USERS
+        const foundUser = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === inputUser);
+        if (foundUser) {
+          matchedUser = foundUser;
+          matchedRole = foundUser.role;
+        }
       }
     }
 
     if (!matchedUser || !matchedRole) {
-      return { success: false, error: 'User record not found in Firestore. Please use credentials: Owner/Owner, Admin/Admin, Manage/Manage, or Tenant/Tenant.' };
+      return {
+        success: false,
+        error: 'No account found matching this name. Tenants can log in using their Name as Username & Password (e.g. "Almaz Kebede" / "Almaz Kebede"). Management: Owner/Owner, Manage/Manage, or Admin/Admin.'
+      };
     }
 
     // Authenticate and set session

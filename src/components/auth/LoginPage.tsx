@@ -68,12 +68,12 @@ const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
     role: 'tenant',
     label: 'Tenant Portal',
     sublabel: 'Commercial & Residential',
-    username: 'Tenant',
-    pass: 'Tenant',
+    username: 'Almaz Kebede',
+    pass: 'Almaz Kebede',
     name: 'Almaz Kebede',
-    title: 'Bole Coffee Roastery & Cafe',
+    title: 'Bole Coffee Roastery (Unit G-01)',
     destinationRoute: '/portal',
-    permissions: ['Lease & Rent Schedule', 'Upload Bank Payment Slip', 'Maintenance Dispatch', 'Digital QR Receipts']
+    permissions: ['Lease & Day Countdown', 'Upload Bank Payment Slip', 'Maintenance Dispatch', 'Digital QR Receipts']
   }
 };
 

@@ -72,18 +72,17 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
     if (currentUser.role === 'tenant') {
       return [
-        { id: 'tenant_portal', label: 'Tenant Self-Service Portal', icon: Building2, route: '/portal' },
+        { id: 'tenant_portal', label: 'My Lease & Rent Portal', icon: Building2, route: '/portal' },
       ];
     }
 
     // Manager
     return [
-      { id: 'tenants', label: 'Tenant Directory & Leases', icon: Users, route: '/manager' },
+      { id: 'tenants', label: 'Tenant & Lease Directory', icon: Users, route: '/manager/tenants' },
       { id: 'invoices', label: 'Invoices & Payment Logging', icon: Receipt, route: '/manager/invoices' },
       { id: 'sms', label: 'SMS Reminder Engine', icon: MessageSquare, route: '/manager/sms' },
       { id: 'redlist', label: 'Delinquent Records', icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/manager/redlist' },
       { id: 'dashboard', label: 'Occupancy Overview', icon: LayoutDashboard, route: '/manager/overview' },
-      { id: 'tenant_portal', label: 'Tenant Portal Preview', icon: Building2, route: '/portal' },
     ];
   };
 
@@ -122,7 +121,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         </div>
 
         <div className="flex items-center gap-2.5">
-          {metrics.pendingVerificationCount > 0 && currentUser.role !== 'manager' && (
+          {metrics.pendingVerificationCount > 0 && currentUser.role !== 'manager' && currentUser.role !== 'tenant' && (
             <button
               id="header-vault-badge"
               onClick={() => handleTabClick({ id: 'vault', route: '/owner/vault' })}
@@ -133,7 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             </button>
           )}
 
-          {metrics.redListCount > 0 && (
+          {metrics.redListCount > 0 && currentUser.role !== 'tenant' && (
             <button
               id="header-redlist-badge"
               onClick={() => handleTabClick({ id: 'redlist', route: '/owner/redlist' })}
@@ -144,15 +143,17 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             </button>
           )}
 
-          <button
-            id="header-reset-btn"
-            onClick={resetToSampleData}
-            title="Reset database to initial enterprise state"
-            className="text-white/60 hover:text-white transition-colors flex items-center gap-1 text-[10px] font-medium ml-1 active:scale-95"
-          >
-            <RotateCcw className="w-2.5 h-2.5" />
-            Reset Data
-          </button>
+          {currentUser.role !== 'tenant' && (
+            <button
+              id="header-reset-btn"
+              onClick={resetToSampleData}
+              title="Reset database to initial enterprise state"
+              className="text-white/60 hover:text-white transition-colors flex items-center gap-1 text-[10px] font-medium ml-1 active:scale-95"
+            >
+              <RotateCcw className="w-2.5 h-2.5" />
+              Reset Data
+            </button>
+          )}
         </div>
       </div>
 
@@ -177,41 +178,28 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             </p>
           </div>
 
-          {/* Complex Filter Dropdown */}
-          <div className="hidden lg:flex items-center ml-3 pl-3 border-l border-black/[0.08]">
-            <select
-              id="property-selector"
-              value={selectedPropertyId}
-              onChange={(e) => setSelectedPropertyId(e.target.value)}
-              className="bg-[#767680]/10 text-[#1C1C1E] text-xs rounded-xl px-3 py-1.5 border border-transparent focus:bg-white focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/20 font-medium transition-all outline-none cursor-pointer"
-            >
-              <option value="all">🏢 All Complexes (Portfolio)</option>
-              {properties.map((prop) => (
-                <option key={prop.propertyId} value={prop.propertyId}>
-                  {prop.name} ({prop.type})
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Complex Filter Dropdown (Hidden for tenants) */}
+          {currentUser.role !== 'tenant' && (
+            <div className="hidden lg:flex items-center ml-3 pl-3 border-l border-black/[0.08]">
+              <select
+                id="property-selector"
+                value={selectedPropertyId}
+                onChange={(e) => setSelectedPropertyId(e.target.value)}
+                className="bg-[#767680]/10 text-[#1C1C1E] text-xs rounded-xl px-3 py-1.5 border border-transparent focus:bg-white focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/20 font-medium transition-all outline-none cursor-pointer"
+              >
+                <option value="all">🏢 All Complexes (Portfolio)</option>
+                {properties.map((prop) => (
+                  <option key={prop.propertyId} value={prop.propertyId}>
+                    {prop.name} ({prop.type})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
-        {/* User Profile, Role Switcher & Logout */}
+        {/* User Profile & Logout */}
         <div className="flex items-center gap-3">
-          {/* Quick Persona Switcher */}
-          <div className="hidden md:flex items-center bg-[#767680]/10 rounded-2xl p-1 border border-black/[0.04] text-[11px]">
-            <span className="px-2 text-[#8E8E93] font-medium">Role:</span>
-            <select
-              value={currentUser.role}
-              onChange={(e) => switchUser(e.target.value as UserRole)}
-              className="bg-transparent text-[#1C1C1E] font-bold text-xs outline-none cursor-pointer pr-2"
-            >
-              <option value="owner">Building Owner</option>
-              <option value="manager">Property Manager</option>
-              <option value="tenant">Commercial Tenant</option>
-              <option value="admin">Super Admin</option>
-            </select>
-          </div>
-
           <div className="bg-[#767680]/10 p-1.5 rounded-2xl border border-black/[0.04] flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full ring-2 ring-white overflow-hidden shrink-0 shadow-sm ml-1">
               <img
@@ -245,7 +233,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               id="header-logout-btn"
               onClick={logout}
               title="Sign Out / Lock Session"
-              className="p-1.5 px-2.5 rounded-xl text-[#FF3B30] bg-[#FF3B30]/5 hover:bg-[#FF3B30]/10 border border-[#FF3B30]/15 transition-all active:scale-95 flex items-center gap-1.5 text-xs font-semibold"
+              className="p-1.5 px-2.5 rounded-xl text-[#FF3B30] bg-[#FF3B30]/5 hover:bg-[#FF3B30]/10 border border-[#FF3B30]/15 transition-all active:scale-95 flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
