@@ -27,6 +27,7 @@ import {
   MOCK_RENEWAL_REQUESTS,
   generateBankReceiptSvg
 } from '../data/mockData';
+import { Language, TRANSLATIONS } from '../data/translations';
 import {
   seedFirestoreIfEmpty,
   subscribeToPMSCollections,
@@ -47,6 +48,9 @@ interface PMSContextType {
   isAuthenticated: boolean;
   isFirestoreConnected: boolean;
   syncStatus: 'synced' | 'syncing' | 'offline';
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string, defaultText?: string) => string;
   activeRoleRoute: string; // '/admin' | '/owner' | '/manager'
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -132,6 +136,21 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [guardError, setGuardError] = useState<{ attemptedRoute: string; requiredRole: string; currentRole: string; message: string } | null>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('all');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Multilingual Support (English & Amharic)
+  const [language, setLanguageState] = useState<Language>(() => {
+    const saved = localStorage.getItem('epms_language') as Language;
+    return saved === 'am' ? 'am' : 'en';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem('epms_language', lang);
+  };
+
+  const t = (key: string, defaultText?: string): string => {
+    return TRANSLATIONS[language]?.[key] || defaultText || TRANSLATIONS.en[key] || key;
+  };
 
   // Firestore Real-Time Connectivity State
   const [isFirestoreConnected, setIsFirestoreConnected] = useState<boolean>(false);
@@ -286,26 +305,28 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     let matchedUser: UserProfile | undefined;
     let matchedRole: UserRole | undefined;
 
-    if (inputUser === 'owner' || inputUser === 'abebe.mengesha@boleplaza.et' || (inputUser === 'owner' && inputPass.toLowerCase() === 'owner')) {
-      if (inputPass.toLowerCase() === 'owner' || inputPass === 'Owner' || inputPass === 'OwnerPass2026!') {
+    const is123 = inputPass === '123';
+
+    if (inputUser === 'owner' || inputUser === 'abebe.mengesha@boleplaza.et' || inputUser === 'abebe' || (inputUser.includes('owner') && (is123 || inputPass.toLowerCase() === 'owner'))) {
+      if (is123 || inputPass.toLowerCase() === 'owner' || inputPass === 'Owner' || inputPass === 'OwnerPass2026!') {
         matchedUser = MOCK_USERS.owner;
         matchedRole = 'owner';
       } else {
-        return { success: false, error: 'Incorrect password for Owner account. (Password: Owner)' };
+        return { success: false, error: 'Incorrect password for Owner account. (Password: 123)' };
       }
-    } else if (inputUser === 'admin' || inputUser === 'dawit.alemu@sysadmin.et') {
-      if (inputPass.toLowerCase() === 'admin' || inputPass === 'Admin' || inputPass === 'AdminPass2026!') {
+    } else if (inputUser === 'admin' || inputUser === 'dawit.alemu@sysadmin.et' || inputUser === 'dawit' || (inputUser.includes('admin') && (is123 || inputPass.toLowerCase() === 'admin'))) {
+      if (is123 || inputPass.toLowerCase() === 'admin' || inputPass === 'Admin' || inputPass === 'AdminPass2026!') {
         matchedUser = MOCK_USERS.admin;
         matchedRole = 'admin';
       } else {
-        return { success: false, error: 'Incorrect password for Administrator account. (Password: Admin)' };
+        return { success: false, error: 'Incorrect password for Administrator account. (Password: 123)' };
       }
-    } else if (inputUser === 'manage' || inputUser === 'manager' || inputUser === 'management' || inputUser === 'hanna.tadesse@boleplaza.et') {
-      if (inputPass.toLowerCase() === 'manage' || inputPass.toLowerCase() === 'manager' || inputPass === 'Manage' || inputPass === 'ManagerPass2026!') {
+    } else if (inputUser === 'manage' || inputUser === 'manager' || inputUser === 'management' || inputUser === 'hanna.tadesse@boleplaza.et' || inputUser === 'hanna' || (inputUser.includes('manage') && (is123 || inputPass.toLowerCase() === 'manage'))) {
+      if (is123 || inputPass.toLowerCase() === 'manage' || inputPass.toLowerCase() === 'manager' || inputPass === 'Manage' || inputPass === 'ManagerPass2026!') {
         matchedUser = MOCK_USERS.manager;
         matchedRole = 'manager';
       } else {
-        return { success: false, error: 'Incorrect password for Management account. (Password: Manage)' };
+        return { success: false, error: 'Incorrect password for Management account. (Password: 123)' };
       }
     } else {
       // Dynamic Tenant Lookup: search in live tenants directory
@@ -335,8 +356,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const firstWordLegal = legalLower.split(' ')[0];
         const passLower = inputPass.toLowerCase();
 
-        // Password accepted if matches tenant's name, trade name, contact person, first name, or 'tenant'
+        // Password accepted if '123' OR matches tenant's name, trade name, contact person, first name, or 'tenant'
         const isPassValid =
+          is123 ||
+          passLower === '123' ||
           passLower === legalLower ||
           passLower === tradeLower ||
           passLower === contactLower ||
@@ -360,13 +383,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         } else {
           return {
             success: false,
-            error: `Incorrect password for ${foundTenant.legalName}. Password is your name: "${foundTenant.legalName}".`
+            error: `Incorrect password for ${foundTenant.legalName}. Please use password: 123`
           };
         }
       } else {
         // Fallback check in MOCK_USERS
-        const foundUser = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === inputUser);
-        if (foundUser) {
+        const foundUser = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === inputUser || u.name.toLowerCase().includes(inputUser));
+        if (foundUser && (is123 || inputPass.toLowerCase() === '123' || inputPass.toLowerCase() === foundUser.name.toLowerCase())) {
           matchedUser = foundUser;
           matchedRole = foundUser.role;
         }
@@ -376,7 +399,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!matchedUser || !matchedRole) {
       return {
         success: false,
-        error: 'No account found matching this name. Tenants can log in using their Name as Username & Password (e.g. "Almaz Kebede" / "Almaz Kebede"). Management: Owner/Owner, Manage/Manage, or Admin/Admin.'
+        error: 'No account found matching this name. Tenants: Enter your Name & password "123". Management: Owner/123, Manage/123, or Admin/123.'
       };
     }
 
@@ -1110,6 +1133,9 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         activeRoleRoute,
         activeTab,
         setActiveTab,
+        language,
+        setLanguage,
+        t,
         login,
         logout,
         switchUser,

@@ -42,7 +42,9 @@ export const TenantPortal: React.FC = () => {
     renewalRequests,
     logPayment,
     createMaintenanceRequest,
-    submitRenewalRequest
+    submitRenewalRequest,
+    language,
+    t
   } = usePMS();
 
   // Find tenant data strictly for the authenticated user
@@ -194,10 +196,10 @@ export const TenantPortal: React.FC = () => {
             <div className="flex items-center gap-2.5">
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#007AFF]/25 text-[#0A84FF] border border-[#007AFF]/40 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Verified Commercial Leaseholder
+                {t('tenant_verified_lease')}
               </span>
               <span className="text-xs text-white/50">•</span>
-              <span className="text-xs text-white/70 font-mono">TIN: {currentTenant.tinNumber || '0098442109'}</span>
+              <span className="text-xs text-white/70 font-mono">{t('tenant_tin')}: {currentTenant.tinNumber || '0098442109'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               {currentTenant.legalName}
@@ -227,7 +229,7 @@ export const TenantPortal: React.FC = () => {
                 className="px-4 py-2.5 rounded-2xl bg-[#34C759] text-white text-xs font-bold hover:bg-[#2EB14F] active:scale-95 transition-all shadow-lg shadow-emerald-500/25 flex items-center gap-2 cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
-                Upload Payment Slip
+                {t('tenant_upload_slip')}
               </button>
             )}
             <button
@@ -235,14 +237,14 @@ export const TenantPortal: React.FC = () => {
               className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-md active:scale-95 transition-all flex items-center gap-2 border border-white/10 cursor-pointer"
             >
               <Wrench className="w-4 h-4 text-[#FF9500]" />
-              Report Issue
+              {t('tenant_report_issue')}
             </button>
             <button
               onClick={() => setIsRenewalModalOpen(true)}
               className="px-4 py-2.5 rounded-2xl bg-[#007AFF] hover:bg-[#0062CC] text-white text-xs font-semibold active:scale-95 transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer"
             >
               <Calendar className="w-4 h-4" />
-              Request Renewal
+              {t('tenant_request_renewal')}
             </button>
           </div>
         </div>
@@ -250,34 +252,34 @@ export const TenantPortal: React.FC = () => {
         {/* Quick Highlights Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/10 text-xs">
           <div className="bg-white/5 rounded-2xl p-3.5 backdrop-blur-sm border border-white/5">
-            <span className="text-white/60 block text-[11px] font-medium">Monthly Rent</span>
+            <span className="text-white/60 block text-[11px] font-medium">{t('tenant_monthly_rent')}</span>
             <span className="text-base font-bold text-white tracking-tight mt-0.5 block">
               {currentTenant.monthlyRentETB.toLocaleString()} ETB
             </span>
           </div>
           <div className="bg-white/5 rounded-2xl p-3.5 backdrop-blur-sm border border-white/5">
-            <span className="text-white/60 block text-[11px] font-medium">Security Deposit</span>
+            <span className="text-white/60 block text-[11px] font-medium">{t('tenant_deposit')}</span>
             <span className="text-base font-bold text-emerald-400 tracking-tight mt-0.5 block">
               {currentTenant.securityDepositETB.toLocaleString()} ETB
             </span>
           </div>
           <div className="bg-white/5 rounded-2xl p-3.5 backdrop-blur-sm border border-white/5">
-            <span className="text-white/60 block text-[11px] font-medium">Lease Expiry</span>
+            <span className="text-white/60 block text-[11px] font-medium">{t('tenant_lease_expiry')}</span>
             <span className="text-base font-bold text-white tracking-tight mt-0.5 block">
               {currentTenant.leaseEndDate}
             </span>
             <span className="text-[10px] text-amber-400 font-medium">
-              {daysRemaining} days remaining
+              {daysRemaining} {t('tenant_days_remaining')}
             </span>
           </div>
           <div className="bg-white/5 rounded-2xl p-3.5 backdrop-blur-sm border border-white/5">
-            <span className="text-white/60 block text-[11px] font-medium">Payment Status</span>
+            <span className="text-white/60 block text-[11px] font-medium">{t('tenant_payment_status')}</span>
             <span
               className={`text-base font-bold tracking-tight mt-0.5 block ${
                 totalOutstanding > 0 ? 'text-[#FF3B30]' : 'text-[#34C759]'
               }`}
             >
-              {totalOutstanding > 0 ? `${totalOutstanding.toLocaleString()} ETB Due` : 'Current & Settled'}
+              {totalOutstanding > 0 ? `${totalOutstanding.toLocaleString()} ETB ${t('tenant_due')}` : t('tenant_settled')}
             </span>
           </div>
         </div>
@@ -293,7 +295,7 @@ export const TenantPortal: React.FC = () => {
               : 'text-[#8E8E93] hover:text-[#1C1C1E]'
           }`}
         >
-          Portal Overview
+          {t('tenant_tab_overview')}
         </button>
         <button
           onClick={() => setPortalTab('invoices')}
@@ -303,7 +305,7 @@ export const TenantPortal: React.FC = () => {
               : 'text-[#8E8E93] hover:text-[#1C1C1E]'
           }`}
         >
-          <span>Rent &amp; Slips</span>
+          <span>{t('tenant_tab_rent')}</span>
           {unpaidInvoices.length > 0 && (
             <span className="px-1.5 py-0.2 rounded-full bg-[#FF3B30] text-white text-[10px] font-bold">
               {unpaidInvoices.length}
@@ -318,7 +320,7 @@ export const TenantPortal: React.FC = () => {
               : 'text-[#8E8E93] hover:text-[#1C1C1E]'
           }`}
         >
-          <span>Maintenance</span>
+          <span>{t('tenant_tab_maint')}</span>
           {tenantMaintRequests.filter((m) => m.status !== 'completed').length > 0 && (
             <span className="px-1.5 py-0.2 rounded-full bg-[#007AFF] text-white text-[10px] font-bold">
               {tenantMaintRequests.filter((m) => m.status !== 'completed').length}
@@ -333,7 +335,7 @@ export const TenantPortal: React.FC = () => {
               : 'text-[#8E8E93] hover:text-[#1C1C1E]'
           }`}
         >
-          Lease &amp; Vault
+          {t('tenant_tab_lease')}
         </button>
       </div>
 
@@ -352,7 +354,7 @@ export const TenantPortal: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] uppercase tracking-wider font-bold text-[#007AFF]">
-                        Active Commercial Lease Term
+                        {t('tenant_lease_term')}
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         daysRemaining > 60
@@ -361,11 +363,11 @@ export const TenantPortal: React.FC = () => {
                           ? 'bg-amber-500/15 text-amber-700'
                           : 'bg-red-500/15 text-red-700 animate-pulse'
                       }`}>
-                        {daysRemaining > 60 ? 'Lease In Good Standing' : 'Expiring Soon'}
+                        {daysRemaining > 60 ? t('tenant_lease_standing') : t('tenant_lease_expiring')}
                       </span>
                     </div>
                     <h3 className="text-xl font-extrabold text-[#1C1C1E] tracking-tight">
-                      {daysRemaining} Days Remaining
+                      {daysRemaining} {t('tenant_days_remaining')}
                     </h3>
                   </div>
                 </div>
@@ -375,7 +377,7 @@ export const TenantPortal: React.FC = () => {
                   className="px-4 py-2 rounded-xl bg-[#007AFF] text-white text-xs font-semibold hover:bg-[#0062CC] active:scale-95 transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  Request Extension
+                  {t('tenant_request_renewal')}
                 </button>
               </div>
 
@@ -390,8 +392,8 @@ export const TenantPortal: React.FC = () => {
                   />
                 </div>
                 <div className="flex justify-between text-[11px] text-[#8E8E93] font-medium">
-                  <span>Commenced: {currentTenant.leaseStartDate}</span>
-                  <span>Expires: {currentTenant.leaseEndDate}</span>
+                  <span>{t('tenant_commenced')}: {currentTenant.leaseStartDate}</span>
+                  <span>{t('tenant_expires')}: {currentTenant.leaseEndDate}</span>
                 </div>
               </div>
             </div>

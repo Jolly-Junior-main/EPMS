@@ -18,7 +18,8 @@ import {
   LogOut,
   ShieldAlert,
   Lock,
-  ExternalLink
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -31,6 +32,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     currentUser,
     switchUser,
     logout,
+    language,
+    setLanguage,
+    t,
     activeRoleRoute,
     navigateRoleRoute,
     isFirestoreConnected,
@@ -44,45 +48,45 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
   const metrics = getRevenueMetrics();
 
-  // Role-Specific Navigation Tabs
+  // Role-Specific Navigation Tabs with Multilingual Amharic Support
   const getNavTabsForRole = () => {
     if (currentUser.role === 'admin') {
       return [
-        { id: 'admin_monitoring', label: 'System Monitoring', icon: ShieldAlert, route: '/admin' },
-        { id: 'rules', label: 'Firebase Architecture', icon: Cpu, route: '/admin/rules' },
-        { id: 'vault', label: 'Receipt Vault', icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
-        { id: 'dashboard', label: 'Executive Analytics', icon: LayoutDashboard, route: '/owner/dashboard' },
-        { id: 'redlist', label: 'The Red List', icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/owner/redlist' },
-        { id: 'tenants', label: 'Tenants & Leases', icon: Users, route: '/manager/tenants' },
-        { id: 'invoices', label: 'Invoices & Ledger', icon: Receipt, route: '/manager/invoices' },
-        { id: 'sms', label: 'SMS Engine', icon: MessageSquare, route: '/admin/sms' },
+        { id: 'admin_monitoring', label: t('nav_monitoring'), icon: ShieldAlert, route: '/admin' },
+        { id: 'rules', label: t('nav_rules'), icon: Cpu, route: '/admin/rules' },
+        { id: 'vault', label: t('nav_vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
+        { id: 'dashboard', label: t('nav_dashboard'), icon: LayoutDashboard, route: '/owner/dashboard' },
+        { id: 'redlist', label: t('nav_redlist'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/owner/redlist' },
+        { id: 'tenants', label: t('nav_tenants'), icon: Users, route: '/manager/tenants' },
+        { id: 'invoices', label: t('nav_invoices'), icon: Receipt, route: '/manager/invoices' },
+        { id: 'sms', label: t('nav_sms'), icon: MessageSquare, route: '/admin/sms' },
       ];
     }
 
     if (currentUser.role === 'owner') {
       return [
-        { id: 'dashboard', label: 'Revenue Analytics', icon: LayoutDashboard, route: '/owner' },
-        { id: 'vault', label: 'Receipt Verification Vault', icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
-        { id: 'redlist', label: 'The Red List', icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/owner/redlist' },
-        { id: 'invoices', label: 'Invoices & Ledger', icon: Receipt, route: '/owner/ledger' },
-        { id: 'tenants', label: 'Tenant Directory', icon: Users, route: '/owner/tenants' },
-        { id: 'sms', label: 'SMS Reminders', icon: MessageSquare, route: '/owner/sms' },
+        { id: 'dashboard', label: t('nav_dashboard'), icon: LayoutDashboard, route: '/owner' },
+        { id: 'vault', label: t('nav_vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
+        { id: 'redlist', label: t('nav_redlist'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/owner/redlist' },
+        { id: 'invoices', label: t('nav_invoices'), icon: Receipt, route: '/owner/ledger' },
+        { id: 'tenants', label: t('nav_tenants'), icon: Users, route: '/owner/tenants' },
+        { id: 'sms', label: t('nav_sms'), icon: MessageSquare, route: '/owner/sms' },
       ];
     }
 
     if (currentUser.role === 'tenant') {
       return [
-        { id: 'tenant_portal', label: 'My Lease & Rent Portal', icon: Building2, route: '/portal' },
+        { id: 'tenant_portal', label: t('nav_tenant_portal'), icon: Building2, route: '/portal' },
       ];
     }
 
     // Manager
     return [
-      { id: 'tenants', label: 'Tenant & Lease Directory', icon: Users, route: '/manager/tenants' },
-      { id: 'invoices', label: 'Invoices & Payment Logging', icon: Receipt, route: '/manager/invoices' },
-      { id: 'sms', label: 'SMS Reminder Engine', icon: MessageSquare, route: '/manager/sms' },
-      { id: 'redlist', label: 'Delinquent Records', icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/manager/redlist' },
-      { id: 'dashboard', label: 'Occupancy Overview', icon: LayoutDashboard, route: '/manager/overview' },
+      { id: 'tenants', label: t('nav_tenants'), icon: Users, route: '/manager/tenants' },
+      { id: 'invoices', label: t('nav_invoices'), icon: Receipt, route: '/manager/invoices' },
+      { id: 'sms', label: t('nav_sms'), icon: MessageSquare, route: '/manager/sms' },
+      { id: 'redlist', label: t('nav_redlist'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/manager/redlist' },
+      { id: 'dashboard', label: t('nav_occupancy'), icon: LayoutDashboard, route: '/manager/overview' },
     ];
   };
 
@@ -151,9 +155,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               className="text-white/60 hover:text-white transition-colors flex items-center gap-1 text-[10px] font-medium ml-1 active:scale-95"
             >
               <RotateCcw className="w-2.5 h-2.5" />
-              Reset Data
+              {t('reset_data')}
             </button>
           )}
+
+          {/* Language Toggle Button */}
+          <button
+            id="lang-toggle-top-btn"
+            onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
+            className="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-semibold flex items-center gap-1 transition-all border border-white/10 active:scale-95 cursor-pointer ml-1"
+          >
+            <Globe className="w-3 h-3 text-[#0A84FF]" />
+            <span>{language === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 EN'}</span>
+          </button>
         </div>
       </div>
 
@@ -167,14 +181,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-bold text-lg tracking-tight text-[#1C1C1E] leading-none">
-                Enterprise PMS
+                {t('app_title')}
               </h1>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#007AFF]/10 text-[#007AFF] border border-[#007AFF]/20">
-                {currentUser.role === 'admin' ? 'Super Admin' : currentUser.role === 'owner' ? 'Owner Portal' : currentUser.role === 'tenant' ? 'Tenant Self-Service' : 'Manager Portal'}
+                {currentUser.role === 'admin' ? t('portal_admin') : currentUser.role === 'owner' ? t('portal_owner') : currentUser.role === 'tenant' ? t('portal_tenant') : t('portal_manager')}
               </span>
             </div>
             <p className="text-[11px] text-[#8E8E93] font-medium tracking-tight mt-0.5">
-              Addis Ababa Commercial &amp; Residential Real Estate
+              {t('app_subtitle')}
             </p>
           </div>
 
@@ -187,7 +201,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 onChange={(e) => setSelectedPropertyId(e.target.value)}
                 className="bg-[#767680]/10 text-[#1C1C1E] text-xs rounded-xl px-3 py-1.5 border border-transparent focus:bg-white focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/20 font-medium transition-all outline-none cursor-pointer"
               >
-                <option value="all">🏢 All Complexes (Portfolio)</option>
+                <option value="all">{t('all_complexes')}</option>
                 {properties.map((prop) => (
                   <option key={prop.propertyId} value={prop.propertyId}>
                     {prop.name} ({prop.type})
@@ -200,6 +214,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
         {/* User Profile & Logout */}
         <div className="flex items-center gap-3">
+          {/* Main Language Switcher Pill */}
+          <button
+            id="header-lang-switcher"
+            onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-[#767680]/10 hover:bg-[#767680]/20 text-[#1C1C1E] text-xs font-semibold border border-black/[0.04] transition-all active:scale-95 cursor-pointer"
+          >
+            <Globe className="w-3.5 h-3.5 text-[#007AFF]" />
+            <span>{language === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 English'}</span>
+          </button>
+
           <div className="bg-[#767680]/10 p-1.5 rounded-2xl border border-black/[0.04] flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full ring-2 ring-white overflow-hidden shrink-0 shadow-sm ml-1">
               <img
@@ -236,7 +260,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               className="p-1.5 px-2.5 rounded-xl text-[#FF3B30] bg-[#FF3B30]/5 hover:bg-[#FF3B30]/10 border border-[#FF3B30]/15 transition-all active:scale-95 flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              <span>Sign Out</span>
+              <span>{t('sign_out')}</span>
             </button>
           </div>
         </div>

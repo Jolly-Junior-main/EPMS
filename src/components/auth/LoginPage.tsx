@@ -15,7 +15,8 @@ import {
   AlertCircle,
   Smartphone,
   Layers,
-  Terminal
+  Terminal,
+  Globe
 } from 'lucide-react';
 
 interface RoleCredentialPreset {
@@ -36,7 +37,7 @@ const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
     label: 'Owner',
     sublabel: 'Executive & Asset Owner',
     username: 'Owner',
-    pass: 'Owner',
+    pass: '123',
     name: 'Abebe Mengesha',
     title: 'Managing Director & Property Owner',
     destinationRoute: '/owner',
@@ -47,7 +48,7 @@ const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
     label: 'Administrator',
     sublabel: 'Tech Partner & Architect',
     username: 'Admin',
-    pass: 'Admin',
+    pass: '123',
     name: 'Dawit Alemu',
     title: 'Lead Firebase Cloud Architect',
     destinationRoute: '/admin',
@@ -58,7 +59,7 @@ const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
     label: 'Management',
     sublabel: 'Daily Field Operations',
     username: 'Manage',
-    pass: 'Manage',
+    pass: '123',
     name: 'Hanna Tadesse',
     title: 'Senior Property Operations Manager',
     destinationRoute: '/manager',
@@ -69,7 +70,7 @@ const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
     label: 'Tenant Portal',
     sublabel: 'Commercial & Residential',
     username: 'Almaz Kebede',
-    pass: 'Almaz Kebede',
+    pass: '123',
     name: 'Almaz Kebede',
     title: 'Bole Coffee Roastery (Unit G-01)',
     destinationRoute: '/portal',
@@ -78,7 +79,7 @@ const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
 };
 
 export const LoginPage: React.FC = () => {
-  const { login } = usePMS();
+  const { login, language, setLanguage, t } = usePMS();
 
   const [selectedPreset, setSelectedPreset] = useState<UserRole>('owner');
   const [username, setUsername] = useState<string>(PRESET_ACCOUNTS.owner.username);
@@ -121,12 +122,22 @@ export const LoginPage: React.FC = () => {
       <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Top iOS Status Indicator Pill */}
-      <div className="mb-6 animate-in fade-in slide-in-from-top-3 duration-300">
+      {/* Top iOS Status Indicator Pill & Language Toggle */}
+      <div className="mb-6 flex items-center justify-between gap-3 w-full max-w-md animate-in fade-in slide-in-from-top-3 duration-300">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-xs font-semibold text-[#1C1C1E]">
           <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
-          <span>Firebase Real-Time Multi-Browser Sync Active</span>
+          <span>{t('auth_active')}</span>
         </div>
+
+        <button
+          id="login-lang-toggle-btn"
+          type="button"
+          onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.04)] text-xs font-bold text-[#007AFF] hover:bg-white transition-all active:scale-95 cursor-pointer"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          <span>{language === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 English'}</span>
+        </button>
       </div>
 
       {/* Main Centered Floating iOS Login Card */}
@@ -138,10 +149,10 @@ export const LoginPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-[#1C1C1E]">
-              Enterprise PMS
+              {t('login_title')}
             </h1>
             <p className="text-xs text-[#8E8E93] mt-0.5">
-              Strict Role-Separated Property Management Portal
+              {t('login_subtitle')}
             </p>
           </div>
         </div>
@@ -160,7 +171,7 @@ export const LoginPage: React.FC = () => {
             {/* Username / Email Input */}
             <div>
               <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider block mb-1 px-1">
-                Username
+                {t('login_username')}
               </label>
               <div className="relative flex items-center">
                 <Mail className="w-4 h-4 text-[#8E8E93] absolute left-4 pointer-events-none" />
@@ -170,7 +181,7 @@ export const LoginPage: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Owner / Admin / Manage"
+                  placeholder={t('login_username_placeholder')}
                   className="w-full bg-[#F2F2F7] focus:bg-white text-[#1C1C1E] rounded-xl pl-11 pr-4 py-3.5 text-sm focus:ring-2 focus:ring-[#007AFF] outline-none transition-all border border-black/[0.04] font-medium"
                 />
               </div>
@@ -179,7 +190,7 @@ export const LoginPage: React.FC = () => {
             {/* Password Input */}
             <div>
               <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider block mb-1 px-1">
-                Password
+                {t('login_password')}
               </label>
               <div className="relative flex items-center">
                 <Lock className="w-4 h-4 text-[#8E8E93] absolute left-4 pointer-events-none" />
@@ -189,13 +200,13 @@ export const LoginPage: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="123"
                   className="w-full bg-[#F2F2F7] focus:bg-white text-[#1C1C1E] rounded-xl pl-11 pr-11 py-3.5 text-sm focus:ring-2 focus:ring-[#007AFF] outline-none transition-all border border-black/[0.04] font-medium font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 p-1 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors rounded-lg"
+                  className="absolute right-3.5 p-1 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors rounded-lg cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -213,10 +224,10 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded text-[#007AFF] focus:ring-[#007AFF] border-black/[0.15]"
               />
-              <span>Remember this session</span>
+              <span>Remember session</span>
             </label>
             <div className="text-[11px] text-[#8E8E93]">
-              Credentials: <span className="font-mono text-[#007AFF] font-bold">{currentPreset.username} / {currentPreset.pass}</span>
+              Pass: <span className="font-mono text-[#007AFF] font-bold">123</span>
             </div>
           </div>
 
@@ -225,7 +236,7 @@ export const LoginPage: React.FC = () => {
             id="login-submit-btn"
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-[#007AFF] text-white font-semibold rounded-xl py-3.5 hover:bg-[#0066D6] active:scale-[0.98] transition-all shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 text-sm ${
+            className={`w-full bg-[#007AFF] text-white font-semibold rounded-xl py-3.5 hover:bg-[#0066D6] active:scale-[0.98] transition-all shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 text-sm cursor-pointer ${
               isLoading ? 'opacity-70 cursor-wait' : ''
             }`}
           >
@@ -236,21 +247,26 @@ export const LoginPage: React.FC = () => {
               </>
             ) : (
               <>
-                <span>Sign In as {currentPreset.label}</span>
+                <span>{t('login_btn')} ({currentPreset.label})</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
         </form>
 
+        {/* Tenant Hint Callout */}
+        <div className="p-3 bg-[#007AFF]/10 border border-[#007AFF]/20 rounded-2xl text-[11px] text-[#007AFF] leading-relaxed font-medium">
+          {t('login_tenant_hint')}
+        </div>
+
         {/* Quick Role Selector Buttons */}
-        <div className="pt-4 border-t border-black/[0.06] space-y-3">
+        <div className="pt-2 border-t border-black/[0.06] space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
-              Quick Role Credentials
+              {t('login_quick_creds')}
             </span>
             <span className="text-[10px] text-[#007AFF] font-mono font-medium">
-              Target: {currentPreset.destinationRoute}
+              Pass: 123
             </span>
           </div>
 
@@ -265,14 +281,14 @@ export const LoginPage: React.FC = () => {
                   id={`preset-btn-${r}`}
                   type="button"
                   onClick={() => handleSelectPreset(r)}
-                  className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center ${
+                  className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center cursor-pointer ${
                     isSelected
                       ? 'bg-white text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.12)] ring-1 ring-black/5'
                       : 'text-[#8E8E93] hover:text-[#1C1C1E]'
                   }`}
                 >
                   <span className="font-bold text-[11px] truncate w-full">{preset.label.split(' ')[0]}</span>
-                  <span className="text-[9px] font-mono text-[#8E8E93] font-normal">{preset.username}</span>
+                  <span className="text-[9px] font-mono text-[#8E8E93] font-normal">{preset.username.split(' ')[0]}</span>
                 </button>
               );
             })}
@@ -283,10 +299,10 @@ export const LoginPage: React.FC = () => {
             <div className="flex items-center justify-between font-semibold">
               <span className="text-[#1C1C1E] flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#007AFF]" />
-                {currentPreset.name} ({currentPreset.title})
+                {currentPreset.name}
               </span>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] uppercase">
-                {currentPreset.username} / {currentPreset.pass}
+                {currentPreset.username} / 123
               </span>
             </div>
             <div className="flex flex-wrap gap-1 pt-1">
