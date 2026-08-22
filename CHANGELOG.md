@@ -12,3 +12,5 @@
 - **2026-06-25 16:01:00**: perf(db): optimize Firestore collection indexing for property queries
 
 - **2026-09-15 10:53:00**: feat(maintenance): add maintenance ticket workflow with photo uploads
+
+- **2026-08-22 14:47:00**: refactor(ui): update property occupancy status cards with Tailwind CSS
