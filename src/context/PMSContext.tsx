@@ -233,6 +233,25 @@ export const TAB_TO_PATH: Record<string, string> = {
   admin_monitoring: '/admin'
 };
 
+export const getTabPathForUser = (tab: string, role: UserRole): string => {
+  if (role === 'super_admin') {
+    return TAB_TO_PATH[tab] || '/superadmin';
+  }
+  if (role === 'owner') {
+    if (tab === 'invoices' || tab === 'owner_ledger') return '/owner/ledger';
+    if (tab === 'vault') return '/owner/vault';
+    if (tab === 'redlist') return '/owner/redlist';
+    return '/owner';
+  }
+  // manager
+  if (tab === 'tenants' || tab === 'documents') return '/manager/tenants';
+  if (tab === 'invoices') return '/manager/invoices';
+  if (tab === 'sms') return '/manager/sms';
+  if (tab === 'redlist') return '/manager/redlist';
+  if (tab === 'dashboard') return '/manager';
+  return '/manager';
+};
+
 export const PATH_MAP: Record<string, { tab: string; role: UserRole; route: string }> = {
   '/superadmin/subscriptions': { tab: 'sa_subscriptions', role: 'super_admin', route: '/superadmin' },
   '/superadmin/subs': { tab: 'sa_subscriptions', role: 'super_admin', route: '/superadmin' },
@@ -285,11 +304,12 @@ const getUserForRole = (role: UserRole | string): UserProfile => {
 
 const getInitialRouteInfo = () => {
   if (typeof window === 'undefined') {
-    return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
+    return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
   }
   const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+  
   if (cleanPath === '/login') {
-    return { isAuth: false, user: MOCK_USERS.superadmin, route: '/login', tab: 'sa_dashboard' };
+    return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
   }
   
   if (PATH_MAP[cleanPath]) {
@@ -298,11 +318,27 @@ const getInitialRouteInfo = () => {
   }
 
   const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
-  const match = sortedEntries.find(([k]) => cleanPath.startsWith(k))?.[1];
+  const match = sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
   if (match) {
     return { isAuth: true, user: getUserForRole(match.role), route: match.route, tab: match.tab };
   }
-  return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
+
+  // Check saved session in localStorage
+  try {
+    const savedAuth = localStorage.getItem(`${STORAGE_KEY}_auth_state`);
+    const savedUser = localStorage.getItem(`${STORAGE_KEY}_user_profile`);
+    if (savedAuth && JSON.parse(savedAuth) === true && savedUser) {
+      const user = JSON.parse(savedUser);
+      const route = user.role === 'super_admin' ? '/superadmin' : user.role === 'owner' ? '/owner' : '/manager';
+      const tab = user.role === 'super_admin' ? 'sa_dashboard' : user.role === 'owner' ? 'dashboard' : 'tenants';
+      return { isAuth: true, user, route, tab };
+    }
+  } catch (e) {
+    // Ignore storage parse error
+  }
+
+  // Default to Login page on initial access to '/' with no stored session
+  return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
 };
 
 export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -325,7 +361,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return;
       }
       const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
-      const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath.startsWith(k))?.[1];
+      const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
       if (match) {
         setIsAuthenticated(true);
         setCurrentUser(getUserForRole(match.role));
@@ -340,7 +376,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     if (isAuthenticated) {
-      const targetPath = TAB_TO_PATH[activeTab] || activeRoleRoute;
+      const targetPath = getTabPathForUser(activeTab, currentUser.role);
       if (targetPath && window.location.pathname !== targetPath) {
         window.history.pushState(null, '', targetPath);
       }
@@ -349,7 +385,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         window.history.pushState(null, '', '/login');
       }
     }
-  }, [activeTab, activeRoleRoute, isAuthenticated]);
+  }, [activeTab, activeRoleRoute, isAuthenticated, currentUser.role]);
 
   // Multilingual Support (English & Amharic)
   const [language, setLanguageState] = useState<Language>(() => {
