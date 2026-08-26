@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PMSProvider, usePMS } from './context/PMSContext';
 import { Navbar } from './components/layout/Navbar';
 import { LoginPage } from './components/auth/LoginPage';
@@ -11,14 +11,31 @@ import { InvoicesPaymentsLedger } from './components/invoices/InvoicesPaymentsLe
 import { SMSEngineConsole } from './components/sms/SMSEngineConsole';
 import { FirebaseArchitectureViewer } from './components/architecture/FirebaseArchitectureViewer';
 import { TenantPortal } from './components/portal/TenantPortal';
+
+// Super Admin Components
+import { SuperAdminImpersonationBanner } from './components/superadmin/SuperAdminImpersonationBanner';
+import { SuperAdminSidebar } from './components/superadmin/SuperAdminSidebar';
+import { SuperAdminDashboardView } from './components/superadmin/SuperAdminDashboardView';
+import { OrganizationsManager } from './components/superadmin/OrganizationsManager';
+import { SubscriptionsManager } from './components/superadmin/SubscriptionsManager';
+import { PlansManager } from './components/superadmin/PlansManager';
+import { PlatformBillingManager } from './components/superadmin/PlatformBillingManager';
+import { GlobalBuildingsManager } from './components/superadmin/GlobalBuildingsManager';
+import { GlobalUsersManager } from './components/superadmin/GlobalUsersManager';
+import { SuperAdminAuditLogs } from './components/superadmin/SuperAdminAuditLogs';
+import { PlatformNotificationsView } from './components/superadmin/PlatformNotificationsModal';
+import { SupportTicketsManager } from './components/superadmin/SupportTicketsManager';
+import { SystemHealthView } from './components/superadmin/SystemHealthView';
+import { PlatformSettingsView } from './components/superadmin/PlatformSettingsView';
+import { CreateOrganizationModal } from './components/superadmin/CreateOrganizationModal';
+import { OrganizationDetailsModal } from './components/superadmin/OrganizationDetailsModal';
+
 import {
   CheckCircle2,
   AlertCircle,
   Info,
   X,
-  ShieldAlert,
-  Lock,
-  ArrowLeft
+  Lock
 } from 'lucide-react';
 
 function PMSAppContent() {
@@ -35,17 +52,23 @@ function PMSAppContent() {
     t
   } = usePMS();
 
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCreateOrgModalOpen, setIsCreateOrgModalOpen] = useState(false);
+  const [selectedOrgDetailsId, setSelectedOrgDetailsId] = useState<string | null>(null);
+
   // If not authenticated, render the iOS-themed Login Page
   if (!isAuthenticated) {
     return <LoginPage />;
   }
 
-  return (
-    <div className="min-h-screen bg-[#F2F2F7] text-[#1C1C1E] flex flex-col font-sans selection:bg-[#007AFF] selection:text-white">
-      {/* Top Navigation Bar with iPadOS / iOS Style */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+  const isSuperAdminView = currentUser.role === 'super_admin' && activeTab.startsWith('sa_');
 
-      {/* Global iOS Dynamic Island / Capsule Toast Notification */}
+  return (
+    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-[#1C1C1E] dark:text-white flex flex-col font-sans selection:bg-[#007AFF] selection:text-white">
+      {/* Impersonation Banner (Visible whenever Super Admin is impersonating a tenant) */}
+      <SuperAdminImpersonationBanner />
+
+      {/* Global iOS Toast Notification */}
       {notification && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-200">
           <div
@@ -75,16 +98,16 @@ function PMSAppContent() {
         </div>
       )}
 
-      {/* iOS Route Protection / Middleware Security Dialog */}
+      {/* Route Guard Error Modal */}
       {guardError && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-black/[0.06] space-y-4 animate-in zoom-in-95 duration-150">
+          <div className="bg-white dark:bg-[#1C1C1E] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-black/[0.06] dark:border-white/10 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="w-12 h-12 rounded-2xl bg-[#FF3B30]/10 text-[#FF3B30] flex items-center justify-center mx-auto shadow-sm">
               <Lock className="w-6 h-6" />
             </div>
 
             <div className="text-center space-y-1.5">
-              <h3 className="text-lg font-bold text-[#1C1C1E]">
+              <h3 className="text-lg font-bold text-[#1C1C1E] dark:text-white">
                 Access Denied (HTTP 403)
               </h3>
               <p className="text-xs text-[#8E8E93]">
@@ -92,10 +115,10 @@ function PMSAppContent() {
               </p>
             </div>
 
-            <div className="p-4 bg-[#F2F2F7] rounded-2xl text-xs space-y-2 text-[#3A3A3C]">
+            <div className="p-4 bg-[#F2F2F7] dark:bg-[#2C2C2E] rounded-2xl text-xs space-y-2 text-[#3A3A3C] dark:text-white">
               <div className="flex justify-between">
                 <span className="text-[#8E8E93] font-medium">Attempted Route:</span>
-                <span className="font-mono font-bold text-[#1C1C1E]">{guardError.attemptedRoute}</span>
+                <span className="font-mono font-bold text-[#1C1C1E] dark:text-white">{guardError.attemptedRoute}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#8E8E93] font-medium">Required Identity:</span>
@@ -105,7 +128,7 @@ function PMSAppContent() {
                 <span className="text-[#8E8E93] font-medium">Current Session:</span>
                 <span className="font-semibold text-[#FF3B30]">{guardError.currentRole}</span>
               </div>
-              <p className="pt-2 border-t border-black/[0.05] text-[11px] leading-relaxed text-[#1C1C1E]">
+              <p className="pt-2 border-t border-black/[0.05] dark:border-white/10 text-[11px] leading-relaxed text-[#1C1C1E] dark:text-white">
                 {guardError.message}
               </p>
             </div>
@@ -113,87 +136,112 @@ function PMSAppContent() {
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <button
                 onClick={dismissGuardError}
-                className="flex-1 py-3 px-4 rounded-xl bg-[#007AFF] text-white text-xs font-semibold hover:bg-[#0062CC] active:scale-95 transition-all shadow-md shadow-blue-500/20 text-center"
+                className="flex-1 py-3 px-4 rounded-xl bg-[#007AFF] text-white text-xs font-semibold hover:bg-[#0062CC] active:scale-95 transition-all shadow-md shadow-blue-500/20 text-center cursor-pointer"
               >
                 Return to Safe Portal
               </button>
-              {guardError.requiredRole.includes('Owner') && (
-                <button
-                  onClick={() => {
-                    switchUser('owner');
-                    dismissGuardError();
-                  }}
-                  className="py-3 px-4 rounded-xl bg-black/[0.05] hover:bg-black/[0.1] text-[#1C1C1E] text-xs font-semibold active:scale-95 transition-all"
-                >
-                  Switch to Owner
-                </button>
-              )}
-              {guardError.requiredRole.includes('Admin') && (
-                <button
-                  onClick={() => {
-                    switchUser('admin');
-                    dismissGuardError();
-                  }}
-                  className="py-3 px-4 rounded-xl bg-black/[0.05] hover:bg-black/[0.1] text-[#1C1C1E] text-xs font-semibold active:scale-95 transition-all"
-                >
-                  Switch to Admin
-                </button>
-              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Applet Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Super Admin Dashboard */}
-        {activeTab === 'admin_monitoring' && (
-          <SuperAdminDashboard onNavigateToTab={setActiveTab} />
-        )}
+      {/* RENDER SUPER ADMIN CONTROL PLANE */}
+      {isSuperAdminView ? (
+        <div className="flex-1 flex overflow-hidden">
+          {/* Super Admin Collapsible Sidebar */}
+          <SuperAdminSidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
+          />
 
-        {/* Owner Executive Dashboard */}
-        {activeTab === 'dashboard' && (
-          <OwnerExecutiveDashboard onNavigate={setActiveTab} />
-        )}
+          {/* Super Admin Main Content Stage */}
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
+            <div className="max-w-7xl mx-auto space-y-6">
+              {activeTab === 'sa_dashboard' && (
+                <SuperAdminDashboardView
+                  onNavigate={setActiveTab}
+                  onOpenCreateOrg={() => setIsCreateOrgModalOpen(true)}
+                  onSelectOrgForDetails={(orgId) => setSelectedOrgDetailsId(orgId)}
+                />
+              )}
 
-        {/* Receipt Verification Vault */}
-        {activeTab === 'vault' && <ReceiptVerificationVault />}
+              {activeTab === 'sa_organizations' && (
+                <OrganizationsManager
+                  onOpenCreateModal={() => setIsCreateOrgModalOpen(true)}
+                  onSelectOrgForDetails={(orgId) => setSelectedOrgDetailsId(orgId)}
+                />
+              )}
 
-        {/* The Red List Delinquent Tracker */}
-        {activeTab === 'redlist' && <TheRedListTracker />}
-
-        {/* Tenants & Lease Management */}
-        {activeTab === 'tenants' && <TenantsManager />}
-
-        {/* Invoices & Ledger */}
-        {activeTab === 'invoices' && (
-          <InvoicesPaymentsLedger onNavigateToVault={() => setActiveTab('vault')} />
-        )}
-
-        {/* SMS Scheduled Reminder Engine */}
-        {activeTab === 'sms' && <SMSEngineConsole />}
-
-        {/* Firebase Security Rules & Cloud Functions Architecture */}
-        {activeTab === 'rules' && <FirebaseArchitectureViewer />}
-
-        {/* Tenant Self-Service Portal */}
-        {(activeTab === 'tenant_portal' || currentUser.role === 'tenant') && (
-          <TenantPortal />
-        )}
-      </main>
-
-      {/* iOS Apple Styled Footer */}
-      <footer className="bg-white/70 backdrop-blur-xl border-t border-black/[0.05] py-4 px-6 text-center text-xs text-[#8E8E93]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span className="font-medium text-[#3A3A3C] flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#34C759]" />
-            {t('footer_role_active')} [{currentUser.role.toUpperCase()}]
-          </span>
-          <span className="text-[11px] font-medium text-[#8E8E93]">
-            Firebase Storage &amp; Custom Claims RBAC Protected
-          </span>
+              {activeTab === 'sa_buildings' && <GlobalBuildingsManager />}
+              {activeTab === 'sa_users' && <GlobalUsersManager />}
+              {activeTab === 'sa_subscriptions' && <SubscriptionsManager />}
+              {activeTab === 'sa_plans' && <PlansManager />}
+              {activeTab === 'sa_billing' && <PlatformBillingManager />}
+              {activeTab === 'sa_audit_logs' && <SuperAdminAuditLogs />}
+              {activeTab === 'sa_notifications' && <PlatformNotificationsView />}
+              {activeTab === 'sa_support' && <SupportTicketsManager />}
+              {activeTab === 'sa_health' && <SystemHealthView />}
+              {activeTab === 'sa_settings' && <PlatformSettingsView />}
+            </div>
+          </main>
         </div>
-      </footer>
+      ) : (
+        /* STANDARD EPMS CLIENT TENANT WORKSPACE */
+        <div className="flex-1 flex flex-col">
+          {/* Top Navbar */}
+          <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+
+          {/* Main Applet Content */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {activeTab === 'admin_monitoring' && (
+              <SuperAdminDashboard onNavigateToTab={setActiveTab} />
+            )}
+
+            {activeTab === 'dashboard' && (
+              <OwnerExecutiveDashboard onNavigate={setActiveTab} />
+            )}
+
+            {activeTab === 'vault' && <ReceiptVerificationVault />}
+            {activeTab === 'redlist' && <TheRedListTracker />}
+            {activeTab === 'tenants' && <TenantsManager />}
+            {activeTab === 'invoices' && (
+              <InvoicesPaymentsLedger onNavigateToVault={() => setActiveTab('vault')} />
+            )}
+            {activeTab === 'sms' && <SMSEngineConsole />}
+            {activeTab === 'rules' && <FirebaseArchitectureViewer />}
+            {(activeTab === 'tenant_portal' || currentUser.role === 'tenant') && (
+              <TenantPortal />
+            )}
+          </main>
+
+          {/* Standard Footer */}
+          <footer className="bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border-t border-black/[0.05] dark:border-white/10 py-4 px-6 text-center text-xs text-[#8E8E93]">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+              <span className="font-medium text-[#3A3A3C] dark:text-white flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#34C759]" />
+                {t('footer_role_active')} [{currentUser.role.toUpperCase()}]
+                {currentUser.organizationName && ` • ${currentUser.organizationName}`}
+              </span>
+              <span className="text-[11px] font-medium text-[#8E8E93]">
+                EPMS Multi-Tenant SaaS Isolation • Firebase Custom Claims
+              </span>
+            </div>
+          </footer>
+        </div>
+      )}
+
+      {/* Global Modals for Super Admin Operations */}
+      <CreateOrganizationModal
+        isOpen={isCreateOrgModalOpen}
+        onClose={() => setIsCreateOrgModalOpen(false)}
+      />
+
+      <OrganizationDetailsModal
+        organizationId={selectedOrgDetailsId}
+        onClose={() => setSelectedOrgDetailsId(null)}
+      />
     </div>
   );
 }

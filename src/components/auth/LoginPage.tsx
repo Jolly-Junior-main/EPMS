@@ -32,6 +32,17 @@ interface RoleCredentialPreset {
 }
 
 const PRESET_ACCOUNTS: Record<UserRole, RoleCredentialPreset> = {
+  super_admin: {
+    role: 'super_admin',
+    label: 'Super Admin',
+    sublabel: 'Platform Control Plane',
+    username: 'SuperAdmin',
+    pass: '123',
+    name: 'Super Administrator',
+    title: 'Platform Architect & Owner',
+    destinationRoute: '/superadmin',
+    permissions: ['All Client Organizations', 'Subscriptions & Billing', 'Client Impersonation', 'Immutable Audit Logs']
+  },
   owner: {
     role: 'owner',
     label: 'Owner',

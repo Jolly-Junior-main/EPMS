@@ -16,6 +16,19 @@ import {
   LeaseRenewalRequest
 } from '../types/pms';
 import {
+  Organization,
+  PlatformPlan,
+  Subscription,
+  PlatformInvoice,
+  SuperAdminAuditLog,
+  PlatformNotification,
+  SupportTicket,
+  PlatformSettings,
+  ImpersonationContext,
+  PlanTier,
+  SupportTicketStatus
+} from '../types/superAdmin';
+import {
   MOCK_USERS,
   MOCK_PROPERTIES,
   MOCK_UNITS,
@@ -27,6 +40,16 @@ import {
   MOCK_RENEWAL_REQUESTS,
   generateBankReceiptSvg
 } from '../data/mockData';
+import {
+  MOCK_ORGANIZATIONS,
+  MOCK_PLATFORM_PLANS,
+  MOCK_SUBSCRIPTIONS,
+  MOCK_PLATFORM_INVOICES,
+  MOCK_SUPERADMIN_AUDIT_LOGS,
+  MOCK_SUPPORT_TICKETS,
+  MOCK_PLATFORM_NOTIFICATIONS,
+  DEFAULT_PLATFORM_SETTINGS
+} from '../data/mockSuperAdminData';
 import { Language, TRANSLATIONS } from '../data/translations';
 import {
   seedFirestoreIfEmpty,
@@ -113,6 +136,50 @@ interface PMSContextType {
     redListCount: number;
   };
   
+  // Super Admin & Multi-Tenant State
+  organizations: Organization[];
+  plans: PlatformPlan[];
+  subscriptions: Subscription[];
+  platformInvoices: PlatformInvoice[];
+  superAdminAuditLogs: SuperAdminAuditLog[];
+  platformNotifications: PlatformNotification[];
+  supportTickets: SupportTicket[];
+  platformSettings: PlatformSettings;
+  impersonationContext: ImpersonationContext | null;
+  
+  // Super Admin Operational Methods
+  createOrganization: (org: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'>) => { success: boolean; error?: string };
+  updateOrganization: (orgId: string, updates: Partial<Organization>) => { success: boolean; error?: string };
+  suspendOrganization: (orgId: string, reason?: string) => { success: boolean; error?: string };
+  activateOrganization: (orgId: string) => { success: boolean; error?: string };
+  deleteOrganization: (orgId: string) => { success: boolean; error?: string };
+  startImpersonation: (orgId: string) => { success: boolean; error?: string };
+  exitImpersonation: () => void;
+  extendSubscription: (subId: string, monthsToAdd: number) => { success: boolean; error?: string };
+  updateSubscriptionPlan: (subId: string, newPlanTier: PlanTier) => { success: boolean; error?: string };
+  addTrialDays: (subId: string, days: number) => { success: boolean; error?: string };
+  updatePlatformPlan: (planId: string, updates: Partial<PlatformPlan>) => { success: boolean; error?: string };
+  logSuperAdminAudit: (log: Omit<SuperAdminAuditLog, 'logId' | 'timestamp' | 'actorId' | 'actorName' | 'actorRole' | 'ipAddress'>) => void;
+  markNotificationRead: (notificationId: string) => void;
+  createSupportTicket: (ticket: Omit<SupportTicket, 'ticketId' | 'ticketNumber' | 'createdAt' | 'updatedAt'>) => { success: boolean; error?: string };
+  updateSupportTicketStatus: (ticketId: string, status: SupportTicketStatus, resolutionNotes?: string) => { success: boolean; error?: string };
+  updatePlatformSettings: (updates: Partial<PlatformSettings>) => { success: boolean; error?: string };
+  getSuperAdminMetrics: () => {
+    totalOrganizations: number;
+    activeOrganizations: number;
+    suspendedOrganizations: number;
+    totalBuildings: number;
+    totalUnits: number;
+    occupiedUnits: number;
+    vacantUnits: number;
+    totalUsers: number;
+    activeSubscriptions: number;
+    expiringSubscriptions: number;
+    monthlyRecurringRevenueETB: number;
+    totalRevenueETB: number;
+    unreadNotificationsCount: number;
+  };
+
   resetToSampleData: () => Promise<void>;
 }
 
@@ -201,6 +268,93 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     ];
   });
+
+  // Super Admin & Multi-Tenant State Hooks
+  const [organizations, setOrganizations] = useState<Organization[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_organizations`);
+    return saved ? JSON.parse(saved) : MOCK_ORGANIZATIONS;
+  });
+
+  const [plans, setPlans] = useState<PlatformPlan[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_plans`);
+    return saved ? JSON.parse(saved) : MOCK_PLATFORM_PLANS;
+  });
+
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_subscriptions`);
+    return saved ? JSON.parse(saved) : MOCK_SUBSCRIPTIONS;
+  });
+
+  const [platformInvoices, setPlatformInvoices] = useState<PlatformInvoice[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_invoices`);
+    return saved ? JSON.parse(saved) : MOCK_PLATFORM_INVOICES;
+  });
+
+  const [superAdminAuditLogs, setSuperAdminAuditLogs] = useState<SuperAdminAuditLog[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_audit_logs`);
+    return saved ? JSON.parse(saved) : MOCK_SUPERADMIN_AUDIT_LOGS;
+  });
+
+  const [platformNotifications, setPlatformNotifications] = useState<PlatformNotification[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_notifications`);
+    return saved ? JSON.parse(saved) : MOCK_PLATFORM_NOTIFICATIONS;
+  });
+
+  const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_tickets`);
+    return saved ? JSON.parse(saved) : MOCK_SUPPORT_TICKETS;
+  });
+
+  const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_settings`);
+    return saved ? JSON.parse(saved) : DEFAULT_PLATFORM_SETTINGS;
+  });
+
+  const [impersonationContext, setImpersonationContext] = useState<ImpersonationContext | null>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_impersonation_ctx`);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Sync state to LocalStorage
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_organizations`, JSON.stringify(organizations));
+  }, [organizations]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_plans`, JSON.stringify(plans));
+  }, [plans]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_subscriptions`, JSON.stringify(subscriptions));
+  }, [subscriptions]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_invoices`, JSON.stringify(platformInvoices));
+  }, [platformInvoices]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_audit_logs`, JSON.stringify(superAdminAuditLogs));
+  }, [superAdminAuditLogs]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_notifications`, JSON.stringify(platformNotifications));
+  }, [platformNotifications]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_tickets`, JSON.stringify(supportTickets));
+  }, [supportTickets]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_settings`, JSON.stringify(platformSettings));
+  }, [platformSettings]);
+
+  useEffect(() => {
+    if (impersonationContext) {
+      localStorage.setItem(`${STORAGE_KEY}_impersonation_ctx`, JSON.stringify(impersonationContext));
+    } else {
+      localStorage.removeItem(`${STORAGE_KEY}_impersonation_ctx`);
+    }
+  }, [impersonationContext]);
 
   // Initialize Firestore Collections & Real-time Listeners
   useEffect(() => {
@@ -307,7 +461,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const is123 = inputPass === '123';
 
-    if (inputUser === 'owner' || inputUser === 'abebe.mengesha@boleplaza.et' || inputUser === 'abebe' || (inputUser.includes('owner') && (is123 || inputPass.toLowerCase() === 'owner'))) {
+    if (inputUser === 'superadmin' || inputUser === 'super_admin' || inputUser === 'super' || inputUser === 'platform' || inputUser === 'superadmin@epms.cloud.et' || (inputUser.includes('super') && (is123 || inputPass.toLowerCase() === 'superadmin'))) {
+      if (is123 || inputPass.toLowerCase() === 'superadmin' || inputPass === 'SuperAdmin' || inputPass === '123') {
+        matchedUser = MOCK_USERS.superadmin;
+        matchedRole = 'super_admin';
+      } else {
+        return { success: false, error: 'Incorrect password for Super Administrator account. (Password: 123)' };
+      }
+    } else if (inputUser === 'owner' || inputUser === 'abebe.mengesha@boleplaza.et' || inputUser === 'abebe' || (inputUser.includes('owner') && (is123 || inputPass.toLowerCase() === 'owner'))) {
       if (is123 || inputPass.toLowerCase() === 'owner' || inputPass === 'Owner' || inputPass === 'OwnerPass2026!') {
         matchedUser = MOCK_USERS.owner;
         matchedRole = 'owner';
@@ -399,7 +560,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!matchedUser || !matchedRole) {
       return {
         success: false,
-        error: 'No account found matching this name. Tenants: Enter your Name & password "123". Management: Owner/123, Manage/123, or Admin/123.'
+        error: 'No account found matching this name. SuperAdmin: SuperAdmin/123. Tenants: Enter Name/123. Management: Owner/123, Manage/123, Admin/123.'
       };
     }
 
@@ -409,11 +570,15 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setGuardError(null);
 
     // Strict Post-Login Redirection Logic:
-    // - Super Admin (/admin): System Monitoring, API Logs, Configuration Dashboard
+    // - Super Admin (/superadmin): Multi-Tenant SaaS Control Plane
+    // - Org Admin (/admin): System Monitoring, API Logs, Firebase Rules
     // - Building Owner (/owner): Revenue Analytics, Delinquent Red List, Receipt Verification Vault
     // - Property Manager (/manager): Tenant Directory, Document Vault, Rent Schedules, Payment Logging
     // - Tenant Portal (/portal): Lease Overview, Self-Service Slip Upload, Maintenance, Receipts
-    if (matchedRole === 'admin') {
+    if (matchedRole === 'super_admin') {
+      setActiveRoleRoute('/superadmin');
+      setActiveTab('sa_dashboard');
+    } else if (matchedRole === 'admin') {
       setActiveRoleRoute('/admin');
       setActiveTab('admin_monitoring');
     } else if (matchedRole === 'owner') {
@@ -427,12 +592,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setActiveTab('tenant_portal');
     }
 
-    showToast(`Welcome, ${matchedUser.name}! Authenticated as [${matchedRole.toUpperCase()}]. Redirecting to ${matchedRole === 'admin' ? '/admin' : matchedRole === 'owner' ? '/owner' : matchedRole === 'manager' ? '/manager' : '/portal'}`, 'success');
+    showToast(`Welcome, ${matchedUser.name}! Authenticated as [${matchedRole.toUpperCase()}].`, 'success');
     return { success: true, role: matchedRole };
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setImpersonationContext(null);
     showToast('Signed out of Enterprise PMS session.', 'info');
   };
 
@@ -442,7 +608,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (targetUser) {
       setCurrentUser(targetUser);
       setGuardError(null);
-      if (role === 'admin') {
+      if (role === 'super_admin') {
+        setActiveRoleRoute('/superadmin');
+        setActiveTab('sa_dashboard');
+      } else if (role === 'admin') {
         setActiveRoleRoute('/admin');
         setActiveTab('admin_monitoring');
       } else if (role === 'owner') {
@@ -455,7 +624,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setActiveRoleRoute('/portal');
         setActiveTab('tenant_portal');
       }
-      showToast(`Switched active profile to ${targetUser.name} [Role: ${role.toUpperCase()}]`, 'info');
+      showToast(`Switched active persona to [${targetUser.name}] (${role.toUpperCase()})`, 'info');
     }
   };
 
@@ -1123,6 +1292,457 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   };
 
+  // -------------------------------------------------------------
+  // Super Admin Control Plane Operational Methods
+  // -------------------------------------------------------------
+  const logSuperAdminAudit = (log: Omit<SuperAdminAuditLog, 'logId' | 'timestamp' | 'actorId' | 'actorName' | 'actorRole' | 'ipAddress'>) => {
+    const newLog: SuperAdminAuditLog = {
+      ...log,
+      logId: `slog_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      actorId: currentUser.uid,
+      actorName: currentUser.name,
+      actorRole: currentUser.role,
+      ipAddress: '197.156.103.42'
+    };
+    setSuperAdminAuditLogs((prev) => [newLog, ...prev]);
+  };
+
+  const createOrganization = (orgData: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'>) => {
+    const newOrgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newSubId = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newAdminUid = `usr_admin_${Date.now()}`;
+
+    const newOrg: Organization = {
+      ...orgData,
+      organizationId: newOrgId,
+      subscriptionId: newSubId,
+      primaryAdminUid: newAdminUid,
+      createdAt: new Date().toISOString(),
+      lastActivityAt: new Date().toISOString(),
+      usage: {
+        buildingsCount: 1,
+        unitsCount: 10,
+        occupiedUnitsCount: 8,
+        usersCount: 2,
+        storageUsedMB: 1200,
+        smsSentThisMonth: 15
+      }
+    };
+
+    const targetPlan = plans.find((p) => p.tier === orgData.planTier) || plans[0];
+    const newSub: Subscription = {
+      subscriptionId: newSubId,
+      organizationId: newOrgId,
+      planId: targetPlan.planId,
+      tier: orgData.planTier,
+      status: orgData.status === 'trial' ? 'trial' : 'active',
+      startDate: new Date().toISOString().split('T')[0],
+      expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      daysRemaining: 30,
+      amountETB: targetPlan.monthlyPriceETB,
+      billingCycle: 'monthly',
+      autoRenew: true,
+      paymentStatus: 'paid',
+      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    };
+
+    setOrganizations((prev) => [newOrg, ...prev]);
+    setSubscriptions((prev) => [newSub, ...prev]);
+
+    logSuperAdminAudit({
+      organizationId: newOrgId,
+      organizationName: newOrg.name,
+      action: 'CREATE_ORGANIZATION',
+      resource: 'organization',
+      resourceId: newOrgId,
+      newValue: `Created ${newOrg.name} under ${newOrg.planTier.toUpperCase()} plan.`,
+      details: `Primary Administrator: ${newOrg.primaryAdminName} (${newOrg.primaryAdminEmail})`
+    });
+
+    showToast(`Client organization "${newOrg.name}" onboarded successfully!`, 'success');
+    return { success: true };
+  };
+
+  const updateOrganization = (orgId: string, updates: Partial<Organization>) => {
+    setOrganizations((prev) =>
+      prev.map((org) => {
+        if (org.organizationId === orgId) {
+          const updated = { ...org, ...updates, lastActivityAt: new Date().toISOString() };
+          logSuperAdminAudit({
+            organizationId: orgId,
+            organizationName: org.name,
+            action: 'UPDATE_ORGANIZATION',
+            resource: 'organization',
+            resourceId: orgId,
+            details: `Updated fields: ${Object.keys(updates).join(', ')}`
+          });
+          return updated;
+        }
+        return org;
+      })
+    );
+    showToast('Organization settings updated successfully.', 'success');
+    return { success: true };
+  };
+
+  const suspendOrganization = (orgId: string, reason?: string) => {
+    setOrganizations((prev) =>
+      prev.map((org) => {
+        if (org.organizationId === orgId) {
+          logSuperAdminAudit({
+            organizationId: orgId,
+            organizationName: org.name,
+            action: 'SUSPEND_ORGANIZATION',
+            resource: 'organization',
+            resourceId: orgId,
+            previousValue: `Status: ${org.status}`,
+            newValue: 'Status: suspended',
+            details: reason || 'Suspended by Super Administrator'
+          });
+          return { ...org, status: 'suspended', lastActivityAt: new Date().toISOString() };
+        }
+        return org;
+      })
+    );
+    showToast('Organization suspended. Users locked out from tenant workspaces.', 'info');
+    return { success: true };
+  };
+
+  const activateOrganization = (orgId: string) => {
+    setOrganizations((prev) =>
+      prev.map((org) => {
+        if (org.organizationId === orgId) {
+          logSuperAdminAudit({
+            organizationId: orgId,
+            organizationName: org.name,
+            action: 'ACTIVATE_ORGANIZATION',
+            resource: 'organization',
+            resourceId: orgId,
+            previousValue: `Status: ${org.status}`,
+            newValue: 'Status: active',
+            details: 'Reactivated by Super Administrator.'
+          });
+          return { ...org, status: 'active', lastActivityAt: new Date().toISOString() };
+        }
+        return org;
+      })
+    );
+    showToast('Organization reactivated successfully.', 'success');
+    return { success: true };
+  };
+
+  const deleteOrganization = (orgId: string) => {
+    const targetOrg = organizations.find((o) => o.organizationId === orgId);
+    if (!targetOrg) return { success: false, error: 'Organization not found' };
+
+    setOrganizations((prev) => prev.filter((o) => o.organizationId !== orgId));
+    setSubscriptions((prev) => prev.filter((s) => s.organizationId !== orgId));
+
+    logSuperAdminAudit({
+      organizationId: orgId,
+      organizationName: targetOrg.name,
+      action: 'ARCHIVE_ORGANIZATION',
+      resource: 'organization',
+      resourceId: orgId,
+      details: `Archived/deleted ${targetOrg.name} and purged subscription scope.`
+    });
+
+    showToast(`Organization "${targetOrg.name}" archived.`, 'info');
+    return { success: true };
+  };
+
+  const startImpersonation = (orgId: string) => {
+    const targetOrg = organizations.find((o) => o.organizationId === orgId);
+    if (!targetOrg) return { success: false, error: 'Organization not found' };
+
+    const ctx: ImpersonationContext = {
+      isImpersonating: true,
+      targetOrganizationId: orgId,
+      targetOrganizationName: targetOrg.name,
+      originalSuperAdmin: {
+        uid: currentUser.uid,
+        name: currentUser.name,
+        email: currentUser.email
+      },
+      startedAt: new Date().toISOString()
+    };
+
+    setImpersonationContext(ctx);
+
+    // Switch view to owner role of the target organization
+    setCurrentUser({
+      uid: targetOrg.primaryAdminUid,
+      name: targetOrg.primaryAdminName,
+      email: targetOrg.primaryAdminEmail,
+      role: 'owner',
+      phone: targetOrg.contactPhone,
+      avatar: targetOrg.logoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      title: `Managing Director • ${targetOrg.name}`,
+      organizationId: orgId,
+      organizationName: targetOrg.name,
+      complexAccess: ['all']
+    });
+
+    setActiveRoleRoute('/owner');
+    setActiveTab('dashboard');
+
+    logSuperAdminAudit({
+      organizationId: orgId,
+      organizationName: targetOrg.name,
+      action: 'START_IMPERSONATION',
+      resource: 'impersonation',
+      resourceId: orgId,
+      details: `Super Admin entered client environment: ${targetOrg.name}`
+    });
+
+    showToast(`Super Admin Mode Active: Viewing ${targetOrg.name}`, 'info');
+    return { success: true };
+  };
+
+  const exitImpersonation = () => {
+    if (!impersonationContext) return;
+
+    const orgName = impersonationContext.targetOrganizationName;
+    const orgId = impersonationContext.targetOrganizationId;
+
+    logSuperAdminAudit({
+      organizationId: orgId,
+      organizationName: orgName,
+      action: 'EXIT_IMPERSONATION',
+      resource: 'impersonation',
+      resourceId: orgId,
+      details: `Super Admin exited client environment: ${orgName}`
+    });
+
+    setImpersonationContext(null);
+    setCurrentUser(MOCK_USERS.superadmin);
+    setActiveRoleRoute('/superadmin');
+    setActiveTab('sa_dashboard');
+
+    showToast('Exited client environment. Returned to Super Admin Control Plane.', 'success');
+  };
+
+  const extendSubscription = (subId: string, monthsToAdd: number) => {
+    setSubscriptions((prev) =>
+      prev.map((sub) => {
+        if (sub.subscriptionId === subId) {
+          const currentExp = new Date(sub.expiryDate);
+          currentExp.setMonth(currentExp.getMonth() + monthsToAdd);
+          const newExpStr = currentExp.toISOString().split('T')[0];
+          const daysRemaining = Math.ceil((currentExp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+          logSuperAdminAudit({
+            organizationId: sub.organizationId,
+            action: 'EXTEND_SUBSCRIPTION',
+            resource: 'subscription',
+            resourceId: subId,
+            previousValue: `Expiry: ${sub.expiryDate}`,
+            newValue: `Expiry: ${newExpStr}`,
+            details: `Extended subscription by ${monthsToAdd} month(s). New status: active.`
+          });
+
+          return {
+            ...sub,
+            expiryDate: newExpStr,
+            daysRemaining,
+            status: 'active'
+          };
+        }
+        return sub;
+      })
+    );
+    showToast(`Subscription extended by ${monthsToAdd} month(s)!`, 'success');
+    return { success: true };
+  };
+
+  const updateSubscriptionPlan = (subId: string, newPlanTier: PlanTier) => {
+    const targetPlan = plans.find((p) => p.tier === newPlanTier);
+    if (!targetPlan) return { success: false, error: 'Plan tier not found' };
+
+    setSubscriptions((prev) =>
+      prev.map((sub) => {
+        if (sub.subscriptionId === subId) {
+          logSuperAdminAudit({
+            organizationId: sub.organizationId,
+            action: 'CHANGE_SUBSCRIPTION_PLAN',
+            resource: 'subscription',
+            resourceId: subId,
+            previousValue: `Tier: ${sub.tier}`,
+            newValue: `Tier: ${newPlanTier}`,
+            details: `Updated plan to ${targetPlan.name} (${targetPlan.monthlyPriceETB.toLocaleString()} ETB/mo)`
+          });
+
+          // Also update organization record
+          setOrganizations((orgs) =>
+            orgs.map((o) =>
+              o.organizationId === sub.organizationId
+                ? { ...o, planTier: newPlanTier, planId: targetPlan.planId }
+                : o
+            )
+          );
+
+          return {
+            ...sub,
+            tier: newPlanTier,
+            planId: targetPlan.planId,
+            amountETB: targetPlan.monthlyPriceETB
+          };
+        }
+        return sub;
+      })
+    );
+    showToast(`Subscription upgraded to ${targetPlan.name}!`, 'success');
+    return { success: true };
+  };
+
+  const addTrialDays = (subId: string, days: number) => {
+    setSubscriptions((prev) =>
+      prev.map((sub) => {
+        if (sub.subscriptionId === subId) {
+          const currentExp = new Date(sub.expiryDate);
+          currentExp.setDate(currentExp.getDate() + days);
+          const newExpStr = currentExp.toISOString().split('T')[0];
+          const daysRemaining = Math.ceil((currentExp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+          logSuperAdminAudit({
+            organizationId: sub.organizationId,
+            action: 'ADD_TRIAL_DAYS',
+            resource: 'subscription',
+            resourceId: subId,
+            previousValue: `Expiry: ${sub.expiryDate}`,
+            newValue: `Expiry: ${newExpStr}`,
+            details: `Granted ${days} extra trial days.`
+          });
+
+          return {
+            ...sub,
+            expiryDate: newExpStr,
+            daysRemaining,
+            status: 'trial'
+          };
+        }
+        return sub;
+      })
+    );
+    showToast(`Added ${days} trial days!`, 'success');
+    return { success: true };
+  };
+
+  const updatePlatformPlan = (planId: string, updates: Partial<PlatformPlan>) => {
+    setPlans((prev) =>
+      prev.map((p) => {
+        if (p.planId === planId) {
+          logSuperAdminAudit({
+            action: 'UPDATE_PLAN_CONFIG',
+            resource: 'plan',
+            resourceId: planId,
+            details: `Updated plan ${p.name} properties.`
+          });
+          return { ...p, ...updates };
+        }
+        return p;
+      })
+    );
+    showToast('Platform plan updated.', 'success');
+    return { success: true };
+  };
+
+  const markNotificationRead = (notificationId: string) => {
+    setPlatformNotifications((prev) =>
+      prev.map((n) => (n.notificationId === notificationId ? { ...n, isRead: true } : n))
+    );
+  };
+
+  const createSupportTicket = (ticketData: Omit<SupportTicket, 'ticketId' | 'ticketNumber' | 'createdAt' | 'updatedAt'>) => {
+    const newTicket: SupportTicket = {
+      ...ticketData,
+      ticketId: `tkt_${Date.now()}`,
+      ticketNumber: `TKT-2026-${Math.floor(100 + Math.random() * 900)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    setSupportTickets((prev) => [newTicket, ...prev]);
+    showToast(`Support Ticket ${newTicket.ticketNumber} created!`, 'success');
+    return { success: true };
+  };
+
+  const updateSupportTicketStatus = (ticketId: string, status: SupportTicketStatus, resolutionNotes?: string) => {
+    setSupportTickets((prev) =>
+      prev.map((tkt) =>
+        tkt.ticketId === ticketId
+          ? {
+              ...tkt,
+              status,
+              resolutionNotes: resolutionNotes || tkt.resolutionNotes,
+              updatedAt: new Date().toISOString()
+            }
+          : tkt
+      )
+    );
+    showToast(`Ticket status updated to ${status.toUpperCase()}`, 'info');
+    return { success: true };
+  };
+
+  const updatePlatformSettings = (updates: Partial<PlatformSettings>) => {
+    setPlatformSettings((prev) => ({
+      ...prev,
+      ...updates,
+      general: { ...prev.general, ...updates.general },
+      security: { ...prev.security, ...updates.security },
+      emailSms: { ...prev.emailSms, ...updates.emailSms },
+      maintenance: { ...prev.maintenance, ...updates.maintenance }
+    }));
+    logSuperAdminAudit({
+      action: 'UPDATE_PLATFORM_SETTINGS',
+      resource: 'setting',
+      details: 'Updated global platform configuration parameters.'
+    });
+    showToast('Platform settings saved.', 'success');
+    return { success: true };
+  };
+
+  const getSuperAdminMetrics = () => {
+    const totalOrganizations = organizations.length;
+    const activeOrganizations = organizations.filter((o) => o.status === 'active' || o.status === 'trial').length;
+    const suspendedOrganizations = organizations.filter((o) => o.status === 'suspended').length;
+
+    const totalBuildings = organizations.reduce((sum, o) => sum + (o.usage?.buildingsCount || 0), 0);
+    const totalUnits = organizations.reduce((sum, o) => sum + (o.usage?.unitsCount || 0), 0);
+    const occupiedUnits = organizations.reduce((sum, o) => sum + (o.usage?.occupiedUnitsCount || 0), 0);
+    const vacantUnits = totalUnits - occupiedUnits;
+    const totalUsers = organizations.reduce((sum, o) => sum + (o.usage?.usersCount || 0), 0);
+
+    const activeSubscriptions = subscriptions.filter((s) => s.status === 'active').length;
+    const expiringSubscriptions = subscriptions.filter((s) => s.status === 'expiring_soon' || s.daysRemaining <= 14).length;
+
+    const monthlyRecurringRevenueETB = subscriptions
+      .filter((s) => s.status === 'active' || s.status === 'expiring_soon')
+      .reduce((sum, s) => sum + (s.billingCycle === 'annually' ? Math.round(s.amountETB / 12) : s.amountETB), 0);
+
+    const totalRevenueETB = platformInvoices
+      .filter((inv) => inv.status === 'paid')
+      .reduce((sum, inv) => sum + inv.amountETB, 0);
+
+    const unreadNotificationsCount = platformNotifications.filter((n) => !n.isRead).length;
+
+    return {
+      totalOrganizations,
+      activeOrganizations,
+      suspendedOrganizations,
+      totalBuildings,
+      totalUnits,
+      occupiedUnits,
+      vacantUnits,
+      totalUsers,
+      activeSubscriptions,
+      expiringSubscriptions,
+      monthlyRecurringRevenueETB,
+      totalRevenueETB,
+      unreadNotificationsCount
+    };
+  };
+
   return (
     <PMSContext.Provider
       value={{
@@ -1170,7 +1790,34 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         sendCustomSMS,
         getRedList,
         getRevenueMetrics,
-        resetToSampleData
+        resetToSampleData,
+        // Super Admin Exports
+        organizations,
+        plans,
+        subscriptions,
+        platformInvoices,
+        superAdminAuditLogs,
+        platformNotifications,
+        supportTickets,
+        platformSettings,
+        impersonationContext,
+        createOrganization,
+        updateOrganization,
+        suspendOrganization,
+        activateOrganization,
+        deleteOrganization,
+        startImpersonation,
+        exitImpersonation,
+        extendSubscription,
+        updateSubscriptionPlan,
+        addTrialDays,
+        updatePlatformPlan,
+        logSuperAdminAudit,
+        markNotificationRead,
+        createSupportTicket,
+        updateSupportTicketStatus,
+        updatePlatformSettings,
+        getSuperAdminMetrics
       }}
     >
       {children}

@@ -20,15 +20,46 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     portfolio_title: 'Addis Ababa Portfolio',
     footer_role_active: 'Enterprise PMS • Multi-Role Authentication Active',
 
+    // Super Admin Specific
+    super_admin_title: 'EPMS Cloud Control Plane',
+    super_admin_subtitle: 'Centralized Multi-Tenant SaaS Management, Subscriptions & Architecture',
+    super_admin_impersonating: 'SUPER ADMIN ACCESS MODE',
+    super_admin_viewing_org: 'You are currently viewing client environment:',
+    super_admin_exit_impersonation: 'Exit Client Environment',
+    super_admin_kpi_total_orgs: 'Total Client Orgs',
+    super_admin_kpi_active_orgs: 'Active Clients',
+    super_admin_kpi_total_bldgs: 'Total Managed Buildings',
+    super_admin_kpi_total_units: 'Total Units Portfolio',
+    super_admin_kpi_total_users: 'Active System Users',
+    super_admin_kpi_mrr: 'Platform MRR (SaaS)',
+    super_admin_kpi_expiring_subs: 'Expiring Subscriptions',
+    super_admin_kpi_occupancy: 'Platform-wide Occupancy',
+
+    // Super Admin Navigation
+    nav_sa_dashboard: 'Executive Overview',
+    nav_sa_organizations: 'Organizations',
+    nav_sa_buildings: 'All Buildings',
+    nav_sa_users: 'Global Users',
+    nav_sa_subscriptions: 'Subscriptions',
+    nav_sa_plans: 'Plans & Pricing',
+    nav_sa_billing: 'Platform Billing',
+    nav_sa_audit_logs: 'Platform Audit Logs',
+    nav_sa_notifications: 'Notifications',
+    nav_sa_support: 'Support Tickets',
+    nav_sa_health: 'System Health',
+    nav_sa_settings: 'Platform Settings',
+
     // Roles
+    role_super_admin: 'Platform Super Admin',
     role_owner: 'Building Owner',
     role_manager: 'Property Manager',
-    role_admin: 'Super Admin',
+    role_admin: 'Organization Admin',
     role_tenant: 'Commercial Tenant',
     portal_tenant: 'Tenant Self-Service',
     portal_owner: 'Owner Portal',
     portal_manager: 'Manager Portal',
-    portal_admin: 'Super Admin',
+    portal_admin: 'Admin Console',
+    portal_super_admin: 'Super Admin Control Plane',
 
     // Navigation Tabs
     nav_dashboard: 'Revenue Analytics',
@@ -46,15 +77,15 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     login_title: 'Enterprise PMS',
     login_subtitle: 'Commercial Complex & Property Management System',
     login_username: 'Username / Tenant Name',
-    login_username_placeholder: 'e.g. Almaz Kebede or Owner / Manage',
+    login_username_placeholder: 'e.g. SuperAdmin, Owner, Manage, Almaz Kebede',
     login_password: 'Password (123)',
     login_password_placeholder: 'Enter 123',
     login_btn: 'Sign In',
     login_quick_creds: 'Quick Demo Credentials (Password: 123)',
-    login_tenant_hint: '💡 All tenants log in using their Full Name as Username and password "123".',
+    login_tenant_hint: '💡 Super Admin, Owners, Managers, and Tenants can log in using their respective accounts and password "123".',
     login_remember: 'Remember session',
     login_auth_spinner: 'Authenticating with Firebase...',
-    login_security_note: 'Connected to Cloud Firestore backend. Changes made by Owner, Administrator, or Management are synchronized live across all browsers.',
+    login_security_note: 'Connected to Cloud Firestore backend. Changes made by Super Admin, Owner, Administrator, or Management are synchronized live across all browsers.',
 
     // Executive Dashboard
     dash_title_owner: 'Owner Executive Revenue Vault',
@@ -77,7 +108,26 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     dash_overdue_delinquent: 'Overdue Delinquency Summary',
     dash_no_overdue: 'Zero delinquent units! All rent payments are currently up to date.',
 
-    // Vault (Receipt Verification Vault)
+    // Organizations
+    org_title: 'Client Organizations',
+    org_subtitle: 'Centrally manage all onboarded real estate firms, lease scopes, and usage tiers',
+    org_create_btn: 'Onboard New Organization',
+    org_search_placeholder: 'Search organizations by name, TIN, email, or contact...',
+    org_open_dashboard: 'Open Client Dashboard',
+    org_manage_sub: 'Manage Subscription',
+    org_suspend: 'Suspend Organization',
+    org_activate: 'Activate Organization',
+    org_delete: 'Archive Organization',
+    org_view_details: 'View Profile',
+    org_usage_limits: 'Usage & Quota Limits',
+
+    // Subscriptions & Plans
+    sub_title: 'Platform Subscriptions',
+    sub_subtitle: 'Active SaaS licenses, billing cycles, renewals, and tier upgrades',
+    plan_title: 'SaaS Subscription Plans',
+    plan_subtitle: 'Configurable tier limits, features, and ETB pricing matrix',
+
+    // Vault
     vault_title: 'Receipt Verification Vault',
     vault_subtitle: 'Official bank payment advice audit & confirmation center',
     vault_pending_tab: 'Pending Verification',
@@ -97,7 +147,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     vault_submitted_at: 'Submitted At',
     vault_unit: 'Unit & Complex',
 
-    // Red List (Overdue Tracker)
+    // Red List
     redlist_title: 'The Red List: Delinquent Tenant Tracker',
     redlist_subtitle: 'Active overdue rents, automated SMS escalation, and default mitigation',
     redlist_critical_badge: 'Critical Overdue',
@@ -257,15 +307,46 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     portfolio_title: 'የአዲስ አበባ ህንፃዎች ፖርትፎሊዮ',
     footer_role_active: 'ኢንተርፕራይዝ የህንፃ አስተዳደር • የተጠቃሚ ክፍለ-ጊዜ ነቅቷል',
 
+    // Super Admin Specific
+    super_admin_title: 'የኢፒኤምኤስ ክላውድ መቆጣጠሪያ ማዕከል',
+    super_admin_subtitle: 'የሁሉም ድርጅቶች፣ የህንፃዎች፣ የደንበኝነት ምዝገባዎች እና የሲስተም አርክቴክቸር ማዕከል',
+    super_admin_impersonating: 'የሱፐር አድሚን ቀጥታ መግቢያ ሁነታ',
+    super_admin_viewing_org: 'በአሁኑ ሰዓት የሚመለከቱት ድርጅት፡',
+    super_admin_exit_impersonation: 'ከድርጅቱ ውጣ',
+    super_admin_kpi_total_orgs: 'ጠቅላላ ደንበኛ ድርጅቶች',
+    super_admin_kpi_active_orgs: 'ንቁ ደንበኞች',
+    super_admin_kpi_total_bldgs: 'ጠቅላላ ህንፃዎች',
+    super_admin_kpi_total_units: 'ጠቅላላ ክፍሎች',
+    super_admin_kpi_total_users: 'ንቁ ተጠቃሚዎች',
+    super_admin_kpi_mrr: 'ወርሃዊ የፕላትፎርም ገቢ',
+    super_admin_kpi_expiring_subs: 'የሚያበቁ ምዝገባዎች',
+    super_admin_kpi_occupancy: 'የክፍሎች ይዞታ ምጣኔ',
+
+    // Super Admin Navigation
+    nav_sa_dashboard: 'አጠቃላይ ትንተና',
+    nav_sa_organizations: 'ድርጅቶች',
+    nav_sa_buildings: 'ሁሉም ህንፃዎች',
+    nav_sa_users: 'ጠቅላላ ተጠቃሚዎች',
+    nav_sa_subscriptions: 'የደንበኝነት ምዝገባዎች',
+    nav_sa_plans: 'የአገልግሎት ፓኬጆች',
+    nav_sa_billing: 'የፕላትፎርም ክፍያዎች',
+    nav_sa_audit_logs: 'የኦዲት መዝገቦች',
+    nav_sa_notifications: 'ማሳወቂያዎች',
+    nav_sa_support: 'የድጋፍ ጥያቄዎች',
+    nav_sa_health: 'የሲስተም ጤና',
+    nav_sa_settings: 'የሲስተም ቅንብሮች',
+
     // Roles
+    role_super_admin: 'ፕላትፎርም ሱፐር አድሚን (Super Admin)',
     role_owner: 'የህንፃ ባለቤት (Owner)',
     role_manager: 'የህንፃ ስራ አስኪያጅ (Manager)',
-    role_admin: 'ሲስተም አድሚን (Admin)',
+    role_admin: 'የድርጅት አድሚን (Admin)',
     role_tenant: 'የንግድ ተከራይ (Tenant)',
     portal_tenant: 'የተከራይ አገልግሎት ፖርታል',
     portal_owner: 'የባለቤት ፖርታል',
     portal_manager: 'የስራ አስኪያጅ ፖርታል',
     portal_admin: 'የአድሚን ፖርታል',
+    portal_super_admin: 'የሱፐር አድሚን መቆጣጠሪያ ማዕከል',
 
     // Navigation Tabs
     nav_dashboard: 'የገቢ እና ፋይናንስ ትንተና',
@@ -283,15 +364,15 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     login_title: 'ኢንተርፕራይዝ የህንፃ አስተዳደር',
     login_subtitle: 'ደህንነቱ የተጠበቀ የንግድ ህንፃዎች እና ተከራዮች ሲስተም',
     login_username: 'የተጠቃሚ ስም / የተከራይ ስም',
-    login_username_placeholder: 'ለምሳሌ፡ አልማዝ ከበደ ወይም Owner / Manage',
+    login_username_placeholder: 'ለምሳሌ፡ SuperAdmin, Owner, Manage, አልማዝ ከበደ',
     login_password: 'የይለፍ ቃል (123)',
     login_password_placeholder: '123 ያስገቡ',
     login_btn: 'ግባ (Sign In)',
     login_quick_creds: 'የሙከራ መግቢያዎች (የይለፍ ቃል፡ 123)',
-    login_tenant_hint: '💡 ሁሉም ተከራዮች ሙሉ ስማቸውን እንደ ተጠቃሚ ስም እና የይለፍ ቃል "123" በመጠቀም መግባት ይችላሉ።',
+    login_tenant_hint: '💡 ሱፐር አድሚን፣ ባለቤቶች፣ ስራ አስኪያጆች እና ተከራዮች መለያቸውን እና የይለፍ ቃል "123" በመጠቀም መግባት ይችላሉ።',
     login_remember: 'መግቢያዬ ይታወስ',
     login_auth_spinner: 'ከፋየርቤዝ ጋር በመገናኘት ላይ...',
-    login_security_note: 'ከክላውድ ፋየርቤዝ ዳታቤዝ ጋር በቀጥታ የተገናኘ። በባለቤት፣ በአድሚን ወይም በስራ አስኪያጅ የሚደረጉ ለውጦች ወዲያውኑ ይንጸባረቃሉ።',
+    login_security_note: 'ከክላውድ ፋየርቤዝ ዳታቤዝ ጋር በቀጥታ የተገናኘ። በሱፐር አድሚን፣ በባለቤት፣ ወይም በስራ አስኪያጅ የሚደረጉ ለውጦች ወዲያውኑ ይንጸባረቃሉ።',
 
     // Executive Dashboard
     dash_title_owner: 'የህንፃ ባለቤት የገቢ እና ፋይናንስ ካዝና',
@@ -314,7 +395,26 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     dash_overdue_delinquent: 'የውዝፍ እዳ እና ያለፈባቸው ተከራዮች ማጠቃለያ',
     dash_no_overdue: 'ምንም ውዝፍ እዳ የለም! ሁሉም የኪራይ ክፍያዎች በወቅቱ ተከፍለዋል።',
 
-    // Vault (Receipt Verification Vault)
+    // Organizations
+    org_title: 'የደንበኛ ድርጅቶች ማውጫ',
+    org_subtitle: 'ሁሉንም የተመዘገቡ የሪል እስቴት ድርጅቶች፣ የህንፃዎች መጠን እና የፍጆታ ገደብ ማስተዳደሪያ',
+    org_create_btn: 'አዲስ ደንበኛ ድርጅት መዝግብ',
+    org_search_placeholder: 'በስም፣ በቲን ቁጥር፣ በኢሜይል ወይም በስልክ ፈልግ...',
+    org_open_dashboard: 'የድርጅቱን ዳሽቦርድ ክፈት',
+    org_manage_sub: 'የደንበኝነት ምዝገባ አስተዳድር',
+    org_suspend: 'ድርጅቱን አግድ',
+    org_activate: 'ድርጅቱን አንቃ',
+    org_delete: 'ድርጅቱን አስቀምጥ / አሰናብት',
+    org_view_details: 'ዝርዝር መረጃ ተመልከት',
+    org_usage_limits: 'የአጠቃቀም እና የፍጆታ ገደብ',
+
+    // Subscriptions & Plans
+    sub_title: 'የፕላትፎርም የደንበኝነት ምዝገባዎች',
+    sub_subtitle: 'ንቁ የፍቃድ ምዝገባዎች፣ የክፍያ ዑደቶች፣ የእድሳት ቀናት እና የደረጃ ማሻሻያዎች',
+    plan_title: 'የአገልግሎት ፓኬጆች እና የዋጋ ዝርዝር',
+    plan_subtitle: 'የህንፃ፣ የክፍሎች እና የተጠቃሚዎች ገደብ እና የብር ዋጋ ማስተካከያ',
+
+    // Vault
     vault_title: 'የደረሰኝ ማረጋገጫ ካዝና',
     vault_subtitle: 'ይፋዊ የባንክ ክፍያ ደረሰኞችን የመመርመሪያ እና የማረጋገጫ ማዕከል',
     vault_pending_tab: 'ማረጋገጫ የሚጠብቁ ደረሰኞች',
@@ -334,7 +434,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     vault_submitted_at: 'የተላከበት ቀን',
     vault_unit: 'ክፍል እና ህንፃ',
 
-    // Red List (Overdue Tracker)
+    // Red List
     redlist_title: 'የቀይ ዝርዝር፡ ውዝፍ እዳ ያለባቸው ተከራዮች',
     redlist_subtitle: 'የመክፈያ ቀናቸው ያለፈባቸው ተከራዮች፣ ራስ-ሰር የኤስኤምኤስ ማስጠንቀቂያ እና የክትትል ሲስተም',
     redlist_critical_badge: 'አስቸኳይ ውዝፍ እዳ',

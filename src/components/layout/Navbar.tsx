@@ -50,6 +50,17 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
   // Role-Specific Navigation Tabs with Multilingual Amharic Support
   const getNavTabsForRole = () => {
+    if (currentUser.role === 'super_admin') {
+      return [
+        { id: 'sa_dashboard', label: t('nav_sa_dashboard', 'Control Plane'), icon: LayoutDashboard, route: '/superadmin' },
+        { id: 'sa_organizations', label: t('nav_sa_organizations', 'Organizations'), icon: Building2, route: '/superadmin/orgs' },
+        { id: 'sa_subscriptions', label: t('nav_sa_subscriptions', 'Subscriptions'), icon: Sparkles, route: '/superadmin/subs' },
+        { id: 'sa_billing', label: t('nav_sa_billing', 'Billing'), icon: Receipt, route: '/superadmin/billing' },
+        { id: 'dashboard', label: t('nav_dashboard', 'Client Dashboard'), icon: LayoutDashboard, route: '/owner/dashboard' },
+        { id: 'vault', label: t('nav_vault', 'Vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
+      ];
+    }
+
     if (currentUser.role === 'admin') {
       return [
         { id: 'admin_monitoring', label: t('nav_monitoring'), icon: ShieldAlert, route: '/admin' },

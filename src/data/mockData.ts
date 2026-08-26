@@ -1,6 +1,18 @@
 import { Tenant, Unit, Invoice, Payment, SMSLog, Property, UserProfile, MaintenanceRequest, LeaseRenewalRequest } from '../types/pms';
 
 export const MOCK_USERS: Record<string, UserProfile> = {
+  superadmin: {
+    uid: 'usr_superadmin_000',
+    name: 'Platform Super Administrator',
+    email: 'superadmin@epms.cloud.et',
+    role: 'super_admin',
+    phone: '+251 91 000 0000',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    title: 'Chief Platform Operations & System Architect',
+    organizationId: 'all',
+    organizationName: 'EPMS Cloud Platform',
+    complexAccess: ['all']
+  },
   owner: {
     uid: 'usr_owner_001',
     name: 'Abebe Mengesha',
@@ -9,6 +21,8 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     phone: '+251 91 123 4567',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     title: 'Managing Director & Property Owner',
+    organizationId: 'org_bole_plaza',
+    organizationName: 'Bole Medhanialem Commercial Center',
     complexAccess: ['prop_bole_01', 'prop_kazanchis_02', 'prop_sarbet_03']
   },
   manager: {
@@ -19,6 +33,8 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     phone: '+251 91 234 5678',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     title: 'Senior Property Operations Manager',
+    organizationId: 'org_bole_plaza',
+    organizationName: 'Bole Medhanialem Commercial Center',
     complexAccess: ['prop_bole_01', 'prop_kazanchis_02', 'prop_sarbet_03']
   },
   admin: {
@@ -29,6 +45,8 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     phone: '+251 91 345 6789',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
     title: 'Lead Firebase Cloud Architect',
+    organizationId: 'org_bole_plaza',
+    organizationName: 'Bole Medhanialem Commercial Center',
     complexAccess: ['prop_bole_01', 'prop_kazanchis_02', 'prop_sarbet_03']
   },
   tenant: {
@@ -39,6 +57,8 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     phone: '+251 91 123 4567',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     title: 'Tenant • Bole Coffee Roastery (G-01)',
+    organizationId: 'org_bole_plaza',
+    organizationName: 'Bole Medhanialem Commercial Center',
     complexAccess: ['prop_bole_01']
   }
 };

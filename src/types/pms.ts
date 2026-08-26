@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'owner' | 'manager' | 'tenant';
+export type UserRole = 'super_admin' | 'admin' | 'owner' | 'manager' | 'tenant';
 
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'emergency';
 export type MaintenanceStatus = 'reported' | 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
@@ -12,6 +12,7 @@ export interface MaintenanceRequest {
   unitId: string;
   unitNumber: string;
   propertyId: string;
+  organizationId?: string;
   category: MaintenanceCategory;
   priority: MaintenancePriority;
   status: MaintenanceStatus;
@@ -36,6 +37,7 @@ export interface LeaseRenewalRequest {
   notes?: string;
   status: 'pending' | 'approved' | 'declined';
   submittedAt: string;
+  organizationId?: string;
 }
 
 export interface UserProfile {
@@ -46,6 +48,8 @@ export interface UserProfile {
   phone: string;
   avatar: string;
   title: string;
+  organizationId?: string;
+  organizationName?: string;
   complexAccess: string[];
 }
 
@@ -64,6 +68,7 @@ export interface TenantDocument {
 
 export interface Tenant {
   tenantId: string;
+  organizationId?: string;
   legalName: string;
   businessTradeName?: string;
   phone: string;
@@ -85,6 +90,7 @@ export interface Tenant {
 
 export interface Unit {
   unitId: string;
+  organizationId?: string;
   propertyId: string;
   propertyName: string;
   unitNumber: string;
@@ -101,6 +107,7 @@ export type PaymentStatus = 'pending' | 'submitted_for_verification' | 'paid' | 
 
 export interface Invoice {
   invoiceId: string;
+  organizationId?: string;
   invoiceNumber: string;
   unitId: string;
   tenantId: string;
@@ -121,6 +128,7 @@ export type VerificationStatus = 'unverified' | 'verified' | 'rejected';
 
 export interface Payment {
   paymentId: string;
+  organizationId?: string;
   invoiceId: string;
   tenantId: string;
   unitId: string;
@@ -139,6 +147,7 @@ export interface Payment {
 
 export interface SMSLog {
   id: string;
+  organizationId?: string;
   recipientPhone: string;
   recipientName: string;
   tenantId: string;
@@ -157,6 +166,8 @@ export interface SMSLog {
 
 export interface Property {
   propertyId: string;
+  organizationId?: string;
+  organizationName?: string;
   name: string;
   location: string;
   totalUnits: number;
@@ -165,6 +176,7 @@ export interface Property {
 
 export interface VerificationAuditLog {
   id: string;
+  organizationId?: string;
   paymentId: string;
   invoiceId: string;
   action: 'verified' | 'rejected' | 'submitted';
