@@ -258,6 +258,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             <span>{language === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 English'}</span>
           </button>
 
+          {/* Quick Super Admin Switch Button */}
+          {currentUser.role !== 'super_admin' && (
+            <button
+              onClick={() => switchUser('super_admin')}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-[#007AFF]/10 hover:bg-[#007AFF] hover:text-white text-[#007AFF] text-xs font-bold border border-[#007AFF]/20 transition-all active:scale-95 cursor-pointer shadow-sm"
+              title="Switch to Super Admin Control Plane"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>⚡ Super Admin</span>
+            </button>
+          )}
+
           <div className="bg-[#767680]/10 p-1.5 rounded-2xl border border-black/[0.04] flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full ring-2 ring-white overflow-hidden shrink-0 shadow-sm ml-1">
               <img

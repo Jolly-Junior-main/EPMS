@@ -17,7 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
 
 interface SuperAdminSidebarProps {

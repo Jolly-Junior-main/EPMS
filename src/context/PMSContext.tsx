@@ -168,6 +168,7 @@ interface PMSContextType {
   addTrialDays: (subId: string, days: number) => { success: boolean; error?: string };
   updatePlatformPlan: (planId: string, updates: Partial<PlatformPlan>) => { success: boolean; error?: string };
   resetClientPassword: (orgId: string, userUid: string, newPassword?: string) => { success: boolean; message?: string };
+  createCommercialUnitForClient: (orgId: string, unitData: { businessName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => { success: boolean; error?: string };
   createSalonForClient: (orgId: string, salonData: { salonName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => { success: boolean; error?: string };
   createAdBanner: (ad: Omit<PlatformAdBanner, 'adId' | 'createdAt'>) => { success: boolean; error?: string };
   updateAdBanner: (adId: string, updates: Partial<PlatformAdBanner>) => { success: boolean; error?: string };
@@ -202,22 +203,119 @@ const PMSContext = createContext<PMSContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'enterprise_pms_data_v1';
 
+export const TAB_TO_PATH: Record<string, string> = {
+  sa_dashboard: '/superadmin',
+  sa_organizations: '/superadmin/orgs',
+  sa_sms_api: '/superadmin/sms',
+  sa_subscriptions: '/superadmin/subs',
+  sa_plans: '/superadmin/plans',
+  sa_ads: '/superadmin/ads',
+  sa_billing: '/superadmin/billing',
+  sa_health: '/superadmin/health',
+  sa_logs: '/superadmin/logs',
+  sa_buildings: '/superadmin/buildings',
+  dashboard: '/owner',
+  owner_ledger: '/owner/ledger',
+  vault: '/owner/vault',
+  tenants: '/manager/tenants',
+  documents: '/manager/documents',
+  invoices: '/manager/invoices',
+  redlist: '/manager/redlist',
+  sms: '/manager/sms',
+  tenant_portal: '/portal',
+  admin_monitoring: '/admin'
+};
+
+export const PATH_MAP: Record<string, { tab: string; role: UserRole; route: string }> = {
+  '/superadmin': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/dashboard': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/orgs': { tab: 'sa_organizations', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/clients': { tab: 'sa_organizations', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/sms': { tab: 'sa_sms_api', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/subs': { tab: 'sa_subscriptions', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/plans': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/ads': { tab: 'sa_ads', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/billing': { tab: 'sa_billing', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/health': { tab: 'sa_health', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/logs': { tab: 'sa_logs', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/buildings': { tab: 'sa_buildings', role: 'super_admin', route: '/superadmin' },
+  '/owner': { tab: 'dashboard', role: 'owner', route: '/owner' },
+  '/owner/': { tab: 'dashboard', role: 'owner', route: '/owner' },
+  '/owner/revenue': { tab: 'dashboard', role: 'owner', route: '/owner' },
+  '/owner/ledger': { tab: 'owner_ledger', role: 'owner', route: '/owner' },
+  '/owner/vault': { tab: 'vault', role: 'owner', route: '/owner' },
+  '/manager': { tab: 'tenants', role: 'manager', route: '/manager' },
+  '/manager/': { tab: 'tenants', role: 'manager', route: '/manager' },
+  '/manager/tenants': { tab: 'tenants', role: 'manager', route: '/manager' },
+  '/manager/documents': { tab: 'documents', role: 'manager', route: '/manager' },
+  '/manager/invoices': { tab: 'invoices', role: 'manager', route: '/manager' },
+  '/manager/redlist': { tab: 'redlist', role: 'manager', route: '/manager' },
+  '/manager/sms': { tab: 'sms', role: 'manager', route: '/manager' },
+  '/portal': { tab: 'tenant_portal', role: 'tenant', route: '/portal' },
+  '/portal/': { tab: 'tenant_portal', role: 'tenant', route: '/portal' },
+  '/admin': { tab: 'admin_monitoring', role: 'admin', route: '/admin' }
+};
+
+const getInitialRouteInfo = () => {
+  if (typeof window === 'undefined') {
+    return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
+  }
+  const path = window.location.pathname.toLowerCase();
+  if (path === '/login') {
+    return { isAuth: false, user: MOCK_USERS.superadmin, route: '/login', tab: 'sa_dashboard' };
+  }
+  const directMatch = PATH_MAP[path] || Object.entries(PATH_MAP).find(([k]) => path.startsWith(k))?.[1];
+  if (directMatch) {
+    return { isAuth: true, user: MOCK_USERS[directMatch.role], route: directMatch.route, tab: directMatch.tab };
+  }
+  return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
+};
+
 export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_auth_state`);
-    return saved !== null ? JSON.parse(saved) : true;
-  });
-  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_user_profile`);
-    return saved ? JSON.parse(saved) : MOCK_USERS.owner;
-  });
-  const [activeRoleRoute, setActiveRoleRoute] = useState<string>(() => {
-    return currentUser.role === 'admin' ? '/admin' : currentUser.role === 'manager' ? '/manager' : '/owner';
-  });
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const initialRoute = getInitialRouteInfo();
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(initialRoute.isAuth);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(initialRoute.user);
+  const [activeRoleRoute, setActiveRoleRoute] = useState<string>(initialRoute.route);
+  const [activeTab, setActiveTab] = useState<string>(initialRoute.tab);
   const [guardError, setGuardError] = useState<{ attemptedRoute: string; requiredRole: string; currentRole: string; message: string } | null>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('all');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Synchronize browser URL history with active section
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      if (path === '/login') {
+        setIsAuthenticated(false);
+        return;
+      }
+      const match = PATH_MAP[path] || Object.entries(PATH_MAP).find(([k]) => path.startsWith(k))?.[1];
+      if (match) {
+        setIsAuthenticated(true);
+        setCurrentUser(MOCK_USERS[match.role]);
+        setActiveRoleRoute(match.route);
+        setActiveTab(match.tab);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const targetPath = TAB_TO_PATH[activeTab] || activeRoleRoute;
+      if (targetPath && window.location.pathname !== targetPath) {
+        window.history.pushState(null, '', targetPath);
+      }
+    } else {
+      if (window.location.pathname !== '/login') {
+        window.history.pushState(null, '', '/login');
+      }
+    }
+  }, [activeTab, activeRoleRoute, isAuthenticated]);
 
   // Multilingual Support (English & Amharic)
   const [language, setLanguageState] = useState<Language>(() => {
@@ -1733,20 +1831,20 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return { success: true, message: `Password reset to: ${newPassword}` };
   };
 
-  const createSalonForClient = (orgId: string, salonData: { salonName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => {
+  const createCommercialUnitForClient = (orgId: string, unitData: { businessName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => {
     const org = organizations.find((o) => o.organizationId === orgId) || organizations[0];
-    const unitId = `unit_salon_${Date.now()}`;
-    const tenantId = `tnt_salon_${Date.now()}`;
-    const invoiceId = `inv_salon_${Date.now()}`;
+    const unitId = `unit_comm_${Date.now()}`;
+    const tenantId = `tnt_comm_${Date.now()}`;
+    const invoiceId = `inv_comm_${Date.now()}`;
 
     const newUnit: Unit = {
       unitId,
       organizationId: org ? org.organizationId : 'org_bole_plaza',
       propertyId: properties[0]?.propertyId || 'prop_bole_01',
-      unitNumber: salonData.unitNumber || `S-${Math.floor(100 + Math.random() * 900)}`,
+      unitNumber: unitData.unitNumber || `U-${Math.floor(100 + Math.random() * 900)}`,
       floor: 1,
-      sqm: 45,
-      monthlyRentETB: salonData.monthlyRentETB,
+      sqm: 60,
+      monthlyRentETB: unitData.monthlyRentETB,
       status: 'occupied',
       currentTenantId: tenantId
     };
@@ -1754,16 +1852,16 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newTenant: Tenant = {
       tenantId,
       organizationId: org ? org.organizationId : 'org_bole_plaza',
-      legalName: salonData.managerName,
-      businessTradeName: salonData.salonName,
-      phone: salonData.managerPhone,
-      email: salonData.managerEmail || `${salonData.salonName.toLowerCase().replace(/\s+/g, '')}@epms.et`,
+      legalName: unitData.managerName,
+      businessTradeName: unitData.businessName,
+      phone: unitData.managerPhone,
+      email: unitData.managerEmail || `${unitData.businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}@epms.et`,
       assignedUnitId: unitId,
       unitNumber: newUnit.unitNumber,
       leaseStartDate: new Date().toISOString().split('T')[0],
       leaseEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      monthlyRentETB: salonData.monthlyRentETB,
-      securityDepositETB: salonData.monthlyRentETB * 2,
+      monthlyRentETB: unitData.monthlyRentETB,
+      securityDepositETB: unitData.monthlyRentETB * 2,
       status: 'active',
       documents: []
     };
@@ -1775,7 +1873,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       tenantId,
       unitId,
       propertyId: newUnit.propertyId,
-      amountDue: salonData.monthlyRentETB,
+      amountDue: unitData.monthlyRentETB,
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       billingPeriod: 'Current Month',
       issuedDate: new Date().toISOString().split('T')[0],
@@ -1789,14 +1887,25 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     logSuperAdminAudit({
       organizationId: org ? org.organizationId : undefined,
       organizationName: org ? org.name : undefined,
-      action: 'CREATE_SALON_UNIT',
+      action: 'CREATE_COMMERCIAL_UNIT',
       resource: 'building',
       resourceId: unitId,
-      details: `Provisioned new salon "${salonData.salonName}" in Unit ${newUnit.unitNumber} (${salonData.monthlyRentETB.toLocaleString()} ETB/mo) for ${org ? org.name : 'Client'}.`
+      details: `Provisioned new commercial space "${unitData.businessName}" in Unit ${newUnit.unitNumber} (${unitData.monthlyRentETB.toLocaleString()} ETB/mo) for ${org ? org.name : 'Client'}.`
     });
 
-    showToast(`Salon "${salonData.salonName}" provisioned successfully in Unit ${newUnit.unitNumber}!`, 'success');
+    showToast(`Commercial space "${unitData.businessName}" provisioned in Unit ${newUnit.unitNumber}!`, 'success');
     return { success: true };
+  };
+
+  const createSalonForClient = (orgId: string, salonData: { salonName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => {
+    return createCommercialUnitForClient(orgId, {
+      businessName: salonData.salonName,
+      unitNumber: salonData.unitNumber,
+      monthlyRentETB: salonData.monthlyRentETB,
+      managerName: salonData.managerName,
+      managerPhone: salonData.managerPhone,
+      managerEmail: salonData.managerEmail
+    });
   };
 
   const createAdBanner = (adData: Omit<PlatformAdBanner, 'adId' | 'createdAt'>) => {
@@ -2040,6 +2149,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addTrialDays,
         updatePlatformPlan,
         resetClientPassword,
+        createCommercialUnitForClient,
         createSalonForClient,
         createAdBanner,
         updateAdBanner,

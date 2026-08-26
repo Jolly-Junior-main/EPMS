@@ -24,9 +24,9 @@ import {
   KeyRound,
   Lock,
   Clock,
-  Scissors
+  Store
 } from 'lucide-react';
-import { CreateSalonModal } from './CreateSalonModal';
+import { CreateCommercialUnitModal } from './CreateCommercialUnitModal';
 
 interface OrganizationsManagerProps {
   onOpenCreateModal: () => void;
@@ -137,11 +137,11 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setIsCreateSalonOpen(true)}
-            className="px-3.5 py-2.5 bg-[#AF52DE]/10 hover:bg-[#AF52DE] hover:text-white text-[#AF52DE] rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-sm border border-[#AF52DE]/20"
-            title="Provision a new Salon / Spa commercial unit for a client"
+            className="px-3.5 py-2.5 bg-[#007AFF]/10 hover:bg-[#007AFF] hover:text-white text-[#007AFF] rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-sm border border-[#007AFF]/20"
+            title="Provision a new Commercial Shop / Office unit for a client"
           >
-            <Scissors className="w-4 h-4" />
-            + Provision Salon for Client
+            <Store className="w-4 h-4" />
+            + Provision Commercial Space
           </button>
           <button
             onClick={handleExportCSV}
@@ -474,8 +474,8 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
         </div>
       )}
 
-      {/* Create Salon for Client Modal */}
-      <CreateSalonModal
+      {/* Create Commercial Unit for Client Modal */}
+      <CreateCommercialUnitModal
         isOpen={isCreateSalonOpen}
         onClose={() => setIsCreateSalonOpen(false)}
       />
