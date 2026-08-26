@@ -27,6 +27,7 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
     currentUser,
     clientTheme,
     getRevenueMetrics,
+    properties,
     invoices,
     payments,
     getRedList,
@@ -264,7 +265,13 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
             </div>
 
             <div className="space-y-2.5">
-              {properties.map((prop) => {
+              {properties
+                .filter((p) =>
+                  currentUser.role === 'super_admin'
+                    ? true
+                    : p.propertyId === (currentUser.assignedPropertyId || currentUser.complexAccess?.[0] || 'prop_bole_01')
+                )
+                .map((prop) => {
                 const propInvoices = invoices.filter((i) => i.propertyId === prop.propertyId);
                 const propTotal = propInvoices.reduce((acc, i) => acc + i.amountDue, 0);
                 const propPaid = propInvoices.filter((i) => i.paymentStatus === 'paid').reduce((acc, i) => acc + i.amountDue, 0);
