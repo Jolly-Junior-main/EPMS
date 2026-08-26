@@ -242,6 +242,30 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     complexAccess: ['prop_bole_01'],
     assignedPropertyId: 'prop_bole_01',
     assignedPropertyName: 'Bole Medhanialem Commercial Center'
+  },
+  super_admin: {
+    uid: 'usr_superadmin_000',
+    name: 'Platform Super Administrator',
+    email: 'superadmin@epms.cloud.et',
+    role: 'super_admin',
+    phone: '+251 91 000 0000',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    title: 'Chief Platform Operations & System Architect',
+    organizationId: 'all',
+    organizationName: 'EPMS Cloud Platform',
+    complexAccess: ['all']
+  },
+  admin: {
+    uid: 'usr_superadmin_000',
+    name: 'Platform Super Administrator',
+    email: 'superadmin@epms.cloud.et',
+    role: 'super_admin',
+    phone: '+251 91 000 0000',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    title: 'Chief Platform Operations & System Architect',
+    organizationId: 'all',
+    organizationName: 'EPMS Cloud Platform',
+    complexAccess: ['all']
   }
 };
 

@@ -241,7 +241,13 @@ export const PATH_MAP: Record<string, { tab: string; role: UserRole; route: stri
   '/superadmin/clients': { tab: 'sa_organizations', role: 'super_admin', route: '/superadmin' },
   '/superadmin/sms': { tab: 'sa_sms_api', role: 'super_admin', route: '/superadmin' },
   '/superadmin/plans': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/pricing': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/prices': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/price': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
   '/superadmin/ads': { tab: 'sa_ads', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/ad': { tab: 'sa_ads', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/announcements': { tab: 'sa_ads', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/banners': { tab: 'sa_ads', role: 'super_admin', route: '/superadmin' },
   '/superadmin/billing': { tab: 'sa_billing', role: 'super_admin', route: '/superadmin' },
   '/superadmin/health': { tab: 'sa_health', role: 'super_admin', route: '/superadmin' },
   '/superadmin/audit': { tab: 'sa_audit_logs', role: 'super_admin', route: '/superadmin' },
@@ -253,6 +259,9 @@ export const PATH_MAP: Record<string, { tab: string; role: UserRole; route: stri
   '/superadmin/users': { tab: 'sa_users', role: 'super_admin', route: '/superadmin' },
   '/superadmin/dashboard': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
   '/superadmin': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
+  '/pricing': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
+  '/plans': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
+  '/ads': { tab: 'sa_ads', role: 'super_admin', route: '/superadmin' },
   '/owner/revenue': { tab: 'dashboard', role: 'owner', route: '/owner' },
   '/owner/ledger': { tab: 'owner_ledger', role: 'owner', route: '/owner' },
   '/owner/vault': { tab: 'vault', role: 'owner', route: '/owner' },
@@ -267,6 +276,13 @@ export const PATH_MAP: Record<string, { tab: string; role: UserRole; route: stri
   '/admin': { tab: 'admin_monitoring', role: 'admin', route: '/admin' }
 };
 
+const getUserForRole = (role: UserRole | string): UserProfile => {
+  if (role === 'super_admin' || role === 'superadmin' || role === 'admin') return MOCK_USERS.superadmin;
+  if (role === 'owner') return MOCK_USERS.bole_owner;
+  if (role === 'manager') return MOCK_USERS.bole_manager;
+  return MOCK_USERS[role] || MOCK_USERS.superadmin;
+};
+
 const getInitialRouteInfo = () => {
   if (typeof window === 'undefined') {
     return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
@@ -278,13 +294,13 @@ const getInitialRouteInfo = () => {
   
   if (PATH_MAP[cleanPath]) {
     const match = PATH_MAP[cleanPath];
-    return { isAuth: true, user: MOCK_USERS[match.role], route: match.route, tab: match.tab };
+    return { isAuth: true, user: getUserForRole(match.role), route: match.route, tab: match.tab };
   }
 
   const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
   const match = sortedEntries.find(([k]) => cleanPath.startsWith(k))?.[1];
   if (match) {
-    return { isAuth: true, user: MOCK_USERS[match.role], route: match.route, tab: match.tab };
+    return { isAuth: true, user: getUserForRole(match.role), route: match.route, tab: match.tab };
   }
   return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
 };
@@ -312,7 +328,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath.startsWith(k))?.[1];
       if (match) {
         setIsAuthenticated(true);
-        setCurrentUser(MOCK_USERS[match.role]);
+        setCurrentUser(getUserForRole(match.role));
         setActiveRoleRoute(match.route);
         setActiveTab(match.tab);
       }
@@ -785,16 +801,17 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Switch User directly
   const switchUser = (role: UserRole) => {
-    const targetUser = MOCK_USERS[role];
+    const targetUser = getUserForRole(role);
     if (targetUser) {
       setCurrentUser(targetUser);
+      setIsAuthenticated(true);
       setGuardError(null);
       if (role === 'super_admin') {
         setActiveRoleRoute('/superadmin');
         setActiveTab('sa_dashboard');
       } else if (role === 'admin') {
-        setActiveRoleRoute('/admin');
-        setActiveTab('admin_monitoring');
+        setActiveRoleRoute('/superadmin');
+        setActiveTab('sa_dashboard');
       } else if (role === 'owner') {
         setActiveRoleRoute('/owner');
         setActiveTab('dashboard');
@@ -802,8 +819,8 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setActiveRoleRoute('/manager');
         setActiveTab('tenants');
       } else {
-        setActiveRoleRoute('/portal');
-        setActiveTab('tenant_portal');
+        setActiveRoleRoute('/owner');
+        setActiveTab('dashboard');
       }
       showToast(`Switched active persona to [${targetUser.name}] (${role.toUpperCase()})`, 'info');
     }
