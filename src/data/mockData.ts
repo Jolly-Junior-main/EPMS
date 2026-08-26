@@ -13,55 +13,150 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     organizationName: 'EPMS Cloud Platform',
     complexAccess: ['all']
   },
-  owner: {
-    uid: 'usr_owner_001',
+  // Client 1: Bole Medhanialem Commercial Plaza
+  bole_owner: {
+    uid: 'usr_bole_owner',
     name: 'Abebe Mengesha',
-    email: 'abebe.mengesha@boleplaza.et',
+    email: 'owner@boleplaza.et',
     role: 'owner',
     phone: '+251 91 123 4567',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     title: 'Managing Director & Property Owner',
     organizationId: 'org_bole_plaza',
-    organizationName: 'Bole Medhanialem Commercial Center',
-    complexAccess: ['prop_bole_01', 'prop_kazanchis_02', 'prop_sarbet_03']
+    organizationName: 'Bole Medhanialem Commercial Plaza',
+    complexAccess: ['prop_bole_01'],
+    assignedPropertyId: 'prop_bole_01',
+    assignedPropertyName: 'Bole Medhanialem Commercial Center'
   },
-  manager: {
-    uid: 'usr_mgr_002',
+  bole_manager: {
+    uid: 'usr_bole_manager',
     name: 'Hanna Tadesse',
-    email: 'hanna.tadesse@boleplaza.et',
+    email: 'manager@boleplaza.et',
     role: 'manager',
     phone: '+251 91 234 5678',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
     title: 'Senior Property Operations Manager',
     organizationId: 'org_bole_plaza',
-    organizationName: 'Bole Medhanialem Commercial Center',
+    organizationName: 'Bole Medhanialem Commercial Plaza',
     complexAccess: ['prop_bole_01'],
     assignedPropertyId: 'prop_bole_01',
     assignedPropertyName: 'Bole Medhanialem Commercial Center'
   },
-  admin: {
-    uid: 'usr_admin_003',
-    name: 'Dawit Alemu',
-    email: 'dawit.alemu@sysadmin.et',
-    role: 'admin',
+  // Client 2: Kazanchis Business Towers
+  kazanchis_owner: {
+    uid: 'usr_kaz_owner',
+    name: 'Dawit Haile',
+    email: 'owner@kazanchistower.et',
+    role: 'owner',
     phone: '+251 91 345 6789',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    title: 'Lead Firebase Cloud Architect',
-    organizationId: 'org_bole_plaza',
-    organizationName: 'Bole Medhanialem Commercial Center',
-    complexAccess: ['prop_bole_01', 'prop_kazanchis_02', 'prop_sarbet_03']
+    title: 'Executive Asset Director & Owner',
+    organizationId: 'org_kazanchis_towers',
+    organizationName: 'Kazanchis Business Towers S.C.',
+    complexAccess: ['prop_kazanchis_02'],
+    assignedPropertyId: 'prop_kazanchis_02',
+    assignedPropertyName: 'Kazanchis Financial & Executive Tower'
   },
-  tenant: {
-    uid: 'ten_001',
-    name: 'Almaz Kebede',
-    email: 'almaz.kebede@bolecafe.et',
-    role: 'tenant',
+  kazanchis_manager: {
+    uid: 'usr_kaz_manager',
+    name: 'Meron Bekele',
+    email: 'manager@kazanchistower.et',
+    role: 'manager',
+    phone: '+251 91 456 7890',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    title: 'Commercial Operations Manager',
+    organizationId: 'org_kazanchis_towers',
+    organizationName: 'Kazanchis Business Towers S.C.',
+    complexAccess: ['prop_kazanchis_02'],
+    assignedPropertyId: 'prop_kazanchis_02',
+    assignedPropertyName: 'Kazanchis Financial & Executive Tower'
+  },
+  // Client 3: Sarbet Luxury Mall
+  sarbet_owner: {
+    uid: 'usr_sar_owner',
+    name: 'Solomon Tesfaye',
+    email: 'owner@sarbetmall.et',
+    role: 'owner',
+    phone: '+251 91 567 8901',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    title: 'Managing Director & Retail Owner',
+    organizationId: 'org_sarbet_mall',
+    organizationName: 'Sarbet Luxury Mall Real Estate',
+    complexAccess: ['prop_sarbet_03'],
+    assignedPropertyId: 'prop_sarbet_03',
+    assignedPropertyName: 'Sarbet International Retail Mall'
+  },
+  sarbet_manager: {
+    uid: 'usr_sar_manager',
+    name: 'Tigist Alemayehu',
+    email: 'manager@sarbetmall.et',
+    role: 'manager',
+    phone: '+251 91 678 9012',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    title: 'Retail Operations Manager',
+    organizationId: 'org_sarbet_mall',
+    organizationName: 'Sarbet Luxury Mall Real Estate',
+    complexAccess: ['prop_sarbet_03'],
+    assignedPropertyId: 'prop_sarbet_03',
+    assignedPropertyName: 'Sarbet International Retail Mall'
+  },
+  // Client 4: CMC Mega Commercial Hub
+  cmc_owner: {
+    uid: 'usr_cmc_owner',
+    name: 'Yohannes Kebede',
+    email: 'owner@cmchub.et',
+    role: 'owner',
+    phone: '+251 91 789 0123',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
+    title: 'Commercial Group President & Owner',
+    organizationId: 'org_cmc_hub',
+    organizationName: 'CMC Commercial Properties Group',
+    complexAccess: ['prop_cmc_04'],
+    assignedPropertyId: 'prop_cmc_04',
+    assignedPropertyName: 'CMC Mega Commercial & Retail Hub'
+  },
+  cmc_manager: {
+    uid: 'usr_cmc_manager',
+    name: 'Selamawit Fikru',
+    email: 'manager@cmchub.et',
+    role: 'manager',
+    phone: '+251 91 890 1234',
+    avatar: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=150&auto=format&fit=crop&q=80',
+    title: 'Logistics & Hub Operations Manager',
+    organizationId: 'org_cmc_hub',
+    organizationName: 'CMC Commercial Properties Group',
+    complexAccess: ['prop_cmc_04'],
+    assignedPropertyId: 'prop_cmc_04',
+    assignedPropertyName: 'CMC Mega Commercial & Retail Hub'
+  },
+  // Aliases for default convenience
+  owner: {
+    uid: 'usr_bole_owner',
+    name: 'Abebe Mengesha',
+    email: 'owner@boleplaza.et',
+    role: 'owner',
     phone: '+251 91 123 4567',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    title: 'Tenant • Bole Coffee Roastery (G-01)',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    title: 'Managing Director & Property Owner',
     organizationId: 'org_bole_plaza',
-    organizationName: 'Bole Medhanialem Commercial Center',
-    complexAccess: ['prop_bole_01']
+    organizationName: 'Bole Medhanialem Commercial Plaza',
+    complexAccess: ['prop_bole_01'],
+    assignedPropertyId: 'prop_bole_01',
+    assignedPropertyName: 'Bole Medhanialem Commercial Center'
+  },
+  manager: {
+    uid: 'usr_bole_manager',
+    name: 'Hanna Tadesse',
+    email: 'manager@boleplaza.et',
+    role: 'manager',
+    phone: '+251 91 234 5678',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    title: 'Senior Property Operations Manager',
+    organizationId: 'org_bole_plaza',
+    organizationName: 'Bole Medhanialem Commercial Plaza',
+    complexAccess: ['prop_bole_01'],
+    assignedPropertyId: 'prop_bole_01',
+    assignedPropertyName: 'Bole Medhanialem Commercial Center'
   }
 };
 
@@ -75,17 +170,24 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     propertyId: 'prop_kazanchis_02',
-    name: 'Kazanchis Financial District Tower',
+    name: 'Kazanchis Financial & Executive Tower',
     location: 'Menelik II Ave, Kirkos Sub-City, Addis Ababa',
     totalUnits: 36,
     type: 'mixed_use'
   },
   {
     propertyId: 'prop_sarbet_03',
-    name: 'Sarbet Heights Executive Residences',
+    name: 'Sarbet International Retail Mall',
     location: 'Roosevelt St, Old Airport / Sarbet, Addis Ababa',
-    totalUnits: 16,
-    type: 'residential'
+    totalUnits: 24,
+    type: 'commercial'
+  },
+  {
+    propertyId: 'prop_cmc_04',
+    name: 'CMC Mega Commercial & Retail Hub',
+    location: 'CMC Road, Yeka Sub-City, Addis Ababa',
+    totalUnits: 45,
+    type: 'commercial'
   }
 ];
 

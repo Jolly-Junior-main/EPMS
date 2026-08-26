@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import { PMSProvider, usePMS } from './context/PMSContext';
 import { Navbar } from './components/layout/Navbar';
 import { LoginPage } from './components/auth/LoginPage';
-import { SuperAdminDashboard } from './components/admin/SuperAdminDashboard';
 import { OwnerExecutiveDashboard } from './components/dashboard/OwnerExecutiveDashboard';
 import { ReceiptVerificationVault } from './components/vault/ReceiptVerificationVault';
 import { TheRedListTracker } from './components/redlist/TheRedListTracker';
 import { TenantsManager } from './components/tenants/TenantsManager';
 import { InvoicesPaymentsLedger } from './components/invoices/InvoicesPaymentsLedger';
 import { SMSEngineConsole } from './components/sms/SMSEngineConsole';
-import { FirebaseArchitectureViewer } from './components/architecture/FirebaseArchitectureViewer';
-import { TenantPortal } from './components/portal/TenantPortal';
 
 // Super Admin Components
 import { SuperAdminImpersonationBanner } from './components/superadmin/SuperAdminImpersonationBanner';
@@ -199,10 +196,6 @@ function PMSAppContent() {
 
           {/* Main Applet Content */}
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            {activeTab === 'admin_monitoring' && (
-              <SuperAdminDashboard onNavigateToTab={setActiveTab} />
-            )}
-
             {activeTab === 'dashboard' && (
               <OwnerExecutiveDashboard onNavigate={setActiveTab} />
             )}
@@ -214,10 +207,6 @@ function PMSAppContent() {
               <InvoicesPaymentsLedger onNavigateToVault={() => setActiveTab('vault')} />
             )}
             {activeTab === 'sms' && <SMSEngineConsole />}
-            {activeTab === 'rules' && <FirebaseArchitectureViewer />}
-            {(activeTab === 'tenant_portal' || currentUser.role === 'tenant') && (
-              <TenantPortal />
-            )}
           </main>
 
           {/* Standard Footer */}

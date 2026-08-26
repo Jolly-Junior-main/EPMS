@@ -62,30 +62,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       ];
     }
 
-    if (currentUser.role === 'admin') {
-      return [
-        { id: 'admin_monitoring', label: t('nav_monitoring'), icon: ShieldAlert, route: '/admin' },
-        { id: 'rules', label: t('nav_rules'), icon: Cpu, route: '/admin/rules' },
-        { id: 'vault', label: t('nav_vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
-        { id: 'dashboard', label: t('nav_dashboard'), icon: LayoutDashboard, route: '/owner/dashboard' },
-        { id: 'redlist', label: t('nav_redlist'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/owner/redlist' },
-        { id: 'tenants', label: t('nav_tenants'), icon: Users, route: '/manager/tenants' },
-        { id: 'invoices', label: t('nav_invoices'), icon: Receipt, route: '/manager/invoices' },
-      ];
-    }
-
     // Owner: Strictly restricted to Revenue, Who Paid/Not Paid, and Verification Vault
     if (currentUser.role === 'owner') {
       return [
         { id: 'dashboard', label: t('nav_dashboard', 'Revenue Analytics'), icon: LayoutDashboard, route: '/owner' },
         { id: 'invoices', label: t('nav_invoices', 'Who Paid & Not Paid'), icon: Receipt, route: '/owner/ledger' },
         { id: 'vault', label: t('nav_vault', 'Receipt Verification Vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
-      ];
-    }
-
-    if (currentUser.role === 'tenant') {
-      return [
-        { id: 'tenant_portal', label: t('nav_tenant_portal'), icon: Building2, route: '/portal' },
       ];
     }
 
@@ -213,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 {t('app_title')}
               </h1>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#007AFF]/10 text-[#007AFF] border border-[#007AFF]/20">
-                {currentUser.role === 'admin' ? t('portal_admin') : currentUser.role === 'owner' ? t('portal_owner') : currentUser.role === 'tenant' ? t('portal_tenant') : t('portal_manager')}
+                {currentUser.role === 'owner' ? t('portal_owner', 'Executive Owner') : t('portal_manager', 'Building Manager')}
               </span>
             </div>
             <p className="text-[11px] text-[#8E8E93] font-medium tracking-tight mt-0.5">
