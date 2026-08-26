@@ -50,6 +50,8 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
   const navItems = [
     { id: 'sa_dashboard', label: t('nav_sa_dashboard', 'Dashboard Overview'), icon: LayoutDashboard },
     { id: 'sa_organizations', label: t('nav_sa_organizations', 'Clients & Passwords'), icon: Building2 },
+    { id: 'sa_buildings', label: 'Buildings & Units', icon: Layers },
+    { id: 'sa_users', label: 'Platform Users', icon: Users },
     { id: 'sa_sms_api', label: 'SMS API Gateway', icon: MessageSquare },
     { id: 'sa_subscriptions', label: t('nav_sa_subscriptions', 'Subscriptions (1M/6M/1Y)'), icon: CreditCard },
     { id: 'sa_plans', label: t('nav_sa_plans', 'Plans & Pricing'), icon: Sparkles },

@@ -215,8 +215,12 @@ export const TAB_TO_PATH: Record<string, string> = {
   sa_ads: '/superadmin/ads',
   sa_billing: '/superadmin/billing',
   sa_health: '/superadmin/health',
-  sa_logs: '/superadmin/logs',
+  sa_audit_logs: '/superadmin/logs',
+  sa_notifications: '/superadmin/notifications',
+  sa_support: '/superadmin/support',
+  sa_settings: '/superadmin/settings',
   sa_buildings: '/superadmin/buildings',
+  sa_users: '/superadmin/users',
   dashboard: '/owner',
   owner_ledger: '/owner/ledger',
   vault: '/owner/vault',
@@ -230,33 +234,36 @@ export const TAB_TO_PATH: Record<string, string> = {
 };
 
 export const PATH_MAP: Record<string, { tab: string; role: UserRole; route: string }> = {
-  '/superadmin': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
-  '/superadmin/': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
-  '/superadmin/dashboard': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/subscriptions': { tab: 'sa_subscriptions', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/subs': { tab: 'sa_subscriptions', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/organizations': { tab: 'sa_organizations', role: 'super_admin', route: '/superadmin' },
   '/superadmin/orgs': { tab: 'sa_organizations', role: 'super_admin', route: '/superadmin' },
   '/superadmin/clients': { tab: 'sa_organizations', role: 'super_admin', route: '/superadmin' },
   '/superadmin/sms': { tab: 'sa_sms_api', role: 'super_admin', route: '/superadmin' },
-  '/superadmin/subs': { tab: 'sa_subscriptions', role: 'super_admin', route: '/superadmin' },
   '/superadmin/plans': { tab: 'sa_plans', role: 'super_admin', route: '/superadmin' },
   '/superadmin/ads': { tab: 'sa_ads', role: 'super_admin', route: '/superadmin' },
   '/superadmin/billing': { tab: 'sa_billing', role: 'super_admin', route: '/superadmin' },
   '/superadmin/health': { tab: 'sa_health', role: 'super_admin', route: '/superadmin' },
-  '/superadmin/logs': { tab: 'sa_logs', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/audit': { tab: 'sa_audit_logs', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/logs': { tab: 'sa_audit_logs', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/notifications': { tab: 'sa_notifications', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/support': { tab: 'sa_support', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/settings': { tab: 'sa_settings', role: 'super_admin', route: '/superadmin' },
   '/superadmin/buildings': { tab: 'sa_buildings', role: 'super_admin', route: '/superadmin' },
-  '/owner': { tab: 'dashboard', role: 'owner', route: '/owner' },
-  '/owner/': { tab: 'dashboard', role: 'owner', route: '/owner' },
+  '/superadmin/users': { tab: 'sa_users', role: 'super_admin', route: '/superadmin' },
+  '/superadmin/dashboard': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
+  '/superadmin': { tab: 'sa_dashboard', role: 'super_admin', route: '/superadmin' },
   '/owner/revenue': { tab: 'dashboard', role: 'owner', route: '/owner' },
   '/owner/ledger': { tab: 'owner_ledger', role: 'owner', route: '/owner' },
   '/owner/vault': { tab: 'vault', role: 'owner', route: '/owner' },
-  '/manager': { tab: 'tenants', role: 'manager', route: '/manager' },
-  '/manager/': { tab: 'tenants', role: 'manager', route: '/manager' },
+  '/owner': { tab: 'dashboard', role: 'owner', route: '/owner' },
   '/manager/tenants': { tab: 'tenants', role: 'manager', route: '/manager' },
   '/manager/documents': { tab: 'documents', role: 'manager', route: '/manager' },
   '/manager/invoices': { tab: 'invoices', role: 'manager', route: '/manager' },
   '/manager/redlist': { tab: 'redlist', role: 'manager', route: '/manager' },
   '/manager/sms': { tab: 'sms', role: 'manager', route: '/manager' },
+  '/manager': { tab: 'tenants', role: 'manager', route: '/manager' },
   '/portal': { tab: 'tenant_portal', role: 'tenant', route: '/portal' },
-  '/portal/': { tab: 'tenant_portal', role: 'tenant', route: '/portal' },
   '/admin': { tab: 'admin_monitoring', role: 'admin', route: '/admin' }
 };
 
@@ -264,13 +271,20 @@ const getInitialRouteInfo = () => {
   if (typeof window === 'undefined') {
     return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
   }
-  const path = window.location.pathname.toLowerCase();
-  if (path === '/login') {
+  const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+  if (cleanPath === '/login') {
     return { isAuth: false, user: MOCK_USERS.superadmin, route: '/login', tab: 'sa_dashboard' };
   }
-  const directMatch = PATH_MAP[path] || Object.entries(PATH_MAP).find(([k]) => path.startsWith(k))?.[1];
-  if (directMatch) {
-    return { isAuth: true, user: MOCK_USERS[directMatch.role], route: directMatch.route, tab: directMatch.tab };
+  
+  if (PATH_MAP[cleanPath]) {
+    const match = PATH_MAP[cleanPath];
+    return { isAuth: true, user: MOCK_USERS[match.role], route: match.route, tab: match.tab };
+  }
+
+  const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
+  const match = sortedEntries.find(([k]) => cleanPath.startsWith(k))?.[1];
+  if (match) {
+    return { isAuth: true, user: MOCK_USERS[match.role], route: match.route, tab: match.tab };
   }
   return { isAuth: true, user: MOCK_USERS.superadmin, route: '/superadmin', tab: 'sa_dashboard' };
 };
@@ -289,12 +303,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Synchronize browser URL history with active section
   useEffect(() => {
     const handlePopState = () => {
-      const path = window.location.pathname.toLowerCase();
-      if (path === '/login') {
+      const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+      if (cleanPath === '/login') {
         setIsAuthenticated(false);
         return;
       }
-      const match = PATH_MAP[path] || Object.entries(PATH_MAP).find(([k]) => path.startsWith(k))?.[1];
+      const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
+      const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath.startsWith(k))?.[1];
       if (match) {
         setIsAuthenticated(true);
         setCurrentUser(MOCK_USERS[match.role]);
