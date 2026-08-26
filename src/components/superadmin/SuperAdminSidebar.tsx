@@ -66,12 +66,12 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
 
   return (
     <aside
-      className={`bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-2xl border-r border-black/[0.06] dark:border-white/10 flex flex-col justify-between transition-all duration-300 z-30 shrink-0 ${
+      className={`h-screen max-h-screen sticky top-0 bg-white/95 dark:bg-[#1C1C1E]/95 backdrop-blur-2xl border-r border-black/[0.06] dark:border-white/10 flex flex-col justify-between transition-all duration-300 z-30 shrink-0 select-none ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Brand Header */}
-      <div className="p-4 border-b border-black/[0.05] dark:border-white/10 flex items-center justify-between">
+      <div className="p-4 border-b border-black/[0.05] dark:border-white/10 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#007AFF] to-[#5856D6] text-white flex items-center justify-center shrink-0 shadow-md shadow-[#007AFF]/25">
             <ShieldCheck className="w-6 h-6" />
@@ -98,7 +98,7 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
       </div>
 
       {/* Navigation List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar min-h-0">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -134,8 +134,8 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
         })}
       </div>
 
-      {/* Footer Profile & Actions */}
-      <div className="p-3 border-t border-black/[0.05] dark:border-white/10 space-y-2">
+      {/* Pinned Footer Profile & Actions */}
+      <div className="p-3 border-t border-black/[0.05] dark:border-white/10 space-y-2 bg-white/90 dark:bg-[#1C1C1E]/90 shrink-0">
         {/* Language Toggle */}
         <button
           onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
@@ -147,7 +147,7 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
           )}
         </button>
 
-        {/* User Card */}
+        {/* User Card with Sign Out Button */}
         <div className="flex items-center justify-between p-2 rounded-2xl bg-black/[0.03] dark:bg-white/[0.03]">
           <div className="flex items-center gap-2.5 overflow-hidden">
             <img
@@ -170,7 +170,7 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
           <button
             onClick={logout}
             className="p-1.5 rounded-xl hover:bg-[#FF3B30]/10 text-[#FF3B30] transition-colors cursor-pointer"
-            title={t('sign_out')}
+            title={t('sign_out', 'Sign Out')}
           >
             <LogOut className="w-4 h-4" />
           </button>

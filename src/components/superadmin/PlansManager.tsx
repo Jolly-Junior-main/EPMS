@@ -80,19 +80,19 @@ export const PlansManager: React.FC = () => {
                 <div className="flex items-baseline justify-between">
                   <span className="text-[11px] font-bold uppercase text-[#8E8E93]">1 Month</span>
                   <span className="text-lg font-extrabold text-[#007AFF]">
-                    {plan.monthlyPriceETB.toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
+                    {(plan.monthlyPriceETB || 0).toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between text-xs">
                   <span className="text-[11px] font-bold uppercase text-[#8E8E93]">6 Months <span className="text-[#FF9500]">(10% off)</span></span>
                   <span className="font-bold text-[#1C1C1E] dark:text-white">
-                    {(plan.sixMonthPriceETB || Math.round(plan.monthlyPriceETB * 6 * 0.9)).toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
+                    {(plan.sixMonthPriceETB || Math.round((plan.monthlyPriceETB || 0) * 6 * 0.9)).toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
                   </span>
                 </div>
                 <div className="flex items-baseline justify-between text-xs">
                   <span className="text-[11px] font-bold uppercase text-[#8E8E93]">1 Year <span className="text-[#34C759]">(20% off)</span></span>
                   <span className="font-bold text-[#34C759]">
-                    {plan.annualPriceETB.toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
+                    {(plan.annualPriceETB || Math.round((plan.monthlyPriceETB || 0) * 12 * 0.8)).toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
                   </span>
                 </div>
               </div>
@@ -104,7 +104,7 @@ export const PlansManager: React.FC = () => {
                     <Building2 className="w-3.5 h-3.5" /> Max Buildings
                   </span>
                   <span className="font-bold text-[#1C1C1E] dark:text-white">
-                    {plan.limits.maxBuildings}
+                    {plan.limits?.maxBuildings ?? 10}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -112,7 +112,7 @@ export const PlansManager: React.FC = () => {
                     <Layers className="w-3.5 h-3.5" /> Max Units
                   </span>
                   <span className="font-bold text-[#1C1C1E] dark:text-white">
-                    {plan.limits.maxUnits}
+                    {plan.limits?.maxUnits ?? 100}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ export const PlansManager: React.FC = () => {
                     <Users className="w-3.5 h-3.5" /> Max Users
                   </span>
                   <span className="font-bold text-[#1C1C1E] dark:text-white">
-                    {plan.limits.maxUsers}
+                    {plan.limits?.maxUsers ?? 20}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -128,15 +128,15 @@ export const PlansManager: React.FC = () => {
                     <HardDrive className="w-3.5 h-3.5" /> Storage Quota
                   </span>
                   <span className="font-bold text-[#1C1C1E] dark:text-white">
-                    {plan.limits.maxStorageGB} GB
+                    {plan.limits?.storageGB ?? 50} GB
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#8E8E93] flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5" /> SMS / Month
+                    <MessageSquare className="w-3.5 h-3.5" /> SMS Gateway
                   </span>
                   <span className="font-bold text-[#1C1C1E] dark:text-white">
-                    {plan.limits.maxSmsPerMonth}
+                    {plan.limits?.hasSmsIntegration ? 'Included (REST API)' : 'Standard Only'}
                   </span>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export const PlansManager: React.FC = () => {
                 <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">
                   Included Features
                 </span>
-                {plan.features.slice(0, 4).map((f, i) => (
+                {(plan.limits?.features || ['Automated Invoicing', 'EFT Verification', 'SMS Reminders']).slice(0, 4).map((f, i) => (
                   <div key={i} className="text-[11px] text-[#1C1C1E] dark:text-white flex items-center gap-1.5">
                     <CheckCircle2 className="w-3 h-3 text-[#34C759] shrink-0" />
                     <span className="truncate">{f}</span>

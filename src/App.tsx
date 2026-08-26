@@ -63,7 +63,7 @@ function PMSAppContent() {
   const isSuperAdminView = currentUser.role === 'super_admin';
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-[#1C1C1E] dark:text-white flex flex-col font-sans selection:bg-[#007AFF] selection:text-white">
+    <div className={`bg-[#F2F2F7] dark:bg-[#000000] text-[#1C1C1E] dark:text-white flex flex-col font-sans selection:bg-[#007AFF] selection:text-white ${isSuperAdminView ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'}`}>
       {/* Impersonation Banner (Visible whenever Super Admin is impersonating a tenant) */}
       <SuperAdminImpersonationBanner />
 
