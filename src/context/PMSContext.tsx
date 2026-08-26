@@ -662,104 +662,92 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // -------------------------------------------------------------
   const login = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
     // Artificial latency for authentic iOS / Firebase feel
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    const inputUser = usernameOrEmail.trim().toLowerCase();
+    const raw = usernameOrEmail.trim().toLowerCase();
+    const cleanUser = raw.replace(/[^a-z0-9]/g, '');
     const inputPass = password.trim();
     
     // Find matching user and validate credentials
     let matchedUser: UserProfile | undefined;
     let matchedRole: UserRole | undefined;
 
-    const is123 = inputPass === '123';
-
+    // Super Admin matching
     if (
-      inputUser === 'superadmin' ||
-      inputUser === 'super_admin' ||
-      inputUser === 'super admin' ||
-      inputUser === 'super' ||
-      inputUser === 'super administrator' ||
-      inputUser === 'platform' ||
-      inputUser === 'superadmin@epms.cloud.et' ||
-      inputUser.includes('super')
+      cleanUser.includes('super') ||
+      cleanUser === 'admin' ||
+      cleanUser === 'administrator' ||
+      cleanUser === 'platform' ||
+      raw.includes('superadmin@')
     ) {
-      if (is123 || inputPass === '123' || inputPass.toLowerCase() === 'superadmin' || inputPass.toLowerCase() === 'super' || inputPass === 'SuperAdmin' || inputPass === 'SuperAdmin123' || inputPass === 'Super123') {
-        matchedUser = MOCK_USERS.superadmin;
-        matchedRole = 'super_admin';
-      } else {
-        return { success: false, error: 'Incorrect password for Super Administrator account. (Default: 123)' };
-      }
+      matchedUser = MOCK_USERS.superadmin;
+      matchedRole = 'super_admin';
     }
-    // Client 1: Bole Medhanialem Commercial Plaza
-    else if (inputUser === 'boleowner' || inputUser === 'bole_owner' || inputUser === 'owner' || inputUser === 'abebe' || inputUser === 'owner@boleplaza.et' || inputUser === 'bole') {
-      if (is123 || inputPass.toLowerCase() === 'boleowner' || inputPass.toLowerCase() === 'owner' || inputPass === 'Bole123' || inputPass === 'OwnerPass2026!') {
-        matchedUser = MOCK_USERS.bole_owner;
-        matchedRole = 'owner';
-      } else {
-        return { success: false, error: 'Incorrect password for Bole Plaza Owner account. (Default: 123)' };
-      }
-    } else if (inputUser === 'bolemanager' || inputUser === 'bole_manager' || inputUser === 'manage' || inputUser === 'manager' || inputUser === 'hanna' || inputUser === 'manager@boleplaza.et') {
-      if (is123 || inputPass.toLowerCase() === 'bolemanager' || inputPass.toLowerCase() === 'manage' || inputPass === 'Bole123' || inputPass === 'ManagerPass2026!') {
+    // Client 1: Bole Plaza matching
+    else if (cleanUser.includes('bole') || cleanUser.includes('abebe') || raw.includes('boleplaza') || cleanUser === '1') {
+      if (cleanUser.includes('man') || cleanUser.includes('hanna')) {
         matchedUser = MOCK_USERS.bole_manager;
         matchedRole = 'manager';
       } else {
-        return { success: false, error: 'Incorrect password for Bole Plaza Building Manager account. (Default: 123)' };
+        matchedUser = MOCK_USERS.bole_owner;
+        matchedRole = 'owner';
       }
     }
-    // Client 2: Kazanchis Business Towers
-    else if (inputUser === 'kazanchisowner' || inputUser === 'kazanchis_owner' || inputUser === 'kazowner' || inputUser === 'dawit' || inputUser === 'owner@kazanchistower.et' || inputUser === 'kazanchis') {
-      if (is123 || inputPass.toLowerCase() === 'kazanchisowner' || inputPass.toLowerCase() === 'kazowner' || inputPass === 'Kaz123') {
-        matchedUser = MOCK_USERS.kazanchis_owner;
-        matchedRole = 'owner';
-      } else {
-        return { success: false, error: 'Incorrect password for Kazanchis Towers Owner account. (Default: 123)' };
-      }
-    } else if (inputUser === 'kazanchismanager' || inputUser === 'kazanchis_manager' || inputUser === 'kazmanager' || inputUser === 'meron' || inputUser === 'manager@kazanchistower.et') {
-      if (is123 || inputPass.toLowerCase() === 'kazanchismanager' || inputPass.toLowerCase() === 'kazmanager' || inputPass === 'Kaz123') {
+    // Client 2: Kazanchis Towers matching
+    else if (cleanUser.includes('kaz') || cleanUser.includes('dawit') || cleanUser.includes('meron') || raw.includes('kazanchi') || cleanUser === '2') {
+      if (cleanUser.includes('man') || cleanUser.includes('meron')) {
         matchedUser = MOCK_USERS.kazanchis_manager;
         matchedRole = 'manager';
       } else {
-        return { success: false, error: 'Incorrect password for Kazanchis Towers Building Manager account. (Default: 123)' };
+        matchedUser = MOCK_USERS.kazanchis_owner;
+        matchedRole = 'owner';
       }
     }
-    // Client 3: Sarbet Luxury Mall
-    else if (inputUser === 'sarbetowner' || inputUser === 'sarbet_owner' || inputUser === 'sarowner' || inputUser === 'solomon' || inputUser === 'owner@sarbetmall.et' || inputUser === 'sarbet') {
-      if (is123 || inputPass.toLowerCase() === 'sarbetowner' || inputPass.toLowerCase() === 'sarowner' || inputPass === 'Sar123') {
-        matchedUser = MOCK_USERS.sarbet_owner;
-        matchedRole = 'owner';
-      } else {
-        return { success: false, error: 'Incorrect password for Sarbet Mall Owner account. (Default: 123)' };
-      }
-    } else if (inputUser === 'sarbetmanager' || inputUser === 'sarbet_manager' || inputUser === 'sarmanager' || inputUser === 'tigist' || inputUser === 'manager@sarbetmall.et') {
-      if (is123 || inputPass.toLowerCase() === 'sarbetmanager' || inputPass.toLowerCase() === 'sarmanager' || inputPass === 'Sar123') {
+    // Client 3: Sarbet Mall matching
+    else if (cleanUser.includes('sar') || cleanUser.includes('solomon') || cleanUser.includes('tigist') || raw.includes('sarbet') || cleanUser === '3') {
+      if (cleanUser.includes('man') || cleanUser.includes('tigist')) {
         matchedUser = MOCK_USERS.sarbet_manager;
         matchedRole = 'manager';
       } else {
-        return { success: false, error: 'Incorrect password for Sarbet Mall Building Manager account. (Default: 123)' };
+        matchedUser = MOCK_USERS.sarbet_owner;
+        matchedRole = 'owner';
       }
     }
-    // Client 4: CMC Mega Commercial Hub
-    else if (inputUser === 'cmcowner' || inputUser === 'cmc_owner' || inputUser === 'yohannes' || inputUser === 'owner@cmchub.et' || inputUser === 'cmc') {
-      if (is123 || inputPass.toLowerCase() === 'cmcowner' || inputPass === 'Cmc123') {
-        matchedUser = MOCK_USERS.cmc_owner;
-        matchedRole = 'owner';
-      } else {
-        return { success: false, error: 'Incorrect password for CMC Mega Hub Owner account. (Default: 123)' };
-      }
-    } else if (inputUser === 'cmcmanager' || inputUser === 'cmc_manager' || inputUser === 'selam' || inputUser === 'selamawit' || inputUser === 'manager@cmchub.et') {
-      if (is123 || inputPass.toLowerCase() === 'cmcmanager' || inputPass === 'Cmc123') {
+    // Client 4: CMC Mega Hub matching
+    else if (cleanUser.includes('cmc') || cleanUser.includes('yohannes') || cleanUser.includes('selam') || raw.includes('cmchub') || cleanUser === '4') {
+      if (cleanUser.includes('man') || cleanUser.includes('selam')) {
         matchedUser = MOCK_USERS.cmc_manager;
         matchedRole = 'manager';
       } else {
-        return { success: false, error: 'Incorrect password for CMC Mega Hub Building Manager account. (Default: 123)' };
+        matchedUser = MOCK_USERS.cmc_owner;
+        matchedRole = 'owner';
       }
+    }
+    // Generic Owner / Manager fallback
+    else if (cleanUser === 'owner' || cleanUser.includes('owner')) {
+      matchedUser = MOCK_USERS.bole_owner;
+      matchedRole = 'owner';
+    } else if (cleanUser === 'manager' || cleanUser.includes('manager') || cleanUser === 'manage') {
+      matchedUser = MOCK_USERS.bole_manager;
+      matchedRole = 'manager';
     } else {
-      // Fallback in MOCK_USERS
-      const foundUser = Object.values(MOCK_USERS).find((u) => u.email.toLowerCase() === inputUser || u.name.toLowerCase().includes(inputUser));
-      if (foundUser && (is123 || inputPass === '123' || inputPass.toLowerCase() === foundUser.name.toLowerCase())) {
+      // Search by email, name, role
+      const foundUser = Object.values(MOCK_USERS).find(
+        (u) =>
+          u.email.toLowerCase() === raw ||
+          u.name.toLowerCase().includes(raw) ||
+          u.uid.toLowerCase() === raw
+      );
+      if (foundUser) {
         matchedUser = foundUser;
         matchedRole = foundUser.role;
       }
+    }
+
+    // Default fallback to Bole Owner if input is provided but ambiguous
+    if (!matchedUser && cleanUser.length > 0) {
+      matchedUser = MOCK_USERS.bole_owner;
+      matchedRole = 'owner';
     }
 
     if (!matchedUser || !matchedRole) {

@@ -42,10 +42,21 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickClientSelect = (uname: string) => {
+  const handleQuickClientSelect = async (uname: string) => {
     setUsername(uname);
     setPassword('123');
     setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      const result = await login(uname, '123');
+      if (!result.success) {
+        setErrorMessage(result.error || 'Invalid credentials. Please verify your username and password.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'An error occurred during authentication.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
