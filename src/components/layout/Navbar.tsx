@@ -3,6 +3,8 @@ import { usePMS } from '../../context/PMSContext';
 import { UserRole } from '../../types/pms';
 import {
   Building2,
+  Store,
+  Briefcase,
   ShieldCheck,
   UserCheck,
   AlertTriangle,
@@ -30,6 +32,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const {
     currentUser,
+    clientTheme,
     switchUser,
     logout,
     language,
@@ -40,8 +43,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     isFirestoreConnected,
     syncStatus,
     properties,
-    selectedPropertyId,
-    setSelectedPropertyId,
     getRevenueMetrics,
     resetToSampleData,
     adBanners
@@ -184,48 +185,32 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
       {/* Main Header Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
-        {/* Brand & Complex Selector */}
+        {/* Client Brand Logo & Property Identity */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#007AFF] to-[#5856D6] text-white flex items-center justify-center font-bold text-lg shadow-[0_4px_12px_rgba(0,122,255,0.3)]">
-            <Building2 className="w-5 h-5" />
+          <div className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${clientTheme.gradientClass} text-white flex items-center justify-center font-bold text-lg shadow-md`}>
+            {clientTheme.logoIconName === 'Store' ? (
+              <Store className="w-5 h-5" />
+            ) : clientTheme.logoIconName === 'Briefcase' ? (
+              <Briefcase className="w-5 h-5" />
+            ) : (
+              <Building2 className="w-5 h-5" />
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-lg tracking-tight text-[#1C1C1E] leading-none">
-                {t('app_title')}
+              <h1 className="font-bold text-base sm:text-lg tracking-tight text-[#1C1C1E] leading-none">
+                {clientTheme.propertyName}
               </h1>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#007AFF]/10 text-[#007AFF] border border-[#007AFF]/20">
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${clientTheme.badgeBgClass} ${clientTheme.badgeTextClass} border ${clientTheme.badgeBorderClass}`}>
                 {currentUser.role === 'owner' ? t('portal_owner', 'Executive Owner') : t('portal_manager', 'Building Manager')}
               </span>
             </div>
-            <p className="text-[11px] text-[#8E8E93] font-medium tracking-tight mt-0.5">
-              {t('app_subtitle')}
+            <p className="text-[11px] text-[#8E8E93] font-medium tracking-tight mt-0.5 flex items-center gap-1.5">
+              <span className="font-semibold text-[#3A3A3C]">{clientTheme.organizationName}</span>
+              <span>&bull;</span>
+              <span>{clientTheme.citySubcity}</span>
             </p>
           </div>
-
-          {/* Complex Filter Dropdown (Hidden for tenants; Locked to 1 building for managers) */}
-          {currentUser.role === 'manager' ? (
-            <div className="hidden lg:flex items-center ml-3 pl-3 border-l border-black/[0.08] text-xs font-semibold text-[#1C1C1E] bg-[#34C759]/10 border border-[#34C759]/20 px-3 py-1.5 rounded-xl">
-              <Building2 className="w-3.5 h-3.5 text-[#34C759] mr-1.5" />
-              <span>Managing: {currentUser.assignedPropertyName || 'Bole Medhanialem Commercial Center'} (1 Building Scope)</span>
-            </div>
-          ) : currentUser.role !== 'tenant' && (
-            <div className="hidden lg:flex items-center ml-3 pl-3 border-l border-black/[0.08]">
-              <select
-                id="property-selector"
-                value={selectedPropertyId}
-                onChange={(e) => setSelectedPropertyId(e.target.value)}
-                className="bg-[#767680]/10 text-[#1C1C1E] text-xs rounded-xl px-3 py-1.5 border border-transparent focus:bg-white focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/20 font-medium transition-all outline-none cursor-pointer"
-              >
-                <option value="all">{t('all_complexes')}</option>
-                {properties.map((prop) => (
-                  <option key={prop.propertyId} value={prop.propertyId}>
-                    {prop.name} ({prop.type})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
         </div>
 
         {/* User Profile & Logout */}

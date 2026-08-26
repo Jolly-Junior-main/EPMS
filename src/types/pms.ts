@@ -187,3 +187,22 @@ export interface VerificationAuditLog {
   timestamp: string;
   details: string;
 }
+
+export interface ClientBrandTheme {
+  organizationId: string;
+  organizationName: string;
+  propertyName: string;
+  propertyId: string;
+  primaryColor: string;
+  accentColor: string;
+  gradientClass: string;
+  badgeBgClass: string;
+  badgeTextClass: string;
+  badgeBorderClass: string;
+  lightBgClass: string;
+  logoIconName: 'Building2' | 'Store' | 'Briefcase' | 'Building';
+  logoUrl?: string;
+  tagline: string;
+  citySubcity: string;
+  escrowAccount: string;
+}

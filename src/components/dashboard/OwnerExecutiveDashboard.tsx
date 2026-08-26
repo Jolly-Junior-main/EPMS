@@ -25,8 +25,7 @@ interface DashboardProps {
 export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const {
     currentUser,
-    properties,
-    selectedPropertyId,
+    clientTheme,
     getRevenueMetrics,
     invoices,
     payments,
@@ -38,25 +37,23 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
   const redListItems = getRedList();
   const unverifiedPayments = payments.filter((p) => p.verificationStatus === 'unverified');
 
-  const selectedPropObj = properties.find((p) => p.propertyId === selectedPropertyId);
-
   return (
     <div id="executive-dashboard-view" className="space-y-6">
       {/* iOS Hero Header Card */}
       <div className="bg-white rounded-3xl p-6 md:p-8 border border-black/[0.04] shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-1.5 z-10">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-[#007AFF]/10 text-[#007AFF] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#007AFF] animate-pulse" />
-              {t('live_aggregates')}
+            <span className={`px-2.5 py-0.5 text-[11px] font-bold rounded-full ${clientTheme.badgeBgClass} ${clientTheme.badgeTextClass} flex items-center gap-1.5 border ${clientTheme.badgeBorderClass}`}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: clientTheme.primaryColor }} />
+              {t('live_aggregates', 'Live Property Financials')}
             </span>
-            <span className="text-xs text-[#8E8E93] font-medium">{t('portfolio_title')}</span>
+            <span className="text-xs text-[#8E8E93] font-medium">{clientTheme.citySubcity}</span>
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-[#1C1C1E]">
-            {currentUser.role === 'owner' ? t('dash_title_owner') : t('dash_title_manager')}
+            {currentUser.role === 'owner' ? t('dash_title_owner', 'Executive Revenue Intelligence') : t('dash_title_manager', 'Building Operations')}
           </h2>
           <p className="text-xs md:text-sm text-[#8E8E93] max-w-2xl">
-            {selectedPropObj ? selectedPropObj.name : t('all_complexes')} • {t('dash_subtitle_default')}
+            <strong className="text-[#1C1C1E]">{clientTheme.propertyName}</strong> &bull; {clientTheme.tagline}
           </p>
         </div>
 

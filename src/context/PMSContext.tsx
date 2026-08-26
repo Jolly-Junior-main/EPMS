@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import confetti from 'canvas-confetti';
 import {
   UserRole,
@@ -13,7 +13,8 @@ import {
   TenantDocument,
   MaintenanceRequest,
   MaintenanceStatus,
-  LeaseRenewalRequest
+  LeaseRenewalRequest,
+  ClientBrandTheme
 } from '../types/pms';
 import {
   Organization,
@@ -41,6 +42,7 @@ import {
   MOCK_SMS_LOGS,
   MOCK_MAINTENANCE_REQUESTS,
   MOCK_RENEWAL_REQUESTS,
+  CLIENT_THEMES,
   generateBankReceiptSvg
 } from '../data/mockData';
 import {
@@ -73,6 +75,7 @@ import {
 
 interface PMSContextType {
   currentUser: UserProfile;
+  clientTheme: ClientBrandTheme;
   isAuthenticated: boolean;
   isFirestoreConnected: boolean;
   syncStatus: 'synced' | 'syncing' | 'offline';
@@ -437,6 +440,53 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const saved = localStorage.getItem(`${STORAGE_KEY}_impersonation_ctx`);
     return saved ? JSON.parse(saved) : null;
   });
+
+  // Active Client Brand Theme
+  const clientTheme: ClientBrandTheme = useMemo(() => {
+    const orgId = currentUser.organizationId || 'org_bole_plaza';
+    if (CLIENT_THEMES[orgId]) {
+      return CLIENT_THEMES[orgId];
+    }
+    const propId = currentUser.assignedPropertyId || currentUser.complexAccess?.[0] || 'prop_bole_01';
+    const found = Object.values(CLIENT_THEMES).find((t) => t.propertyId === propId);
+    return found || CLIENT_THEMES.org_bole_plaza;
+  }, [currentUser]);
+
+  // Effective property for data isolation
+  const effectivePropertyId = useMemo(() => {
+    if (currentUser.role === 'super_admin') return selectedPropertyId;
+    return currentUser.assignedPropertyId || currentUser.complexAccess?.[0] || 'prop_bole_01';
+  }, [currentUser, selectedPropertyId]);
+
+  // Scoped Data Collections strictly filtered by client building
+  const scopedTenants = useMemo(() => {
+    if (currentUser.role === 'super_admin' && effectivePropertyId === 'all') return tenants;
+    return tenants.filter((t) => t.propertyId === effectivePropertyId);
+  }, [tenants, currentUser, effectivePropertyId]);
+
+  const scopedUnits = useMemo(() => {
+    if (currentUser.role === 'super_admin' && effectivePropertyId === 'all') return units;
+    return units.filter((u) => u.propertyId === effectivePropertyId);
+  }, [units, currentUser, effectivePropertyId]);
+
+  const scopedInvoices = useMemo(() => {
+    if (currentUser.role === 'super_admin' && effectivePropertyId === 'all') return invoices;
+    return invoices.filter((inv) => inv.propertyId === effectivePropertyId);
+  }, [invoices, currentUser, effectivePropertyId]);
+
+  const scopedPayments = useMemo(() => {
+    if (currentUser.role === 'super_admin' && effectivePropertyId === 'all') return payments;
+    const invMap = new Map(invoices.map((i) => [i.invoiceId, i.propertyId]));
+    return payments.filter((p) => {
+      const pId = invMap.get(p.invoiceId) || (p.unitId?.includes('bole') ? 'prop_bole_01' : p.unitId?.includes('kaz') ? 'prop_kazanchis_02' : p.unitId?.includes('sar') ? 'prop_sarbet_03' : 'prop_cmc_04');
+      return pId === effectivePropertyId;
+    });
+  }, [payments, invoices, currentUser, effectivePropertyId]);
+
+  const scopedSmsLogs = useMemo(() => {
+    if (currentUser.role === 'super_admin' && effectivePropertyId === 'all') return smsLogs;
+    return smsLogs.filter((s) => !s.organizationId || s.organizationId === currentUser.organizationId);
+  }, [smsLogs, currentUser, effectivePropertyId]);
 
   // Sync state to LocalStorage
   useEffect(() => {
@@ -1337,16 +1387,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const getRedList = () => {
     const now = new Date('2026-08-14T08:00:00Z').getTime();
     
-    // Strict Single-Building Lock for Property Managers
-    const effectivePropId = currentUser.role === 'manager'
-      ? (currentUser.assignedPropertyId || 'prop_bole_01')
-      : selectedPropertyId;
+    // Scoped invoices for the current client's building
+    const targetInvoices = currentUser.role === 'super_admin' ? invoices : scopedInvoices;
 
-    // Red List isolates invoices where dueDate < now AND paymentStatus == 'delinquent'
-    const delinquentInvoices = invoices.filter((inv) => {
+    // Red List isolates invoices where dueDate < now AND (paymentStatus == 'delinquent' or overdue pending)
+    const delinquentInvoices = targetInvoices.filter((inv) => {
       const dueTime = new Date(inv.dueDate).getTime();
-      return (inv.paymentStatus === 'delinquent' || (inv.paymentStatus === 'pending' && dueTime < now)) &&
-        (effectivePropId === 'all' || inv.propertyId === effectivePropId);
+      return inv.paymentStatus === 'delinquent' || (inv.paymentStatus === 'pending' && dueTime < now);
     });
 
     return delinquentInvoices.map((inv) => {
@@ -1370,25 +1417,16 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const getRevenueMetrics = () => {
-    // Strict Single-Building Lock for Property Managers
-    const effectivePropId = currentUser.role === 'manager'
-      ? (currentUser.assignedPropertyId || 'prop_bole_01')
-      : selectedPropertyId;
+    const targetInvoices = currentUser.role === 'super_admin' ? invoices : scopedInvoices;
+    const targetUnits = currentUser.role === 'super_admin' ? units : scopedUnits;
+    const targetPayments = currentUser.role === 'super_admin' ? payments : scopedPayments;
 
-    const filteredInvoices = effectivePropId === 'all'
-      ? invoices
-      : invoices.filter((inv) => inv.propertyId === effectivePropId);
-
-    const filteredUnits = effectivePropId === 'all'
-      ? units
-      : units.filter((u) => u.propertyId === effectivePropId);
-
-    const totalExpectedETB = filteredInvoices.reduce((sum, inv) => sum + inv.amountDue, 0);
-    const grossCollectedETB = filteredInvoices
+    const totalExpectedETB = targetInvoices.reduce((sum, inv) => sum + inv.amountDue, 0);
+    const grossCollectedETB = targetInvoices
       .filter((inv) => inv.paymentStatus === 'paid')
       .reduce((sum, inv) => sum + inv.amountDue, 0);
 
-    const delinquentETB = filteredInvoices
+    const delinquentETB = targetInvoices
       .filter((inv) => inv.paymentStatus === 'delinquent')
       .reduce((sum, inv) => sum + inv.amountDue, 0);
 
@@ -1397,12 +1435,12 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ? Math.round((grossCollectedETB / totalExpectedETB) * 100)
       : 0;
 
-    const totalOccupiedUnits = filteredUnits.filter((u) => u.status === 'occupied').length;
-    const occupancyRatePercent = filteredUnits.length > 0
-      ? Math.round((totalOccupiedUnits / filteredUnits.length) * 100)
+    const totalOccupiedUnits = targetUnits.filter((u) => u.status === 'occupied').length;
+    const occupancyRatePercent = targetUnits.length > 0
+      ? Math.round((totalOccupiedUnits / targetUnits.length) * 100)
       : 0;
 
-    const pendingVerificationCount = payments.filter((p) => p.verificationStatus === 'unverified').length;
+    const pendingVerificationCount = targetPayments.filter((p) => p.verificationStatus === 'unverified').length;
     const redListCount = getRedList().length;
 
     return {
@@ -2056,6 +2094,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <PMSContext.Provider
       value={{
         currentUser,
+        clientTheme,
         isAuthenticated,
         isFirestoreConnected,
         syncStatus,
@@ -2074,11 +2113,11 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         properties,
         selectedPropertyId,
         setSelectedPropertyId,
-        tenants,
-        units,
-        invoices,
-        payments,
-        smsLogs,
+        tenants: scopedTenants,
+        units: scopedUnits,
+        invoices: scopedInvoices,
+        payments: scopedPayments,
+        smsLogs: scopedSmsLogs,
         auditLogs,
         notification,
         clearNotification,
