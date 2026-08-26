@@ -22,6 +22,7 @@ export const SubscriptionsManager: React.FC = () => {
     organizations,
     plans,
     extendSubscription,
+    extendSubscriptionWithCycle,
     updateSubscriptionPlan,
     addTrialDays,
     t
@@ -165,23 +166,30 @@ export const SubscriptionsManager: React.FC = () => {
                         {sub.amountETB.toLocaleString()} ETB
                       </div>
                       <div className="text-[10px] text-[#8E8E93]">
-                        {sub.billingCycle === 'annually' ? 'Annual Cycle' : 'Monthly Cycle'}
+                        {sub.billingCycle === 'annually' ? '1-Year Cycle' : sub.billingCycle === 'semi_annually' ? '6-Month Cycle' : '1-Month Cycle'}
                       </div>
                     </td>
 
                     <td className="py-4 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => extendSubscription(sub.subscriptionId, 1)}
+                          onClick={() => extendSubscriptionWithCycle(sub.subscriptionId, 'monthly')}
                           className="px-2.5 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-[#007AFF] hover:text-white text-xs font-semibold transition-all cursor-pointer"
-                          title="Extend 1 month"
+                          title="Renew 1 Month"
                         >
                           +1 Mo
                         </button>
                         <button
-                          onClick={() => extendSubscription(sub.subscriptionId, 12)}
+                          onClick={() => extendSubscriptionWithCycle(sub.subscriptionId, 'semi_annually')}
+                          className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500 hover:text-white text-amber-600 text-xs font-semibold transition-all cursor-pointer"
+                          title="Renew 6 Months (10% off)"
+                        >
+                          +6 Mos
+                        </button>
+                        <button
+                          onClick={() => extendSubscriptionWithCycle(sub.subscriptionId, 'annually')}
                           className="px-2.5 py-1.5 rounded-xl bg-[#007AFF]/10 hover:bg-[#007AFF] hover:text-white text-[#007AFF] text-xs font-semibold transition-all cursor-pointer"
-                          title="Extend 1 year"
+                          title="Renew 1 Year (20% off)"
                         >
                           +1 Yr
                         </button>

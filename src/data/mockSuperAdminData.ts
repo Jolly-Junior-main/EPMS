@@ -6,7 +6,9 @@ import {
   SuperAdminAuditLog,
   PlatformNotification,
   SupportTicket,
-  PlatformSettings
+  PlatformSettings,
+  PlatformAdBanner,
+  SmsApiGatewayConfig
 } from '../types/superAdmin';
 
 export const MOCK_PLATFORM_PLANS: PlatformPlan[] = [
@@ -16,7 +18,8 @@ export const MOCK_PLATFORM_PLANS: PlatformPlan[] = [
     name: 'Starter Plan',
     description: 'Designed for single commercial or residential properties starting out with automated billing.',
     monthlyPriceETB: 35000,
-    annualPriceETB: 378000, // 10% discount
+    sixMonthPriceETB: 189000, // 10% discount for 6 months
+    annualPriceETB: 336000,  // 20% discount for 1 year
     isPopular: false,
     limits: {
       maxBuildings: 2,
@@ -36,7 +39,8 @@ export const MOCK_PLATFORM_PLANS: PlatformPlan[] = [
     name: 'Professional Plan',
     description: 'Perfect for growing property management firms managing multiple commercial plazas and towers.',
     monthlyPriceETB: 85000,
-    annualPriceETB: 918000,
+    sixMonthPriceETB: 459000, // 10% discount for 6 months
+    annualPriceETB: 816000,  // 20% discount for 1 year
     isPopular: true,
     limits: {
       maxBuildings: 8,
@@ -56,7 +60,8 @@ export const MOCK_PLATFORM_PLANS: PlatformPlan[] = [
     name: 'Business Enterprise',
     description: 'Comprehensive solution for institutional asset managers with high-volume lease operations.',
     monthlyPriceETB: 165000,
-    annualPriceETB: 1782000,
+    sixMonthPriceETB: 891000, // 10% discount for 6 months
+    annualPriceETB: 1584000, // 20% discount for 1 year
     isPopular: false,
     limits: {
       maxBuildings: 25,
@@ -76,7 +81,8 @@ export const MOCK_PLATFORM_PLANS: PlatformPlan[] = [
     name: 'Custom Enterprise Tier',
     description: 'Dedicated cloud infrastructure, custom SLA, and tailored integrations for national real estate conglomerates.',
     monthlyPriceETB: 320000,
-    annualPriceETB: 3456000,
+    sixMonthPriceETB: 1728000, // 10% discount for 6 months
+    annualPriceETB: 3072000,  // 20% discount for 1 year
     isPopular: false,
     limits: {
       maxBuildings: 100,
@@ -91,6 +97,48 @@ export const MOCK_PLATFORM_PLANS: PlatformPlan[] = [
     }
   }
 ];
+
+export const MOCK_AD_BANNERS: PlatformAdBanner[] = [
+  {
+    adId: 'ad_01',
+    title: '⚡ Upgrade to Enterprise Cloud & Get Free EthioTelecom Bulk SMS Gateway',
+    subtitle: 'Scale beyond 500 units with dedicated cloud resources, custom domain, and automated tenant receipt SMS.',
+    ctaText: 'Explore Enterprise Tier',
+    ctaUrl: '#plans',
+    badgeText: 'FEATURED PROMO',
+    badgeColor: '#007AFF',
+    imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300&auto=format&fit=crop&q=80',
+    targetAudience: 'all',
+    placement: 'dashboard_top',
+    isActive: true,
+    createdAt: '2026-08-01T00:00:00Z'
+  },
+  {
+    adId: 'ad_02',
+    title: '💳 Telebirr & CBE Digital Instant Payment Integration Now Live',
+    subtitle: 'Tenants can now settle commercial rent directly through Telebirr SuperApp with automated EFT reference validation.',
+    ctaText: 'View Payment Guide',
+    ctaUrl: '#telebirr',
+    badgeText: 'NEW FEATURE',
+    badgeColor: '#34C759',
+    targetAudience: 'manager',
+    placement: 'dashboard_top',
+    isActive: true,
+    createdAt: '2026-08-15T00:00:00Z'
+  }
+];
+
+export const DEFAULT_SMS_API_CONFIG: SmsApiGatewayConfig = {
+  provider: 'EthioTelecom',
+  apiKey: 'ETH-SMS-KEY-8940-2026-X99B',
+  apiSecret: '••••••••••••••••••••••••••••••••',
+  senderId: 'EPMS-NOTIFY',
+  restEndpointUrl: 'https://api.ethiotelecom.et/v2/sms/send-bulk',
+  balanceCredits: 48500,
+  costPerSmsETB: 0.35,
+  status: 'connected',
+  lastPingAt: '2026-08-26T14:30:00Z'
+};
 
 export const MOCK_ORGANIZATIONS: Organization[] = [
   {

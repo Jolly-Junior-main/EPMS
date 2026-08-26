@@ -48,16 +48,16 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({
 
   const navItems = [
     { id: 'sa_dashboard', label: t('nav_sa_dashboard', 'Dashboard Overview'), icon: LayoutDashboard },
-    { id: 'sa_organizations', label: t('nav_sa_organizations', 'Organizations'), icon: Building2 },
-    { id: 'sa_buildings', label: t('nav_sa_buildings', 'All Buildings'), icon: Layers },
-    { id: 'sa_users', label: t('nav_sa_users', 'Global Users'), icon: Users },
-    { id: 'sa_subscriptions', label: t('nav_sa_subscriptions', 'Subscriptions'), icon: CreditCard },
+    { id: 'sa_organizations', label: t('nav_sa_organizations', 'Clients & Passwords'), icon: Building2 },
+    { id: 'sa_sms_api', label: 'SMS API Gateway', icon: MessageSquare },
+    { id: 'sa_subscriptions', label: t('nav_sa_subscriptions', 'Subscriptions (1M/6M/1Y)'), icon: CreditCard },
     { id: 'sa_plans', label: t('nav_sa_plans', 'Plans & Pricing'), icon: Sparkles },
+    { id: 'sa_ads', label: 'Ads & Announcements', icon: Sparkles },
     { id: 'sa_billing', label: t('nav_sa_billing', 'Platform Billing'), icon: Receipt },
+    { id: 'sa_health', label: t('nav_sa_health', 'System Health'), icon: Activity },
     { id: 'sa_audit_logs', label: t('nav_sa_audit_logs', 'Audit Logs'), icon: FileCheck2 },
     { id: 'sa_notifications', label: t('nav_sa_notifications', 'Notifications'), icon: Bell, badge: unreadNotifs, badgeColor: 'bg-[#FF3B30]' },
     { id: 'sa_support', label: t('nav_sa_support', 'Support Tickets'), icon: LifeBuoy, badge: openTickets, badgeColor: 'bg-[#FF9500]' },
-    { id: 'sa_health', label: t('nav_sa_health', 'System Health'), icon: Activity },
     { id: 'sa_settings', label: t('nav_sa_settings', 'Platform Settings'), icon: Settings }
   ];
 

@@ -27,6 +27,8 @@ import { PlatformNotificationsView } from './components/superadmin/PlatformNotif
 import { SupportTicketsManager } from './components/superadmin/SupportTicketsManager';
 import { SystemHealthView } from './components/superadmin/SystemHealthView';
 import { PlatformSettingsView } from './components/superadmin/PlatformSettingsView';
+import { SmsApiManager } from './components/superadmin/SmsApiManager';
+import { AdBannersManager } from './components/superadmin/AdBannersManager';
 import { CreateOrganizationModal } from './components/superadmin/CreateOrganizationModal';
 import { OrganizationDetailsModal } from './components/superadmin/OrganizationDetailsModal';
 
@@ -174,10 +176,12 @@ function PMSAppContent() {
                 />
               )}
 
+              {activeTab === 'sa_sms_api' && <SmsApiManager />}
               {activeTab === 'sa_buildings' && <GlobalBuildingsManager />}
               {activeTab === 'sa_users' && <GlobalUsersManager />}
               {activeTab === 'sa_subscriptions' && <SubscriptionsManager />}
               {activeTab === 'sa_plans' && <PlansManager />}
+              {activeTab === 'sa_ads' && <AdBannersManager />}
               {activeTab === 'sa_billing' && <PlatformBillingManager />}
               {activeTab === 'sa_audit_logs' && <SuperAdminAuditLogs />}
               {activeTab === 'sa_notifications' && <PlatformNotificationsView />}

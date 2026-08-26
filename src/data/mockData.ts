@@ -35,7 +35,9 @@ export const MOCK_USERS: Record<string, UserProfile> = {
     title: 'Senior Property Operations Manager',
     organizationId: 'org_bole_plaza',
     organizationName: 'Bole Medhanialem Commercial Center',
-    complexAccess: ['prop_bole_01', 'prop_kazanchis_02', 'prop_sarbet_03']
+    complexAccess: ['prop_bole_01'],
+    assignedPropertyId: 'prop_bole_01',
+    assignedPropertyName: 'Bole Medhanialem Commercial Center'
   },
   admin: {
     uid: 'usr_admin_003',

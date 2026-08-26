@@ -75,14 +75,25 @@ export const PlansManager: React.FC = () => {
                 {plan.description}
               </p>
 
-              {/* Pricing in ETB */}
-              <div className="my-5">
-                <div className="text-2xl font-bold text-[#007AFF]">
-                  {plan.monthlyPriceETB.toLocaleString()}{' '}
-                  <span className="text-xs font-normal text-[#8E8E93]">ETB / mo</span>
+              {/* Pricing in ETB: 1 Month / 6 Months / 1 Year */}
+              <div className="my-4 space-y-1.5 p-3 rounded-2xl bg-[#F2F2F7] dark:bg-white/5">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-[11px] font-bold uppercase text-[#8E8E93]">1 Month</span>
+                  <span className="text-lg font-extrabold text-[#007AFF]">
+                    {plan.monthlyPriceETB.toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
+                  </span>
                 </div>
-                <div className="text-[11px] text-[#34C759] font-semibold mt-0.5">
-                  {plan.annualPriceETB.toLocaleString()} ETB billed annually (20% off)
+                <div className="flex items-baseline justify-between text-xs">
+                  <span className="text-[11px] font-bold uppercase text-[#8E8E93]">6 Months <span className="text-[#FF9500]">(10% off)</span></span>
+                  <span className="font-bold text-[#1C1C1E] dark:text-white">
+                    {(plan.sixMonthPriceETB || Math.round(plan.monthlyPriceETB * 6 * 0.9)).toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between text-xs">
+                  <span className="text-[11px] font-bold uppercase text-[#8E8E93]">1 Year <span className="text-[#34C759]">(20% off)</span></span>
+                  <span className="font-bold text-[#34C759]">
+                    {plan.annualPriceETB.toLocaleString()} <span className="text-[10px] font-normal text-[#8E8E93]">ETB</span>
+                  </span>
                 </div>
               </div>
 
@@ -171,20 +182,52 @@ export const PlansManager: React.FC = () => {
             </div>
 
             <form onSubmit={handleSavePlan} className="space-y-3 text-xs">
-              <div>
-                <label className="font-semibold block mb-1">Monthly Price (ETB)</label>
-                <input
-                  type="number"
-                  value={editingPlan.monthlyPriceETB}
-                  onChange={(e) =>
-                    setEditingPlan({
-                      ...editingPlan,
-                      monthlyPriceETB: Number(e.target.value),
-                      annualPriceETB: Math.round(Number(e.target.value) * 12 * 0.8)
-                    })
-                  }
-                  className="w-full px-3 py-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-[#F2F2F7] dark:bg-[#2C2C2E]"
-                />
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="font-semibold block mb-1">1-Month Price (ETB)</label>
+                  <input
+                    type="number"
+                    value={editingPlan.monthlyPriceETB}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setEditingPlan({
+                        ...editingPlan,
+                        monthlyPriceETB: val,
+                        sixMonthPriceETB: Math.round(val * 6 * 0.9),
+                        annualPriceETB: Math.round(val * 12 * 0.8)
+                      });
+                    }}
+                    className="w-full px-3 py-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-[#F2F2F7] dark:bg-[#2C2C2E]"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">6-Month Price (ETB)</label>
+                  <input
+                    type="number"
+                    value={editingPlan.sixMonthPriceETB || Math.round(editingPlan.monthlyPriceETB * 6 * 0.9)}
+                    onChange={(e) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        sixMonthPriceETB: Number(e.target.value)
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-[#F2F2F7] dark:bg-[#2C2C2E]"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold block mb-1">1-Year Price (ETB)</label>
+                  <input
+                    type="number"
+                    value={editingPlan.annualPriceETB}
+                    onChange={(e) =>
+                      setEditingPlan({
+                        ...editingPlan,
+                        annualPriceETB: Number(e.target.value)
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-[#F2F2F7] dark:bg-[#2C2C2E]"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -237,11 +280,11 @@ export const PlansManager: React.FC = () => {
                   <label className="font-semibold block mb-1">Storage (GB)</label>
                   <input
                     type="number"
-                    value={editingPlan.limits.maxStorageGB}
+                    value={editingPlan.limits.storageGB}
                     onChange={(e) =>
                       setEditingPlan({
                         ...editingPlan,
-                        limits: { ...editingPlan.limits, maxStorageGB: Number(e.target.value) }
+                        limits: { ...editingPlan.limits, storageGB: Number(e.target.value) }
                       })
                     }
                     className="w-full px-3 py-2 rounded-xl border border-black/[0.08] dark:border-white/10 bg-[#F2F2F7] dark:bg-[#2C2C2E]"

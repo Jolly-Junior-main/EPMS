@@ -26,7 +26,10 @@ import {
   PlatformSettings,
   ImpersonationContext,
   PlanTier,
-  SupportTicketStatus
+  SupportTicketStatus,
+  PlatformAdBanner,
+  SmsApiGatewayConfig,
+  SubscriptionBillingCycle
 } from '../types/superAdmin';
 import {
   MOCK_USERS,
@@ -48,7 +51,9 @@ import {
   MOCK_SUPERADMIN_AUDIT_LOGS,
   MOCK_SUPPORT_TICKETS,
   MOCK_PLATFORM_NOTIFICATIONS,
-  DEFAULT_PLATFORM_SETTINGS
+  DEFAULT_PLATFORM_SETTINGS,
+  MOCK_AD_BANNERS,
+  DEFAULT_SMS_API_CONFIG
 } from '../data/mockSuperAdminData';
 import { Language, TRANSLATIONS } from '../data/translations';
 import {
@@ -146,6 +151,8 @@ interface PMSContextType {
   supportTickets: SupportTicket[];
   platformSettings: PlatformSettings;
   impersonationContext: ImpersonationContext | null;
+  adBanners: PlatformAdBanner[];
+  smsApiConfig: SmsApiGatewayConfig;
   
   // Super Admin Operational Methods
   createOrganization: (org: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'>) => { success: boolean; error?: string };
@@ -156,9 +163,16 @@ interface PMSContextType {
   startImpersonation: (orgId: string) => { success: boolean; error?: string };
   exitImpersonation: () => void;
   extendSubscription: (subId: string, monthsToAdd: number) => { success: boolean; error?: string };
+  extendSubscriptionWithCycle: (subId: string, cycle: SubscriptionBillingCycle) => { success: boolean; error?: string };
   updateSubscriptionPlan: (subId: string, newPlanTier: PlanTier) => { success: boolean; error?: string };
   addTrialDays: (subId: string, days: number) => { success: boolean; error?: string };
   updatePlatformPlan: (planId: string, updates: Partial<PlatformPlan>) => { success: boolean; error?: string };
+  resetClientPassword: (orgId: string, userUid: string, newPassword?: string) => { success: boolean; message?: string };
+  createAdBanner: (ad: Omit<PlatformAdBanner, 'adId' | 'createdAt'>) => { success: boolean; error?: string };
+  updateAdBanner: (adId: string, updates: Partial<PlatformAdBanner>) => { success: boolean; error?: string };
+  deleteAdBanner: (adId: string) => { success: boolean; error?: string };
+  toggleAdBanner: (adId: string) => { success: boolean; error?: string };
+  updateSmsApiConfig: (config: Partial<SmsApiGatewayConfig>) => { success: boolean; error?: string };
   logSuperAdminAudit: (log: Omit<SuperAdminAuditLog, 'logId' | 'timestamp' | 'actorId' | 'actorName' | 'actorRole' | 'ipAddress'>) => void;
   markNotificationRead: (notificationId: string) => void;
   createSupportTicket: (ticket: Omit<SupportTicket, 'ticketId' | 'ticketNumber' | 'createdAt' | 'updatedAt'>) => { success: boolean; error?: string };
@@ -310,6 +324,16 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return saved ? JSON.parse(saved) : DEFAULT_PLATFORM_SETTINGS;
   });
 
+  const [adBanners, setAdBanners] = useState<PlatformAdBanner[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_ad_banners`);
+    return saved ? JSON.parse(saved) : MOCK_AD_BANNERS;
+  });
+
+  const [smsApiConfig, setSmsApiConfigState] = useState<SmsApiGatewayConfig>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_sa_sms_api_cfg`);
+    return saved ? JSON.parse(saved) : DEFAULT_SMS_API_CONFIG;
+  });
+
   const [impersonationContext, setImpersonationContext] = useState<ImpersonationContext | null>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_impersonation_ctx`);
     return saved ? JSON.parse(saved) : null;
@@ -347,6 +371,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_sa_settings`, JSON.stringify(platformSettings));
   }, [platformSettings]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_ad_banners`, JSON.stringify(adBanners));
+  }, [adBanners]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_sa_sms_api_cfg`, JSON.stringify(smsApiConfig));
+  }, [smsApiConfig]);
 
   useEffect(() => {
     if (impersonationContext) {
@@ -1220,12 +1252,17 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // -------------------------------------------------------------
   const getRedList = () => {
     const now = new Date('2026-08-14T08:00:00Z').getTime();
+    
+    // Strict Single-Building Lock for Property Managers
+    const effectivePropId = currentUser.role === 'manager'
+      ? (currentUser.assignedPropertyId || 'prop_bole_01')
+      : selectedPropertyId;
 
     // Red List isolates invoices where dueDate < now AND paymentStatus == 'delinquent'
     const delinquentInvoices = invoices.filter((inv) => {
       const dueTime = new Date(inv.dueDate).getTime();
       return (inv.paymentStatus === 'delinquent' || (inv.paymentStatus === 'pending' && dueTime < now)) &&
-        (selectedPropertyId === 'all' || inv.propertyId === selectedPropertyId);
+        (effectivePropId === 'all' || inv.propertyId === effectivePropId);
     });
 
     return delinquentInvoices.map((inv) => {
@@ -1249,13 +1286,18 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const getRevenueMetrics = () => {
-    const filteredInvoices = selectedPropertyId === 'all'
-      ? invoices
-      : invoices.filter((inv) => inv.propertyId === selectedPropertyId);
+    // Strict Single-Building Lock for Property Managers
+    const effectivePropId = currentUser.role === 'manager'
+      ? (currentUser.assignedPropertyId || 'prop_bole_01')
+      : selectedPropertyId;
 
-    const filteredUnits = selectedPropertyId === 'all'
+    const filteredInvoices = effectivePropId === 'all'
+      ? invoices
+      : invoices.filter((inv) => inv.propertyId === effectivePropId);
+
+    const filteredUnits = effectivePropId === 'all'
       ? units
-      : units.filter((u) => u.propertyId === selectedPropertyId);
+      : units.filter((u) => u.propertyId === effectivePropId);
 
     const totalExpectedETB = filteredInvoices.reduce((sum, inv) => sum + inv.amountDue, 0);
     const grossCollectedETB = filteredInvoices
@@ -1667,6 +1709,112 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return { success: true };
   };
 
+  const resetClientPassword = (orgId: string, userUid: string, newPassword: string = '123') => {
+    const org = organizations.find((o) => o.organizationId === orgId);
+    logSuperAdminAudit({
+      organizationId: orgId,
+      organizationName: org ? org.name : 'Client Organization',
+      action: 'RESET_CLIENT_PASSWORD',
+      resource: 'security',
+      resourceId: userUid,
+      details: `Password reset to "${newPassword}" for admin/manager account (${userUid}) by Super Admin.`
+    });
+    showToast(`Password successfully reset to "${newPassword}" for ${org ? org.primaryAdminName : 'Client Admin'}.`, 'success');
+    return { success: true, message: `Password reset to: ${newPassword}` };
+  };
+
+  const createAdBanner = (adData: Omit<PlatformAdBanner, 'adId' | 'createdAt'>) => {
+    const newAd: PlatformAdBanner = {
+      ...adData,
+      adId: `ad_${Date.now()}`,
+      createdAt: new Date().toISOString()
+    };
+    setAdBanners((prev) => [newAd, ...prev]);
+    logSuperAdminAudit({
+      action: 'CREATE_AD_BANNER',
+      resource: 'setting',
+      resourceId: newAd.adId,
+      details: `Created platform announcement/ad: "${newAd.title}"`
+    });
+    showToast(`Announcement "${newAd.title}" published!`, 'success');
+    return { success: true };
+  };
+
+  const updateAdBanner = (adId: string, updates: Partial<PlatformAdBanner>) => {
+    setAdBanners((prev) =>
+      prev.map((ad) => (ad.adId === adId ? { ...ad, ...updates } : ad))
+    );
+    showToast('Ad banner updated successfully.', 'success');
+    return { success: true };
+  };
+
+  const deleteAdBanner = (adId: string) => {
+    setAdBanners((prev) => prev.filter((ad) => ad.adId !== adId));
+    showToast('Ad banner removed.', 'info');
+    return { success: true };
+  };
+
+  const toggleAdBanner = (adId: string) => {
+    setAdBanners((prev) =>
+      prev.map((ad) => (ad.adId === adId ? { ...ad, isActive: !ad.isActive } : ad))
+    );
+  };
+
+  const updateSmsApiConfig = (updates: Partial<SmsApiGatewayConfig>) => {
+    setSmsApiConfigState((prev) => {
+      const updated = { ...prev, ...updates, lastPingAt: new Date().toISOString() };
+      return updated;
+    });
+    logSuperAdminAudit({
+      action: 'UPDATE_SMS_API_GATEWAY',
+      resource: 'setting',
+      details: `Updated SMS API configuration (${updates.provider || smsApiConfig.provider} gateway).`
+    });
+    showToast('SMS API gateway configuration saved!', 'success');
+    return { success: true };
+  };
+
+  const extendSubscriptionWithCycle = (subId: string, cycle: SubscriptionBillingCycle) => {
+    const sub = subscriptions.find((s) => s.subscriptionId === subId);
+    if (!sub) return { success: false, error: 'Subscription not found' };
+    const plan = plans.find((p) => p.tier === sub.tier) || plans[0];
+
+    const months = cycle === 'monthly' ? 1 : cycle === 'semi_annually' ? 6 : 12;
+    const price = cycle === 'monthly' ? plan.monthlyPriceETB : cycle === 'semi_annually' ? plan.sixMonthPriceETB : plan.annualPriceETB;
+
+    setSubscriptions((prev) =>
+      prev.map((s) => {
+        if (s.subscriptionId === subId) {
+          const currentExp = new Date(s.expiryDate);
+          currentExp.setMonth(currentExp.getMonth() + months);
+          const newExpStr = currentExp.toISOString().split('T')[0];
+          const daysRemaining = Math.ceil((currentExp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+          return {
+            ...s,
+            billingCycle: cycle,
+            expiryDate: newExpStr,
+            daysRemaining,
+            amountETB: price,
+            status: 'active'
+          };
+        }
+        return s;
+      })
+    );
+
+    logSuperAdminAudit({
+      organizationId: sub.organizationId,
+      action: 'EXTEND_SUBSCRIPTION_CYCLE',
+      resource: 'subscription',
+      resourceId: subId,
+      details: `Renewed subscription for ${months} months (${cycle.toUpperCase()}) at ${price.toLocaleString()} ETB.`
+    });
+
+    showToast(`Subscription renewed for ${months} months (${cycle})!`, 'success');
+    return { success: true };
+  };
+
   const updateSupportTicketStatus = (ticketId: string, status: SupportTicketStatus, resolutionNotes?: string) => {
     setSupportTickets((prev) =>
       prev.map((tkt) =>
@@ -1718,7 +1866,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const monthlyRecurringRevenueETB = subscriptions
       .filter((s) => s.status === 'active' || s.status === 'expiring_soon')
-      .reduce((sum, s) => sum + (s.billingCycle === 'annually' ? Math.round(s.amountETB / 12) : s.amountETB), 0);
+      .reduce((sum, s) => sum + (s.billingCycle === 'annually' ? Math.round(s.amountETB / 12) : s.billingCycle === 'semi_annually' ? Math.round(s.amountETB / 6) : s.amountETB), 0);
 
     const totalRevenueETB = platformInvoices
       .filter((inv) => inv.status === 'paid')
@@ -1801,6 +1949,8 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         supportTickets,
         platformSettings,
         impersonationContext,
+        adBanners,
+        smsApiConfig,
         createOrganization,
         updateOrganization,
         suspendOrganization,
@@ -1809,9 +1959,16 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         startImpersonation,
         exitImpersonation,
         extendSubscription,
+        extendSubscriptionWithCycle,
         updateSubscriptionPlan,
         addTrialDays,
         updatePlatformPlan,
+        resetClientPassword,
+        createAdBanner,
+        updateAdBanner,
+        deleteAdBanner,
+        toggleAdBanner,
+        updateSmsApiConfig,
         logSuperAdminAudit,
         markNotificationRead,
         createSupportTicket,

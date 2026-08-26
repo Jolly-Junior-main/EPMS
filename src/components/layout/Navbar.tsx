@@ -43,7 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     selectedPropertyId,
     setSelectedPropertyId,
     getRevenueMetrics,
-    resetToSampleData
+    resetToSampleData,
+    adBanners
   } = usePMS();
 
   const metrics = getRevenueMetrics();
@@ -53,11 +54,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     if (currentUser.role === 'super_admin') {
       return [
         { id: 'sa_dashboard', label: t('nav_sa_dashboard', 'Control Plane'), icon: LayoutDashboard, route: '/superadmin' },
-        { id: 'sa_organizations', label: t('nav_sa_organizations', 'Organizations'), icon: Building2, route: '/superadmin/orgs' },
-        { id: 'sa_subscriptions', label: t('nav_sa_subscriptions', 'Subscriptions'), icon: Sparkles, route: '/superadmin/subs' },
-        { id: 'sa_billing', label: t('nav_sa_billing', 'Billing'), icon: Receipt, route: '/superadmin/billing' },
-        { id: 'dashboard', label: t('nav_dashboard', 'Client Dashboard'), icon: LayoutDashboard, route: '/owner/dashboard' },
-        { id: 'vault', label: t('nav_vault', 'Vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
+        { id: 'sa_organizations', label: t('nav_sa_organizations', 'Organizations & Passwords'), icon: Building2, route: '/superadmin/orgs' },
+        { id: 'sa_sms_api', label: 'SMS API Gateway', icon: MessageSquare, route: '/superadmin/sms' },
+        { id: 'sa_subscriptions', label: t('nav_sa_subscriptions', 'Subscriptions (1M/6M/1Y)'), icon: Sparkles, route: '/superadmin/subs' },
+        { id: 'sa_plans', label: t('nav_sa_plans', 'Plans & Pricing'), icon: Receipt, route: '/superadmin/plans' },
+        { id: 'sa_ads', label: 'Ads & Banners', icon: Sparkles, route: '/superadmin/ads' },
       ];
     }
 
@@ -70,18 +71,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         { id: 'redlist', label: t('nav_redlist'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/owner/redlist' },
         { id: 'tenants', label: t('nav_tenants'), icon: Users, route: '/manager/tenants' },
         { id: 'invoices', label: t('nav_invoices'), icon: Receipt, route: '/manager/invoices' },
-        { id: 'sms', label: t('nav_sms'), icon: MessageSquare, route: '/admin/sms' },
       ];
     }
 
+    // Owner: Strictly restricted to Revenue, Who Paid/Not Paid, and Verification Vault
     if (currentUser.role === 'owner') {
       return [
-        { id: 'dashboard', label: t('nav_dashboard'), icon: LayoutDashboard, route: '/owner' },
-        { id: 'vault', label: t('nav_vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
-        { id: 'redlist', label: t('nav_redlist'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/owner/redlist' },
-        { id: 'invoices', label: t('nav_invoices'), icon: Receipt, route: '/owner/ledger' },
-        { id: 'tenants', label: t('nav_tenants'), icon: Users, route: '/owner/tenants' },
-        { id: 'sms', label: t('nav_sms'), icon: MessageSquare, route: '/owner/sms' },
+        { id: 'dashboard', label: t('nav_dashboard', 'Revenue Analytics'), icon: LayoutDashboard, route: '/owner' },
+        { id: 'invoices', label: t('nav_invoices', 'Who Paid & Not Paid'), icon: Receipt, route: '/owner/ledger' },
+        { id: 'vault', label: t('nav_vault', 'Receipt Verification Vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
       ];
     }
 
@@ -91,13 +89,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       ];
     }
 
-    // Manager
+    // Manager: 1 Building Operations
     return [
-      { id: 'tenants', label: t('nav_tenants'), icon: Users, route: '/manager/tenants' },
-      { id: 'invoices', label: t('nav_invoices'), icon: Receipt, route: '/manager/invoices' },
-      { id: 'sms', label: t('nav_sms'), icon: MessageSquare, route: '/manager/sms' },
-      { id: 'redlist', label: t('nav_redlist'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/manager/redlist' },
-      { id: 'dashboard', label: t('nav_occupancy'), icon: LayoutDashboard, route: '/manager/overview' },
+      { id: 'tenants', label: t('nav_tenants', 'Tenants Directory'), icon: Users, route: '/manager/tenants' },
+      { id: 'invoices', label: t('nav_invoices', 'Rent Invoices & Payments'), icon: Receipt, route: '/manager/invoices' },
+      { id: 'sms', label: t('nav_sms', 'SMS Reminders'), icon: MessageSquare, route: '/manager/sms' },
+      { id: 'redlist', label: t('nav_redlist', 'Overdue Red List'), icon: AlertTriangle, count: metrics.redListCount, countColor: 'bg-[#FF3B30]', route: '/manager/redlist' },
+      { id: 'dashboard', label: t('nav_occupancy', 'Building Occupancy'), icon: LayoutDashboard, route: '/manager/overview' },
     ];
   };
 
@@ -182,6 +180,26 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         </div>
       </div>
 
+      {/* Super Admin Announcement / Ad Banner */}
+      {adBanners && adBanners.filter(ad => ad.isActive && (ad.targetAudience === 'all' || ad.targetAudience === currentUser.role)).slice(0, 1).map(ad => (
+        <div key={ad.adId} className="bg-gradient-to-r from-[#007AFF]/10 via-[#5856D6]/10 to-[#007AFF]/10 border-b border-[#007AFF]/20 px-4 py-2 text-xs flex items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 overflow-hidden">
+            {ad.badgeText && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-white uppercase shrink-0" style={{ backgroundColor: ad.badgeColor || '#007AFF' }}>
+                {ad.badgeText}
+              </span>
+            )}
+            <span className="font-bold text-[#1C1C1E] truncate">{ad.title}</span>
+            <span className="text-[#8E8E93] hidden md:inline truncate">• {ad.subtitle}</span>
+          </div>
+          {ad.ctaText && (
+            <a href={ad.ctaUrl || '#'} className="px-3 py-1 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-xl text-[11px] font-bold shrink-0 transition-all active:scale-95 shadow-sm">
+              {ad.ctaText}
+            </a>
+          )}
+        </div>
+      ))}
+
       {/* Main Header Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
         {/* Brand & Complex Selector */}
@@ -203,8 +221,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             </p>
           </div>
 
-          {/* Complex Filter Dropdown (Hidden for tenants) */}
-          {currentUser.role !== 'tenant' && (
+          {/* Complex Filter Dropdown (Hidden for tenants; Locked to 1 building for managers) */}
+          {currentUser.role === 'manager' ? (
+            <div className="hidden lg:flex items-center ml-3 pl-3 border-l border-black/[0.08] text-xs font-semibold text-[#1C1C1E] bg-[#34C759]/10 border border-[#34C759]/20 px-3 py-1.5 rounded-xl">
+              <Building2 className="w-3.5 h-3.5 text-[#34C759] mr-1.5" />
+              <span>Managing: {currentUser.assignedPropertyName || 'Bole Medhanialem Commercial Center'} (1 Building Scope)</span>
+            </div>
+          ) : currentUser.role !== 'tenant' && (
             <div className="hidden lg:flex items-center ml-3 pl-3 border-l border-black/[0.08]">
               <select
                 id="property-selector"

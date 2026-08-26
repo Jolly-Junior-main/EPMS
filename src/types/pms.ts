@@ -51,6 +51,8 @@ export interface UserProfile {
   organizationId?: string;
   organizationName?: string;
   complexAccess: string[];
+  assignedPropertyId?: string;
+  assignedPropertyName?: string;
 }
 
 export type TenantStatus = 'active' | 'pending_renewal' | 'delinquent';

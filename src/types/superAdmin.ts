@@ -7,6 +7,8 @@ export type PlatformBillingStatus = 'paid' | 'pending' | 'failed' | 'refunded' |
 export type SupportTicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type SupportTicketStatus = 'open' | 'in_progress' | 'waiting_for_client' | 'resolved' | 'closed';
 
+export type SubscriptionBillingCycle = 'monthly' | 'semi_annually' | 'annually';
+
 export interface PlanLimits {
   maxBuildings: number;
   maxUnits: number;
@@ -25,6 +27,7 @@ export interface PlatformPlan {
   name: string;
   description: string;
   monthlyPriceETB: number;
+  sixMonthPriceETB: number;
   annualPriceETB: number;
   limits: PlanLimits;
   isPopular?: boolean;
@@ -40,7 +43,7 @@ export interface Subscription {
   expiryDate: string;
   daysRemaining: number;
   amountETB: number;
-  billingCycle: 'monthly' | 'annually';
+  billingCycle: SubscriptionBillingCycle;
   autoRenew: boolean;
   paymentStatus: PlatformBillingStatus;
   lastPaymentDate?: string;
@@ -191,4 +194,32 @@ export interface ImpersonationContext {
     email: string;
   };
   startedAt: string;
+}
+
+export interface PlatformAdBanner {
+  adId: string;
+  title: string;
+  subtitle: string;
+  ctaText?: string;
+  ctaUrl?: string;
+  badgeText?: string;
+  badgeColor?: string; // e.g. '#007AFF' | '#34C759' | '#FF9500'
+  imageUrl?: string;
+  targetAudience: 'all' | 'owner' | 'manager' | 'tenant';
+  placement: 'dashboard_top' | 'sidebar_bottom' | 'portal_header';
+  isActive: boolean;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+export interface SmsApiGatewayConfig {
+  provider: 'EthioTelecom' | 'Twilio' | 'Safaricom';
+  apiKey: string;
+  apiSecret: string;
+  senderId: string;
+  restEndpointUrl: string;
+  balanceCredits: number;
+  costPerSmsETB: number;
+  status: 'connected' | 'disconnected' | 'rate_limited';
+  lastPingAt: string;
 }
