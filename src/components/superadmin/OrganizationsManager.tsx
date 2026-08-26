@@ -23,8 +23,10 @@ import {
   Filter,
   KeyRound,
   Lock,
-  Clock
+  Clock,
+  Scissors
 } from 'lucide-react';
+import { CreateSalonModal } from './CreateSalonModal';
 
 interface OrganizationsManagerProps {
   onOpenCreateModal: () => void;
@@ -52,6 +54,7 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
   const [activeMenuOrgId, setActiveMenuOrgId] = useState<string | null>(null);
   const [resetModalOrg, setResetModalOrg] = useState<Organization | null>(null);
   const [newPasswordInput, setNewPasswordInput] = useState('123');
+  const [isCreateSalonOpen, setIsCreateSalonOpen] = useState(false);
 
   // Filtered & Searched Organizations
   const filteredOrgs = organizations.filter((org) => {
@@ -131,7 +134,15 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => setIsCreateSalonOpen(true)}
+            className="px-3.5 py-2.5 bg-[#AF52DE]/10 hover:bg-[#AF52DE] hover:text-white text-[#AF52DE] rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer shadow-sm border border-[#AF52DE]/20"
+            title="Provision a new Salon / Spa commercial unit for a client"
+          >
+            <Scissors className="w-4 h-4" />
+            + Provision Salon for Client
+          </button>
           <button
             onClick={handleExportCSV}
             className="px-3.5 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 text-[#1C1C1E] dark:text-white rounded-2xl text-xs font-semibold transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
@@ -144,7 +155,7 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
             className="px-4 py-2.5 bg-[#007AFF] hover:bg-[#0062CC] text-white rounded-2xl text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.3)] flex items-center gap-2 active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            {t('org_create_btn', 'Onboard Organization')}
+            {t('org_create_btn', 'Onboard Client')}
           </button>
         </div>
       </div>
@@ -462,6 +473,12 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
           </div>
         </div>
       )}
+
+      {/* Create Salon for Client Modal */}
+      <CreateSalonModal
+        isOpen={isCreateSalonOpen}
+        onClose={() => setIsCreateSalonOpen(false)}
+      />
     </div>
   );
 };

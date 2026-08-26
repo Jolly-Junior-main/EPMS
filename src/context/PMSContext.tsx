@@ -168,6 +168,7 @@ interface PMSContextType {
   addTrialDays: (subId: string, days: number) => { success: boolean; error?: string };
   updatePlatformPlan: (planId: string, updates: Partial<PlatformPlan>) => { success: boolean; error?: string };
   resetClientPassword: (orgId: string, userUid: string, newPassword?: string) => { success: boolean; message?: string };
+  createSalonForClient: (orgId: string, salonData: { salonName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => { success: boolean; error?: string };
   createAdBanner: (ad: Omit<PlatformAdBanner, 'adId' | 'createdAt'>) => { success: boolean; error?: string };
   updateAdBanner: (adId: string, updates: Partial<PlatformAdBanner>) => { success: boolean; error?: string };
   deleteAdBanner: (adId: string) => { success: boolean; error?: string };
@@ -1723,6 +1724,72 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return { success: true, message: `Password reset to: ${newPassword}` };
   };
 
+  const createSalonForClient = (orgId: string, salonData: { salonName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => {
+    const org = organizations.find((o) => o.organizationId === orgId) || organizations[0];
+    const unitId = `unit_salon_${Date.now()}`;
+    const tenantId = `tnt_salon_${Date.now()}`;
+    const invoiceId = `inv_salon_${Date.now()}`;
+
+    const newUnit: Unit = {
+      unitId,
+      organizationId: org ? org.organizationId : 'org_bole_plaza',
+      propertyId: properties[0]?.propertyId || 'prop_bole_01',
+      unitNumber: salonData.unitNumber || `S-${Math.floor(100 + Math.random() * 900)}`,
+      floor: 1,
+      sqm: 45,
+      monthlyRentETB: salonData.monthlyRentETB,
+      status: 'occupied',
+      currentTenantId: tenantId
+    };
+
+    const newTenant: Tenant = {
+      tenantId,
+      organizationId: org ? org.organizationId : 'org_bole_plaza',
+      legalName: salonData.managerName,
+      businessTradeName: salonData.salonName,
+      phone: salonData.managerPhone,
+      email: salonData.managerEmail || `${salonData.salonName.toLowerCase().replace(/\s+/g, '')}@epms.et`,
+      assignedUnitId: unitId,
+      unitNumber: newUnit.unitNumber,
+      leaseStartDate: new Date().toISOString().split('T')[0],
+      leaseEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      monthlyRentETB: salonData.monthlyRentETB,
+      securityDepositETB: salonData.monthlyRentETB * 2,
+      status: 'active',
+      documents: []
+    };
+
+    const newInvoice: Invoice = {
+      invoiceId,
+      organizationId: org ? org.organizationId : 'org_bole_plaza',
+      invoiceNumber: `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      tenantId,
+      unitId,
+      propertyId: newUnit.propertyId,
+      amountDue: salonData.monthlyRentETB,
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      billingPeriod: 'Current Month',
+      issuedDate: new Date().toISOString().split('T')[0],
+      paymentStatus: 'pending'
+    };
+
+    setUnits((prev) => [newUnit, ...prev]);
+    setTenants((prev) => [newTenant, ...prev]);
+    setInvoices((prev) => [newInvoice, ...prev]);
+
+    logSuperAdminAudit({
+      organizationId: org ? org.organizationId : undefined,
+      organizationName: org ? org.name : undefined,
+      action: 'CREATE_SALON_UNIT',
+      resource: 'building',
+      resourceId: unitId,
+      details: `Provisioned new salon "${salonData.salonName}" in Unit ${newUnit.unitNumber} (${salonData.monthlyRentETB.toLocaleString()} ETB/mo) for ${org ? org.name : 'Client'}.`
+    });
+
+    showToast(`Salon "${salonData.salonName}" provisioned successfully in Unit ${newUnit.unitNumber}!`, 'success');
+    return { success: true };
+  };
+
   const createAdBanner = (adData: Omit<PlatformAdBanner, 'adId' | 'createdAt'>) => {
     const newAd: PlatformAdBanner = {
       ...adData,
@@ -1964,6 +2031,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addTrialDays,
         updatePlatformPlan,
         resetClientPassword,
+        createSalonForClient,
         createAdBanner,
         updateAdBanner,
         deleteAdBanner,

@@ -148,11 +148,16 @@ export const AdBannersManager: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => deleteAdBanner(ad.adId)}
-                  className="p-2 rounded-xl text-[#FF3B30] hover:bg-[#FF3B30]/10 transition-all"
-                  title="Delete Banner"
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete the ad banner: "${ad.title}"?`)) {
+                      deleteAdBanner(ad.adId);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-[#FF3B30]/10 hover:bg-[#FF3B30] hover:text-white text-[#FF3B30] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                  title="Delete Banner Ad"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
                 </button>
               </div>
             </div>
