@@ -494,8 +494,17 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const is123 = inputPass === '123';
 
-    if (inputUser === 'superadmin' || inputUser === 'super_admin' || inputUser === 'super' || inputUser === 'platform' || inputUser === 'superadmin@epms.cloud.et' || (inputUser.includes('super') && (is123 || inputPass.toLowerCase() === 'superadmin'))) {
-      if (is123 || inputPass.toLowerCase() === 'superadmin' || inputPass === 'SuperAdmin' || inputPass === '123') {
+    if (
+      inputUser === 'superadmin' ||
+      inputUser === 'super_admin' ||
+      inputUser === 'super admin' ||
+      inputUser === 'super' ||
+      inputUser === 'super administrator' ||
+      inputUser === 'platform' ||
+      inputUser === 'superadmin@epms.cloud.et' ||
+      inputUser.includes('super')
+    ) {
+      if (is123 || inputPass === '123' || inputPass.toLowerCase() === 'superadmin' || inputPass.toLowerCase() === 'super' || inputPass === 'SuperAdmin' || inputPass === 'SuperAdmin123') {
         matchedUser = MOCK_USERS.superadmin;
         matchedRole = 'super_admin';
       } else {

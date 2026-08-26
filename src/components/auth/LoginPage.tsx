@@ -281,9 +281,9 @@ export const LoginPage: React.FC = () => {
             </span>
           </div>
 
-          {/* iOS Segmented Control */}
-          <div className="grid grid-cols-4 gap-1 bg-[#767680]/12 p-1 rounded-2xl">
-            {(['owner', 'manager', 'tenant', 'admin'] as UserRole[]).map((r) => {
+          {/* iOS Segmented Control with Super Admin & All Roles */}
+          <div className="grid grid-cols-5 gap-1 bg-[#767680]/12 p-1 rounded-2xl">
+            {(['super_admin', 'owner', 'manager', 'tenant', 'admin'] as UserRole[]).map((r) => {
               const preset = PRESET_ACCOUNTS[r];
               const isSelected = selectedPreset === r;
               return (
@@ -294,12 +294,18 @@ export const LoginPage: React.FC = () => {
                   onClick={() => handleSelectPreset(r)}
                   className={`py-2 px-1 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 text-center flex flex-col items-center justify-center cursor-pointer ${
                     isSelected
-                      ? 'bg-white text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.12)] ring-1 ring-black/5'
+                      ? r === 'super_admin'
+                        ? 'bg-[#007AFF] text-white shadow-[0_2px_8px_rgba(0,122,255,0.35)] ring-1 ring-blue-600'
+                        : 'bg-white text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.12)] ring-1 ring-black/5'
                       : 'text-[#8E8E93] hover:text-[#1C1C1E]'
                   }`}
                 >
-                  <span className="font-bold text-[11px] truncate w-full">{preset.label.split(' ')[0]}</span>
-                  <span className="text-[9px] font-mono text-[#8E8E93] font-normal">{preset.username.split(' ')[0]}</span>
+                  <span className="font-bold text-[10px] truncate w-full">
+                    {r === 'super_admin' ? '⚡ Super' : preset.label.split(' ')[0]}
+                  </span>
+                  <span className={`text-[8px] font-mono font-normal truncate w-full ${isSelected && r === 'super_admin' ? 'text-white/80' : 'text-[#8E8E93]'}`}>
+                    {preset.username.split(' ')[0]}
+                  </span>
                 </button>
               );
             })}

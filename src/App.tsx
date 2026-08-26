@@ -63,7 +63,7 @@ function PMSAppContent() {
     return <LoginPage />;
   }
 
-  const isSuperAdminView = currentUser.role === 'super_admin' && activeTab.startsWith('sa_');
+  const isSuperAdminView = currentUser.role === 'super_admin';
 
   return (
     <div className="min-h-screen bg-[#F2F2F7] dark:bg-[#000000] text-[#1C1C1E] dark:text-white flex flex-col font-sans selection:bg-[#007AFF] selection:text-white">
@@ -152,7 +152,7 @@ function PMSAppContent() {
         <div className="flex-1 flex overflow-hidden">
           {/* Super Admin Collapsible Sidebar */}
           <SuperAdminSidebar
-            activeTab={activeTab}
+            activeTab={activeTab.startsWith('sa_') ? activeTab : 'sa_dashboard'}
             setActiveTab={setActiveTab}
             isCollapsed={isSidebarCollapsed}
             setIsCollapsed={setIsSidebarCollapsed}
@@ -161,7 +161,7 @@ function PMSAppContent() {
           {/* Super Admin Main Content Stage */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
             <div className="max-w-7xl mx-auto space-y-6">
-              {activeTab === 'sa_dashboard' && (
+              {(activeTab === 'sa_dashboard' || !activeTab.startsWith('sa_')) && (
                 <SuperAdminDashboardView
                   onNavigate={setActiveTab}
                   onOpenCreateOrg={() => setIsCreateOrgModalOpen(true)}
