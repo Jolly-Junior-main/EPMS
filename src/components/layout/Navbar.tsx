@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           <span className="hidden md:inline text-white/30">•</span>
           <span className="hidden md:flex items-center gap-1 text-white/90">
             <Building2 className="w-3 h-3 text-white/60" />
-            <span>{properties.find(p => p.propertyId === selectedPropertyId)?.name || 'Addis Ababa Portfolio (All Complexes)'}</span>
+            <span>{clientTheme.propertyName || currentUser.assignedPropertyName || 'Addis Ababa Portfolio'}</span>
           </span>
         </div>
 

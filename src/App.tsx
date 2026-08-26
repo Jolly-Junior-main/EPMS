@@ -196,14 +196,16 @@ function PMSAppContent() {
 
           {/* Main Applet Content */}
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            {activeTab === 'dashboard' && (
+            {(activeTab === 'dashboard' || (currentUser.role === 'owner' && !['vault', 'invoices', 'owner_ledger'].includes(activeTab))) && (
               <OwnerExecutiveDashboard onNavigate={setActiveTab} />
             )}
 
             {activeTab === 'vault' && <ReceiptVerificationVault />}
             {activeTab === 'redlist' && <TheRedListTracker />}
-            {activeTab === 'tenants' && <TenantsManager />}
-            {activeTab === 'invoices' && (
+            {(activeTab === 'tenants' || activeTab === 'documents' || (currentUser.role === 'manager' && !['vault', 'redlist', 'invoices', 'sms', 'dashboard'].includes(activeTab))) && (
+              <TenantsManager />
+            )}
+            {(activeTab === 'invoices' || activeTab === 'owner_ledger') && (
               <InvoicesPaymentsLedger onNavigateToVault={() => setActiveTab('vault')} />
             )}
             {activeTab === 'sms' && <SMSEngineConsole />}
