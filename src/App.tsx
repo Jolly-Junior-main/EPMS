@@ -63,7 +63,7 @@ function PMSAppContent() {
   const isSuperAdminView = currentUser.role === 'super_admin';
 
   return (
-    <div className={`bg-[#F2F2F7] dark:bg-[#000000] text-[#1C1C1E] dark:text-white flex flex-col font-sans selection:bg-[#007AFF] selection:text-white ${isSuperAdminView ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'}`}>
+    <div className={`bg-[#F2F2F7] text-[#1C1C1E] flex flex-col font-sans selection:bg-[#007AFF] selection:text-white ${isSuperAdminView ? 'dark h-screen max-h-screen overflow-hidden' : 'min-h-screen'}`}>
       {/* Impersonation Banner (Visible whenever Super Admin is impersonating a tenant) */}
       <SuperAdminImpersonationBanner />
 
@@ -146,7 +146,7 @@ function PMSAppContent() {
 
       {/* RENDER SUPER ADMIN CONTROL PLANE */}
       {isSuperAdminView ? (
-        <div className="flex-1 flex overflow-hidden">
+        <div className="dark flex-1 flex overflow-hidden bg-[#000000] text-white">
           {/* Super Admin Collapsible Sidebar */}
           <SuperAdminSidebar
             activeTab={activeTab.startsWith('sa_') ? activeTab : 'sa_dashboard'}
@@ -189,8 +189,8 @@ function PMSAppContent() {
           </main>
         </div>
       ) : (
-        /* STANDARD EPMS CLIENT TENANT WORKSPACE */
-        <div className="flex-1 flex flex-col">
+        /* STANDARD EPMS CLIENT TENANT WORKSPACE (STRICTLY LIGHT MODE) */
+        <div className="flex-1 flex flex-col bg-[#F2F2F7] text-[#1C1C1E]">
           {/* Top Navbar */}
           <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -212,9 +212,9 @@ function PMSAppContent() {
           </main>
 
           {/* Standard Footer */}
-          <footer className="bg-white/70 dark:bg-[#1C1C1E]/70 backdrop-blur-xl border-t border-black/[0.05] dark:border-white/10 py-4 px-6 text-center text-xs text-[#8E8E93]">
+          <footer className="bg-white/80 backdrop-blur-xl border-t border-black/[0.05] py-4 px-6 text-center text-xs text-[#8E8E93]">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-              <span className="font-medium text-[#3A3A3C] dark:text-white flex items-center gap-1.5">
+              <span className="font-medium text-[#3A3A3C] flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#34C759]" />
                 {t('footer_role_active')} [{currentUser.role.toUpperCase()}]
                 {currentUser.organizationName && ` • ${currentUser.organizationName}`}
