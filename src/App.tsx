@@ -58,10 +58,20 @@ function PMSAppContent() {
 
   // If not authenticated, route to dedicated platform access portal or client PMS login
   if (!isAuthenticated) {
+    const rawPath =
+      typeof window !== 'undefined'
+        ? window.location.pathname.toLowerCase().replace(/\/$/, '') || '/'
+        : '/';
+
     const isPlatformPath =
-      typeof window !== 'undefined' &&
-      (window.location.pathname.toLowerCase().startsWith('/platform-login') ||
-       window.location.pathname.toLowerCase().startsWith('/system-access'));
+      rawPath === '/platform-login' ||
+      rawPath === '/system-access' ||
+      rawPath === '/platform-admin' ||
+      rawPath === '/superadmin' ||
+      rawPath.startsWith('/superadmin/') ||
+      rawPath === '/admin' ||
+      rawPath.startsWith('/platform-login') ||
+      rawPath.startsWith('/system-access');
 
     if (isPlatformPath) {
       return <PlatformLoginPage />;

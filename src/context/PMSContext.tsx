@@ -305,21 +305,26 @@ const getUserForRole = (role: UserRole | string): UserProfile => {
   return MOCK_USERS[role] || MOCK_USERS.superadmin;
 };
 
+const isPlatformRoute = (path: string) => {
+  const p = path.toLowerCase().replace(/\/$/, '') || '/';
+  return (
+    p === '/platform-login' ||
+    p === '/system-access' ||
+    p === '/platform-admin' ||
+    p === '/superadmin' ||
+    p.startsWith('/superadmin/') ||
+    p === '/admin' ||
+    p.startsWith('/platform-login') ||
+    p.startsWith('/system-access')
+  );
+};
+
 const getInitialRouteInfo = () => {
   if (typeof window === 'undefined') {
     return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
   }
   const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
   
-  // Dedicated Super Admin Login endpoints
-  if (cleanPath === '/platform-login' || cleanPath === '/system-access') {
-    return { isAuth: false, user: MOCK_USERS.superadmin, route: '/platform-login', tab: 'sa_dashboard' };
-  }
-
-  if (cleanPath === '/login') {
-    return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
-  }
-
   // Check saved session in localStorage strictly
   let isSavedAuth = false;
   let savedUser: UserProfile | null = null;
@@ -334,9 +339,12 @@ const getInitialRouteInfo = () => {
     isSavedAuth = false;
   }
 
-  // If user has NO active session, NEVER grant access to any protected route
+  // If user has NO active session:
   if (!isSavedAuth || !savedUser) {
-    if (typeof window !== 'undefined') {
+    if (isPlatformRoute(cleanPath)) {
+      return { isAuth: false, user: MOCK_USERS.superadmin, route: '/platform-login', tab: 'sa_dashboard' };
+    }
+    if (cleanPath !== '/login' && typeof window !== 'undefined') {
       window.history.replaceState(null, '', '/login');
     }
     return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
@@ -393,7 +401,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // If user is NOT authenticated, block all back navigation to protected routes!
       if (!isAuth || !savedUser) {
         setIsAuthenticated(false);
-        if (cleanPath !== '/platform-login' && cleanPath !== '/system-access' && cleanPath !== '/login') {
+        if (!isPlatformRoute(cleanPath) && cleanPath !== '/login') {
           window.history.replaceState(null, '', '/login');
         }
         return;
@@ -435,14 +443,19 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [activeTab]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+
     if (isAuthenticated) {
       const targetPath = getTabPathForUser(activeTab, currentUser.role);
       if (targetPath && window.location.pathname !== targetPath) {
         window.history.pushState(null, '', targetPath);
       }
     } else {
-      if (window.location.pathname !== '/login') {
-        window.history.pushState(null, '', '/login');
+      if (isPlatformRoute(cleanPath)) {
+        // Do not redirect platform login endpoints
+      } else if (cleanPath !== '/login') {
+        window.history.replaceState(null, '', '/login');
       }
     }
   }, [activeTab, activeRoleRoute, isAuthenticated, currentUser.role]);
@@ -916,6 +929,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setGuardError(null);
       setActiveRoleRoute('/superadmin');
       setActiveTab('sa_dashboard');
+
+      if (typeof window !== 'undefined') {
+        window.history.pushState(null, '', '/superadmin');
+      }
 
       logSuperAdminAudit({
         organizationId: 'platform_core',
