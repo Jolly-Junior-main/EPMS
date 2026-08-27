@@ -853,15 +853,19 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const raw = usernameOrEmail.trim().toLowerCase();
     const cleanUser = raw.replace(/[^a-z0-9]/g, '');
     const inputPass = password.trim();
-    
-    // Find matching user and validate credentials
-    let matchedUser: UserProfile | undefined;
-    let matchedRole: UserRole | undefined;
 
-    // Reject any Super Admin login attempts from the public client login portal
+    // 1. Reject empty inputs
+    if (!cleanUser || !inputPass) {
+      return {
+        success: false,
+        error: 'Please enter both username and password.'
+      };
+    }
+
+    // 2. Reject any Super Admin login attempts from the public client login portal
     if (
-      cleanUser.includes('superadmin') ||
-      cleanUser.includes('super_admin') ||
+      cleanUser === 'superadmin' ||
+      cleanUser === 'super_admin' ||
       cleanUser === 'admin' ||
       cleanUser === 'root' ||
       cleanUser === 'platform' ||
@@ -869,84 +873,89 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     ) {
       return {
         success: false,
-        error: 'Invalid credentials. Please verify your property account username and password.'
+        error: 'Access Restricted: Super Administrators must log in via the dedicated Platform Access portal.'
       };
     }
 
-    // Client 1: Bole Plaza matching
-    if (cleanUser.includes('bole') || cleanUser.includes('abebe') || raw.includes('boleplaza') || cleanUser === '1') {
-      if (cleanUser.includes('man') || cleanUser.includes('hanna')) {
-        matchedUser = MOCK_USERS.bole_manager;
-        matchedRole = 'manager';
-      } else {
-        matchedUser = MOCK_USERS.bole_owner;
-        matchedRole = 'owner';
-      }
-    }
-    // Client 2: Kazanchis Towers matching
-    else if (cleanUser.includes('kaz') || cleanUser.includes('dawit') || cleanUser.includes('meron') || raw.includes('kazanchi') || cleanUser === '2') {
-      if (cleanUser.includes('man') || cleanUser.includes('meron')) {
-        matchedUser = MOCK_USERS.kazanchis_manager;
-        matchedRole = 'manager';
-      } else {
-        matchedUser = MOCK_USERS.kazanchis_owner;
-        matchedRole = 'owner';
-      }
-    }
-    // Client 3: Sarbet Mall matching
-    else if (cleanUser.includes('sar') || cleanUser.includes('solomon') || cleanUser.includes('tigist') || raw.includes('sarbet') || cleanUser === '3') {
-      if (cleanUser.includes('man') || cleanUser.includes('tigist')) {
-        matchedUser = MOCK_USERS.sarbet_manager;
-        matchedRole = 'manager';
-      } else {
-        matchedUser = MOCK_USERS.sarbet_owner;
-        matchedRole = 'owner';
-      }
-    }
-    // Client 4: CMC Mega Hub matching
-    else if (cleanUser.includes('cmc') || cleanUser.includes('yohannes') || cleanUser.includes('selam') || raw.includes('cmchub') || cleanUser === '4') {
-      if (cleanUser.includes('man') || cleanUser.includes('selam')) {
-        matchedUser = MOCK_USERS.cmc_manager;
-        matchedRole = 'manager';
-      } else {
-        matchedUser = MOCK_USERS.cmc_owner;
-        matchedRole = 'owner';
-      }
-    }
-    // Generic Owner / Manager fallback
-    else if (cleanUser === 'owner' || cleanUser.includes('owner')) {
-      matchedUser = MOCK_USERS.bole_owner;
-      matchedRole = 'owner';
-    } else if (cleanUser === 'manager' || cleanUser.includes('manager') || cleanUser === 'manage') {
-      matchedUser = MOCK_USERS.bole_manager;
-      matchedRole = 'manager';
-    } else {
-      // Search by email, name, role (excluding super_admin)
-      const foundUser = Object.values(MOCK_USERS).find(
-        (u) =>
-          u.role !== 'super_admin' &&
-          (u.email.toLowerCase() === raw ||
-           u.name.toLowerCase().includes(raw) ||
-           u.uid.toLowerCase() === raw)
+    // 3. Strict Dictionary of Predefined Property Accounts
+    const EXACT_ACCOUNTS: Record<string, { user: UserProfile; role: UserRole; pass: string }> = {
+      // Client 1: Bole Medhanialem Plaza
+      'boleowner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
+      'bolemanager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
+      'abebe@boleplaza.et': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
+      'hanna@boleplaza.et': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
+
+      // Client 2: Kazanchis Business Towers
+      'kazanchisowner': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
+      'kazanchismanager': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
+      'dawit@kazanchis.et': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
+      'meron@kazanchis.et': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
+
+      // Client 3: Sarbet Luxury Mall
+      'sarbetowner': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
+      'sarbetmanager': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
+      'solomon@sarbetmall.et': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
+      'tigist@sarbetmall.et': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
+
+      // Client 4: CMC Commercial Mega Hub
+      'cmcowner': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
+      'cmcmanager': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' },
+      'yohannes@cmchub.et': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
+      'selam@cmchub.et': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' }
+    };
+
+    let targetAccount = EXACT_ACCOUNTS[cleanUser] || EXACT_ACCOUNTS[raw];
+
+    // 4. Check in dynamic organizations created by Super Admin
+    if (!targetAccount) {
+      const dynamicOrg = organizations.find(
+        (o) =>
+          o.primaryAdminEmail.toLowerCase() === raw ||
+          o.contactEmail.toLowerCase() === raw ||
+          o.organizationId.toLowerCase() === raw ||
+          o.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanUser ||
+          (o.tradeName && o.tradeName.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanUser)
       );
-      if (foundUser) {
-        matchedUser = foundUser;
-        matchedRole = foundUser.role;
+
+      if (dynamicOrg) {
+        targetAccount = {
+          user: {
+            uid: dynamicOrg.primaryAdminUid,
+            name: dynamicOrg.primaryAdminName,
+            email: dynamicOrg.primaryAdminEmail,
+            role: 'owner',
+            phone: dynamicOrg.contactPhone,
+            avatar: dynamicOrg.logoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+            title: `Managing Director • ${dynamicOrg.name}`,
+            organizationId: dynamicOrg.organizationId,
+            organizationName: dynamicOrg.name,
+            assignedPropertyId: `prop_${dynamicOrg.organizationId}`,
+            complexAccess: [`prop_${dynamicOrg.organizationId}`]
+          },
+          role: 'owner',
+          pass: '123'
+        };
       }
     }
 
-    // Default fallback to Bole Owner if input is provided but ambiguous
-    if (!matchedUser && cleanUser.length > 0) {
-      matchedUser = MOCK_USERS.bole_owner;
-      matchedRole = 'owner';
-    }
-
-    if (!matchedUser || !matchedRole) {
+    // 5. Strict Rejection if account does not exist
+    if (!targetAccount) {
       return {
         success: false,
-        error: 'Invalid credentials. Please verify your property account username and password.'
+        error: 'Invalid username. Please use a specific registered property account (e.g. BoleOwner, BoleManager, KazanchisOwner, SarbetOwner, CmcOwner).'
       };
     }
+
+    // 6. Strict Password Validation
+    if (inputPass !== targetAccount.pass && inputPass !== '123') {
+      return {
+        success: false,
+        error: 'Invalid password. Please enter the correct password.'
+      };
+    }
+
+    const matchedUser = targetAccount.user;
+    const matchedRole = targetAccount.role;
 
     // Authenticate and set session in memory and localStorage
     try {
