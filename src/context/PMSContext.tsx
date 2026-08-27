@@ -879,27 +879,51 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // 3. Strict Dictionary of Predefined Property Accounts
     const EXACT_ACCOUNTS: Record<string, { user: UserProfile; role: UserRole; pass: string }> = {
+      // Direct Generic Identifiers
+      'owner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
+      'manager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
+      'bole': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
+      'kazanchis': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
+      'sarbet': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
+      'cmc': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
+
       // Client 1: Bole Medhanialem Plaza
       'boleowner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
       'bolemanager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
+      'bole_owner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
+      'bole_manager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
+      'usr_bole_owner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
+      'usr_bole_manager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
       'abebe@boleplaza.et': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
       'hanna@boleplaza.et': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
 
       // Client 2: Kazanchis Business Towers
       'kazanchisowner': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
       'kazanchismanager': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
+      'kazanchis_owner': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
+      'kazanchis_manager': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
+      'usr_kaz_owner': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
+      'usr_kaz_manager': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
       'dawit@kazanchis.et': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
       'meron@kazanchis.et': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
 
       // Client 3: Sarbet Luxury Mall
       'sarbetowner': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
       'sarbetmanager': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
+      'sarbet_owner': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
+      'sarbet_manager': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
+      'usr_sar_owner': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
+      'usr_sar_manager': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
       'solomon@sarbetmall.et': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
       'tigist@sarbetmall.et': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
 
       // Client 4: CMC Commercial Mega Hub
       'cmcowner': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
       'cmcmanager': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' },
+      'cmc_owner': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
+      'cmc_manager': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' },
+      'usr_cmc_owner': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
+      'usr_cmc_manager': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' },
       'yohannes@cmchub.et': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
       'selam@cmchub.et': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' }
     };
@@ -968,12 +992,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setIsAuthenticated(true);
     setGuardError(null);
 
-    if (matchedRole === 'owner') {
-      setActiveRoleRoute('/owner');
-      setActiveTab('dashboard');
-    } else {
-      setActiveRoleRoute('/manager');
-      setActiveTab('tenants');
+    const targetRoute = matchedRole === 'owner' ? '/owner' : '/manager';
+    const targetTab = matchedRole === 'owner' ? 'dashboard' : 'tenants';
+
+    setActiveRoleRoute(targetRoute);
+    setActiveTab(targetTab);
+
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', targetRoute);
     }
 
     showToast(`Welcome, ${matchedUser.name}! Authenticated as [${matchedRole.toUpperCase()}].`, 'success');
