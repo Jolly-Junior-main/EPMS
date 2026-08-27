@@ -985,7 +985,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // BACKEND / API SUPER ADMIN CLEARANCE VERIFICATION
   // -------------------------------------------------------------
   const verifySuperAdminClearance = (actionName: string): boolean => {
-    if (currentUser.role !== 'super_admin') {
+    if (currentUser.role !== 'super_admin' && !impersonationContext?.isImpersonating) {
       logSuperAdminAudit({
         organizationId: 'security_gate',
         organizationName: 'EPMS Security Enforcement',
@@ -1065,8 +1065,8 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Route Guard / Middleware check
   const navigateRoleRoute = (targetRoute: string): boolean => {
-    // Super Admin has universal access
-    if (currentUser.role === 'admin') {
+    // Super Admin has universal access across all modules and workspaces
+    if (currentUser.role === 'admin' || currentUser.role === 'super_admin' || impersonationContext?.isImpersonating) {
       setActiveRoleRoute(targetRoute);
       setGuardError(null);
       return true;
@@ -1074,14 +1074,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Owner restricted from /admin
     if (currentUser.role === 'owner') {
-      if (targetRoute.startsWith('/admin')) {
+      if (targetRoute.startsWith('/admin') || targetRoute.startsWith('/superadmin')) {
         setGuardError({
           attemptedRoute: targetRoute,
           requiredRole: 'Super Admin',
           currentRole: 'Building Owner',
-          message: 'Access Denied: The route /admin contains low-level cloud infrastructure and is strictly restricted to Super Administrators.'
+          message: 'Access Denied: The route contains low-level cloud infrastructure and is strictly restricted to Super Administrators.'
         });
-        showToast('Route Guard: Super Admin role required for /admin', 'error');
+        showToast('Route Guard: Super Admin role required', 'error');
         return false;
       }
       setActiveRoleRoute(targetRoute);
@@ -1091,14 +1091,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Manager restricted from /admin and /owner verification
     if (currentUser.role === 'manager') {
-      if (targetRoute.startsWith('/admin')) {
+      if (targetRoute.startsWith('/admin') || targetRoute.startsWith('/superadmin')) {
         setGuardError({
           attemptedRoute: targetRoute,
           requiredRole: 'Super Admin',
           currentRole: 'Property Manager',
-          message: 'Access Denied: Property Managers cannot access the /admin cloud system console.'
+          message: 'Access Denied: Property Managers cannot access the cloud system console.'
         });
-        showToast('Route Guard: Super Admin role required for /admin', 'error');
+        showToast('Route Guard: Super Admin role required', 'error');
         return false;
       }
       if (targetRoute.startsWith('/owner')) {
@@ -1158,11 +1158,11 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Role-Based Access Control Checks
   // -------------------------------------------------------------
   const canPerformManagerAction = () => {
-    return ['manager', 'owner', 'admin'].includes(currentUser.role);
+    return ['manager', 'owner', 'admin', 'super_admin'].includes(currentUser.role) || !!impersonationContext?.isImpersonating;
   };
 
   const canPerformOwnerAction = () => {
-    return ['owner', 'admin'].includes(currentUser.role);
+    return ['owner', 'admin', 'super_admin'].includes(currentUser.role) || !!impersonationContext?.isImpersonating;
   };
 
   // -------------------------------------------------------------
@@ -1902,6 +1902,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const targetOrg = organizations.find((o) => o.organizationId === orgId);
     if (!targetOrg) return { success: false, error: 'Organization not found' };
 
+    const orgPropertyMap: Record<string, string> = {
+      'org_bole_plaza': 'prop_bole_01',
+      'org_kazanchis_towers': 'prop_kazanchis_02',
+      'org_sarbet_mall': 'prop_sarbet_03',
+      'org_cmc_hub': 'prop_cmc_04'
+    };
+    const propId = orgPropertyMap[orgId] || 'prop_bole_01';
+
     const ctx: ImpersonationContext = {
       isImpersonating: true,
       targetOrganizationId: orgId,
@@ -1927,11 +1935,17 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       title: `Managing Director • ${targetOrg.name}`,
       organizationId: orgId,
       organizationName: targetOrg.name,
-      complexAccess: ['all']
+      assignedPropertyId: propId,
+      complexAccess: [propId, 'all']
     });
 
+    setSelectedPropertyId(propId);
     setActiveRoleRoute('/owner');
     setActiveTab('dashboard');
+
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', '/owner');
+    }
 
     logSuperAdminAudit({
       organizationId: orgId,
@@ -1963,8 +1977,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setImpersonationContext(null);
     setCurrentUser(MOCK_USERS.superadmin);
+    setSelectedPropertyId('all');
     setActiveRoleRoute('/superadmin');
     setActiveTab('sa_dashboard');
+
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', '/superadmin');
+    }
 
     showToast('Exited client environment. Returned to Super Admin Control Plane.', 'success');
   };
