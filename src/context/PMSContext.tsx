@@ -606,14 +606,64 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Active Client Brand Theme
   const clientTheme: ClientBrandTheme = useMemo(() => {
-    const orgId = currentUser.organizationId || 'org_bole_plaza';
-    if (CLIENT_THEMES[orgId]) {
+    const orgId = currentUser.organizationId;
+    if (orgId && CLIENT_THEMES[orgId]) {
       return CLIENT_THEMES[orgId];
     }
-    const propId = currentUser.assignedPropertyId || currentUser.complexAccess?.[0] || 'prop_bole_01';
-    const found = Object.values(CLIENT_THEMES).find((t) => t.propertyId === propId);
-    return found || CLIENT_THEMES.org_bole_plaza;
-  }, [currentUser]);
+
+    // Dynamic Organization resolution from state
+    const dynamicOrg = organizations.find(
+      (o) => o.organizationId === orgId || (currentUser.organizationName && o.name.toLowerCase() === currentUser.organizationName.toLowerCase())
+    );
+    if (dynamicOrg) {
+      const gradientOptions = [
+        'from-[#007AFF] to-[#5856D6]',
+        'from-[#34C759] to-[#30B0C7]',
+        'from-[#FF9500] to-[#FF2D55]',
+        'from-[#5856D6] to-[#AF52DE]',
+        'from-[#FF2D55] to-[#5856D6]'
+      ];
+      const grad = gradientOptions[Math.abs(dynamicOrg.name.length) % gradientOptions.length];
+
+      return {
+        propertyId: `prop_${dynamicOrg.organizationId}`,
+        propertyName: dynamicOrg.tradeName || dynamicOrg.name,
+        organizationName: dynamicOrg.name,
+        citySubcity: `${dynamicOrg.address || dynamicOrg.city || 'Addis Ababa'}, ${dynamicOrg.country || 'Ethiopia'}`,
+        gradientClass: grad,
+        primaryColor: '#007AFF',
+        badgeBgClass: 'bg-[#007AFF]/10',
+        badgeTextClass: 'text-[#007AFF]',
+        badgeBorderClass: 'border-[#007AFF]/20',
+        logoIconName: 'Building2',
+        tagline: `${dynamicOrg.planTier.toUpperCase()} Commercial PMS Workspace`
+      };
+    }
+
+    const propId = currentUser.assignedPropertyId || currentUser.complexAccess?.[0];
+    if (propId) {
+      const found = Object.values(CLIENT_THEMES).find((t) => t.propertyId === propId);
+      if (found) return found;
+    }
+
+    if (currentUser.organizationName) {
+      return {
+        propertyId: orgId || 'prop_custom',
+        propertyName: currentUser.organizationName,
+        organizationName: currentUser.organizationName,
+        citySubcity: 'Addis Ababa, Ethiopia',
+        gradientClass: 'from-[#007AFF] to-[#5856D6]',
+        primaryColor: '#007AFF',
+        badgeBgClass: 'bg-[#007AFF]/10',
+        badgeTextClass: 'text-[#007AFF]',
+        badgeBorderClass: 'border-[#007AFF]/20',
+        logoIconName: 'Building2',
+        tagline: 'Enterprise Commercial PMS'
+      };
+    }
+
+    return CLIENT_THEMES.org_bole_plaza;
+  }, [currentUser, organizations]);
 
   // Effective property for data isolation
   const effectivePropertyId = useMemo(() => {
@@ -687,6 +737,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_sa_ad_banners`, JSON.stringify(adBanners));
   }, [adBanners]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}_ad_banner_global_enabled`, JSON.stringify(isAdBannerGlobalEnabled));
+  }, [isAdBannerGlobalEnabled]);
 
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_sa_sms_api_cfg`, JSON.stringify(smsApiConfig));
@@ -1777,8 +1831,29 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     };
 
+    const newPropertyId = `prop_${newOrgId}`;
+    const newProperty: Property = {
+      propertyId: newPropertyId,
+      name: orgData.tradeName || orgData.name,
+      type: 'commercial_plaza',
+      address: orgData.address || `${orgData.city || 'Addis Ababa'}, Ethiopia`,
+      city: orgData.city || 'Addis Ababa',
+      subCity: orgData.address || 'Central Sub-City',
+      totalFloors: 5,
+      totalUnits: 10,
+      grossAreaSqm: 3500,
+      imageUrl: orgData.logoUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&auto=format&fit=crop&q=80',
+      financials: {
+        totalMonthlyExpectedETB: 350000,
+        monthlyCollectedETB: 350000,
+        collectionRatePercent: 100,
+        occupancyRatePercent: 80
+      }
+    };
+
     setOrganizations((prev) => [newOrg, ...prev]);
     setSubscriptions((prev) => [newSub, ...prev]);
+    setProperties((prev) => [newProperty, ...prev]);
 
     logSuperAdminAudit({
       organizationId: newOrgId,
