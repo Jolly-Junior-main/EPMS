@@ -77,14 +77,25 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7] flex flex-col justify-center items-center px-4 py-10 relative overflow-hidden font-sans selection:bg-[#007AFF] selection:text-white">
+    <div className="min-h-screen relative flex flex-col justify-center items-center px-4 py-10 font-sans selection:bg-[#007AFF] selection:text-white overflow-y-auto">
+      {/* High-Resolution Modern Architectural Buildings Background Image */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat z-0"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2160&q=85')`
+        }}
+      />
+
+      {/* Atmospheric Glassmorphism Gradient & Dark Contrast Overlay */}
+      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-[5px] z-0" />
+
       {/* Background Decorative Ambient Spheres */}
-      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-400/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed top-1/4 -left-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="fixed bottom-1/4 -right-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none z-0" />
 
       {/* Top iOS Status Indicator Pill & Language Toggle */}
-      <div className="mb-6 flex items-center justify-between gap-3 w-full max-w-md animate-in fade-in slide-in-from-top-3 duration-300">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-sm text-xs font-semibold text-[#1C1C1E]">
+      <div className="mb-6 flex items-center justify-between gap-3 w-full max-w-md animate-in fade-in slide-in-from-top-3 duration-300 relative z-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-xl border border-white/20 shadow-md text-xs font-semibold text-[#1C1C1E]">
           <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
           <span>{t('auth_active', 'EPMS Cloud Gateway Online')}</span>
         </div>
@@ -93,7 +104,7 @@ export const LoginPage: React.FC = () => {
           id="login-lang-toggle-btn"
           type="button"
           onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-xl border border-black/[0.06] shadow-sm text-xs font-bold text-[#007AFF] hover:bg-white transition-all active:scale-95 cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-xl border border-white/20 shadow-md text-xs font-bold text-[#007AFF] hover:bg-white transition-all active:scale-95 cursor-pointer"
         >
           <Globe className="w-3.5 h-3.5" />
           <span>{language === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 English'}</span>
@@ -101,7 +112,7 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* Main Centered Floating iOS Login Card */}
-      <div className="w-full max-w-md backdrop-blur-2xl bg-white/90 border border-black/[0.06] rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.08)] p-6 sm:p-8 space-y-5 relative z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md backdrop-blur-2xl bg-white/95 border border-white/40 rounded-3xl shadow-[0_25px_70px_rgba(0,0,0,0.35)] p-6 sm:p-8 space-y-5 relative z-10 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Brand Header */}
         <div className="text-center space-y-2">
