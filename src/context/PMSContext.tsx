@@ -2448,6 +2448,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setLanguage,
         t,
         login,
+        platformLogin,
         logout,
         switchUser,
         guardError,
