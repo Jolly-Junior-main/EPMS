@@ -313,34 +313,43 @@ const getInitialRouteInfo = () => {
   if (cleanPath === '/login') {
     return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
   }
-  
-  if (PATH_MAP[cleanPath]) {
-    const match = PATH_MAP[cleanPath];
-    return { isAuth: true, user: getUserForRole(match.role), route: match.route, tab: match.tab };
-  }
 
-  const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
-  const match = sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
-  if (match) {
-    return { isAuth: true, user: getUserForRole(match.role), route: match.route, tab: match.tab };
-  }
-
-  // Check saved session in localStorage
+  // Check saved session in localStorage strictly
+  let isSavedAuth = false;
+  let savedUser: UserProfile | null = null;
   try {
     const savedAuth = localStorage.getItem(`${STORAGE_KEY}_auth_state`);
-    const savedUser = localStorage.getItem(`${STORAGE_KEY}_user_profile`);
-    if (savedAuth && JSON.parse(savedAuth) === true && savedUser) {
-      const user = JSON.parse(savedUser);
-      const route = user.role === 'super_admin' ? '/superadmin' : user.role === 'owner' ? '/owner' : '/manager';
-      const tab = user.role === 'super_admin' ? 'sa_dashboard' : user.role === 'owner' ? 'dashboard' : 'tenants';
-      return { isAuth: true, user, route, tab };
+    const savedUserStr = localStorage.getItem(`${STORAGE_KEY}_user_profile`);
+    if (savedAuth === 'true' && savedUserStr) {
+      isSavedAuth = true;
+      savedUser = JSON.parse(savedUserStr);
     }
   } catch (e) {
-    // Ignore storage parse error
+    isSavedAuth = false;
   }
 
-  // Default to Login page on initial access to '/' with no stored session
-  return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
+  // If user has NO active session, NEVER grant access to any protected route
+  if (!isSavedAuth || !savedUser) {
+    if (cleanPath !== '/login' && typeof window !== 'undefined') {
+      window.history.replaceState(null, '', '/login');
+    }
+    return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
+  }
+
+  // User IS authenticated: match requested path if authorized
+  const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
+  const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
+
+  if (match) {
+    if (savedUser.role === 'super_admin' || savedUser.role === match.role) {
+      return { isAuth: true, user: savedUser, route: match.route, tab: match.tab };
+    }
+  }
+
+  // Default route for active user
+  const route = savedUser.role === 'super_admin' ? '/superadmin' : savedUser.role === 'owner' ? '/owner' : '/manager';
+  const tab = savedUser.role === 'super_admin' ? 'sa_dashboard' : savedUser.role === 'owner' ? 'dashboard' : 'tenants';
+  return { isAuth: true, user: savedUser, route, tab };
 };
 
 export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -354,27 +363,62 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('all');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
-  // Synchronize browser URL history with active section
+  // Synchronize browser URL history and prevent unauthorized back navigation
   useEffect(() => {
     const handlePopState = () => {
       const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-      if (cleanPath === '/login') {
+      
+      // Check auth state in localStorage
+      let isAuth = false;
+      let savedUser: UserProfile | null = null;
+      try {
+        const authVal = localStorage.getItem(`${STORAGE_KEY}_auth_state`);
+        const userStr = localStorage.getItem(`${STORAGE_KEY}_user_profile`);
+        if (authVal === 'true' && userStr) {
+          isAuth = true;
+          savedUser = JSON.parse(userStr);
+        }
+      } catch (e) {
+        isAuth = false;
+      }
+
+      // If user is NOT authenticated, block all back navigation to protected routes!
+      if (!isAuth || !savedUser) {
         setIsAuthenticated(false);
+        if (window.location.pathname !== '/login') {
+          window.history.replaceState(null, '', '/login');
+        }
         return;
       }
+
+      // If authenticated and tries to go to /login via back button, stay on current dashboard
+      if (cleanPath === '/login') {
+        const targetPath = getTabPathForUser(activeTab, savedUser.role);
+        window.history.replaceState(null, '', targetPath);
+        return;
+      }
+
+      // Sync active tab/route if valid path
       const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
       const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
+
       if (match) {
-        setIsAuthenticated(true);
-        setCurrentUser(getUserForRole(match.role));
-        setActiveRoleRoute(match.route);
-        setActiveTab(match.tab);
+        if (savedUser.role === 'super_admin' || savedUser.role === match.role) {
+          setIsAuthenticated(true);
+          setCurrentUser(savedUser);
+          setActiveRoleRoute(match.route);
+          setActiveTab(match.tab);
+        } else {
+          // Role mismatch, force user's own route
+          const targetPath = getTabPathForUser(activeTab, savedUser.role);
+          window.history.replaceState(null, '', targetPath);
+        }
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -800,7 +844,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       };
     }
 
-    // Authenticate and set session
+    // Authenticate and set session in memory and localStorage
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_auth_state`, 'true');
+      localStorage.setItem(`${STORAGE_KEY}_user_profile`, JSON.stringify(matchedUser));
+    } catch (e) {
+      // ignore storage error
+    }
     setCurrentUser(matchedUser);
     setIsAuthenticated(true);
     setGuardError(null);
@@ -825,15 +875,30 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const logout = () => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_auth_state`, 'false');
+      localStorage.removeItem(`${STORAGE_KEY}_user_profile`);
+    } catch (e) {
+      // ignore
+    }
     setIsAuthenticated(false);
     setImpersonationContext(null);
-    showToast('Signed out of Enterprise PMS session.', 'info');
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', '/login');
+    }
+    showToast('Signed out of Enterprise PMS. Session securely terminated.', 'info');
   };
 
   // Switch User directly
   const switchUser = (role: UserRole) => {
     const targetUser = getUserForRole(role);
     if (targetUser) {
+      try {
+        localStorage.setItem(`${STORAGE_KEY}_auth_state`, 'true');
+        localStorage.setItem(`${STORAGE_KEY}_user_profile`, JSON.stringify(targetUser));
+      } catch (e) {
+        // ignore
+      }
       setCurrentUser(targetUser);
       setIsAuthenticated(true);
       setGuardError(null);
