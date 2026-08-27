@@ -45,7 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     properties,
     getRevenueMetrics,
     resetToSampleData,
-    adBanners
+    adBanners,
+    isAdBannerGlobalEnabled
   } = usePMS();
 
   const metrics = getRevenueMetrics();
@@ -63,12 +64,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
       ];
     }
 
-    // Owner: Strictly restricted to Revenue, Who Paid/Not Paid, and Verification Vault
+    // Owner: Strictly restricted to Revenue, Who Paid/Not Paid, and Telegram Auto-Verified Receipt Gallery
     if (currentUser.role === 'owner') {
       return [
         { id: 'dashboard', label: t('nav_dashboard', 'Revenue Analytics'), icon: LayoutDashboard, route: '/owner' },
         { id: 'invoices', label: t('nav_invoices', 'Who Paid & Not Paid'), icon: Receipt, route: '/owner/ledger' },
-        { id: 'vault', label: t('nav_vault', 'Receipt Verification Vault'), icon: ShieldCheck, count: metrics.pendingVerificationCount, countColor: 'bg-[#007AFF]', route: '/owner/vault' },
+        { id: 'vault', label: t('nav_vault', 'Receipt Gallery'), icon: FileCheck2, route: '/owner/vault' },
       ];
     }
 
@@ -92,79 +93,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   };
 
   return (
-    <header id="main-header" className="sticky top-0 z-40 backdrop-blur-2xl bg-white/80 border-b border-black/[0.06] shadow-[0_2px_15px_rgba(0,0,0,0.03)]">
-      {/* Top iOS Status Bar / Ticker */}
-      <div className="bg-[#1C1C1E] px-4 py-1.5 text-[11px] text-white/80 flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-[#34C759] font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#34C759] animate-pulse" />
-            Authenticated Session Active
-          </span>
-          <span className="text-white/30">•</span>
-          <span className="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <span className={`w-1.5 h-1.5 rounded-full ${syncStatus === 'synced' ? 'bg-emerald-400' : syncStatus === 'syncing' ? 'bg-amber-400 animate-ping' : 'bg-red-400'}`} />
-            Firestore: {syncStatus === 'synced' ? 'Live Synced' : syncStatus === 'syncing' ? 'Connecting...' : 'Cached Local'}
-          </span>
-          <span className="text-white/30">•</span>
-          <span className="font-mono text-[#0A84FF] text-[10px] px-2 py-0.2 rounded-full bg-[#007AFF]/20 border border-[#007AFF]/30">
-            Route: {activeRoleRoute}
-          </span>
-          <span className="hidden md:inline text-white/30">•</span>
-          <span className="hidden md:flex items-center gap-1 text-white/90">
-            <Building2 className="w-3 h-3 text-white/60" />
-            <span>{clientTheme.propertyName || currentUser.assignedPropertyName || 'Addis Ababa Portfolio'}</span>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          {metrics.pendingVerificationCount > 0 && currentUser.role !== 'manager' && currentUser.role !== 'tenant' && (
-            <button
-              id="header-vault-badge"
-              onClick={() => handleTabClick({ id: 'vault', route: '/owner/vault' })}
-              className="px-2 py-0.5 rounded-full bg-[#007AFF]/20 text-[#0A84FF] border border-[#007AFF]/30 text-[10px] font-bold flex items-center gap-1 hover:bg-[#007AFF]/30 transition-all active:scale-95"
-            >
-              <FileCheck2 className="w-3 h-3" />
-              {metrics.pendingVerificationCount} Slips Pending
-            </button>
-          )}
-
-          {metrics.redListCount > 0 && currentUser.role !== 'tenant' && (
-            <button
-              id="header-redlist-badge"
-              onClick={() => handleTabClick({ id: 'redlist', route: '/owner/redlist' })}
-              className="px-2 py-0.5 rounded-full bg-[#FF3B30]/20 text-[#FF453A] border border-[#FF3B30]/30 text-[10px] font-bold flex items-center gap-1 hover:bg-[#FF3B30]/30 transition-all active:scale-95"
-            >
-              <AlertTriangle className="w-3 h-3" />
-              {metrics.redListCount} Overdue
-            </button>
-          )}
-
-          {currentUser.role !== 'tenant' && (
-            <button
-              id="header-reset-btn"
-              onClick={resetToSampleData}
-              title="Reset database to initial enterprise state"
-              className="text-white/60 hover:text-white transition-colors flex items-center gap-1 text-[10px] font-medium ml-1 active:scale-95"
-            >
-              <RotateCcw className="w-2.5 h-2.5" />
-              {t('reset_data')}
-            </button>
-          )}
-
-          {/* Language Toggle Button */}
-          <button
-            id="lang-toggle-top-btn"
-            onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
-            className="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-semibold flex items-center gap-1 transition-all border border-white/10 active:scale-95 cursor-pointer ml-1"
-          >
-            <Globe className="w-3 h-3 text-[#0A84FF]" />
-            <span>{language === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 EN'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Super Admin Announcement / Ad Banner */}
-      {adBanners && adBanners.filter(ad => ad.isActive && (ad.targetAudience === 'all' || ad.targetAudience === currentUser.role)).slice(0, 1).map(ad => (
+    <header id="main-header" className="sticky top-0 z-40 backdrop-blur-2xl bg-white/95 border-b border-black/[0.06] shadow-[0_2px_15px_rgba(0,0,0,0.03)]">
+      {/* Super Admin Announcement / Ad Banner (Only displayed when turned ON) */}
+      {isAdBannerGlobalEnabled && adBanners && adBanners.filter(ad => ad.isActive && (ad.targetAudience === 'all' || ad.targetAudience === currentUser.role)).slice(0, 1).map(ad => (
         <div key={ad.adId} className="bg-gradient-to-r from-[#007AFF]/10 via-[#5856D6]/10 to-[#007AFF]/10 border-b border-[#007AFF]/20 px-4 py-2 text-xs flex items-center justify-between gap-4 animate-in fade-in duration-200">
           <div className="flex items-center gap-2 overflow-hidden">
             {ad.badgeText && (
@@ -223,6 +154,17 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           >
             <Globe className="w-3.5 h-3.5 text-[#007AFF]" />
             <span>{language === 'en' ? '🇪🇹 አማርኛ' : '🇬🇧 English'}</span>
+          </button>
+
+          {/* Reset Data Button */}
+          <button
+            id="header-reset-btn"
+            onClick={resetToSampleData}
+            title="Reset database to initial enterprise state"
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-[#767680]/10 hover:bg-[#767680]/20 text-[#8E8E93] hover:text-[#1C1C1E] text-xs font-semibold border border-black/[0.04] transition-all active:scale-95 cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{t('reset_data', 'Reset Data')}</span>
           </button>
 
           {/* Quick Super Admin Switch Button */}

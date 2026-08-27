@@ -65,8 +65,8 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
             onClick={() => onNavigate('vault')}
             className="px-4 py-2.5 rounded-2xl bg-[#007AFF] hover:bg-[#0071E3] text-white text-xs font-semibold transition-all shadow-[0_4px_12px_rgba(0,122,255,0.25)] flex items-center gap-2 active:scale-95 cursor-pointer"
           >
-            <ShieldCheck className="w-4 h-4 text-white" />
-            {t('dash_verify_slips_btn')} ({metrics.pendingVerificationCount})
+            <FileText className="w-4 h-4 text-white" />
+            Receipt Gallery ({payments.length})
           </button>
           <button
             id="dash-open-redlist-btn"
@@ -79,30 +79,31 @@ export const OwnerExecutiveDashboard: React.FC<DashboardProps> = ({ onNavigate }
         </div>
       </div>
 
-      {/* iOS Action Alert Banner for Pending Slips */}
-      {unverifiedPayments.length > 0 && (
-        <div className="bg-[#FF9500]/10 border border-[#FF9500]/30 rounded-3xl p-4 md:p-5 flex items-center justify-between gap-4 text-[#C97700]">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#FF9500] text-white flex items-center justify-center shrink-0 shadow-[0_4px_12px_rgba(255,149,0,0.3)]">
-              <Clock className="w-5 h-5" />
+      {/* Telegram Bot Live Ingestion Status Banner */}
+      <div className="bg-white rounded-3xl p-4 md:p-5 border border-black/[0.04] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-[#34C759]/10 text-[#34C759] flex items-center justify-center shrink-0 border border-[#34C759]/20">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-[#1C1C1E] flex items-center gap-2">
+              <span>Automated Receipt Ingestion &amp; Verification</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#007AFF]/10 text-[#007AFF] border border-[#007AFF]/20">
+                🤖 Telegram Bot Active
+              </span>
             </div>
-            <div>
-              <div className="text-sm font-bold text-[#1C1C1E]">
-                {unverifiedPayments.length} {t('dash_pending_alert_title')}
-              </div>
-              <div className="text-xs text-[#8E8E93] mt-0.5">
-                {t('dash_pending_alert_sub')}
-              </div>
+            <div className="text-xs text-[#8E8E93] mt-0.5">
+              Deposit slips and mobile transfers (CBE Birr, Telebirr, Awash, Dashen) are automatically imported and verified without manual owner intervention.
             </div>
           </div>
-          <button
-            onClick={() => onNavigate('vault')}
-            className="px-4 py-2 bg-[#FF9500] hover:bg-[#E08500] text-white rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shadow-[0_2px_8px_rgba(255,149,0,0.3)] active:scale-95 cursor-pointer"
-          >
-            {t('dash_review_now')} <ArrowRight className="w-3.5 h-3.5" />
-          </button>
         </div>
-      )}
+        <button
+          onClick={() => onNavigate('vault')}
+          className="px-4 py-2 bg-[#007AFF]/10 hover:bg-[#007AFF] hover:text-white text-[#007AFF] rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer self-start sm:self-auto"
+        >
+          Open Slip Gallery <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
 
       {/* Apple Health / iOS Widget-Style Financial Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

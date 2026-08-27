@@ -17,6 +17,8 @@ import { PlatformAdBanner } from '../../types/superAdmin';
 export const AdBannersManager: React.FC = () => {
   const {
     adBanners,
+    isAdBannerGlobalEnabled,
+    toggleAdBannerGlobal,
     createAdBanner,
     deleteAdBanner,
     toggleAdBanner
@@ -72,10 +74,45 @@ export const AdBannersManager: React.FC = () => {
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="px-5 py-2.5 rounded-2xl bg-[#007AFF] hover:bg-[#0062CC] text-white font-bold text-xs flex items-center gap-2 shadow-sm active:scale-95 transition-all self-start md:self-auto"
+          className="px-5 py-2.5 rounded-2xl bg-[#007AFF] hover:bg-[#0062CC] text-white font-bold text-xs flex items-center gap-2 shadow-sm active:scale-95 transition-all self-start md:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Create New Banner Ad
+        </button>
+      </div>
+
+      {/* Master Global ON/OFF Toggle */}
+      <div className="bg-white rounded-3xl p-6 border border-black/[0.06] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl shrink-0 ${isAdBannerGlobalEnabled ? 'bg-[#34C759]/10 text-[#34C759]' : 'bg-[#8E8E93]/10 text-[#8E8E93]'}`}>
+            <Megaphone className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-[#1C1C1E]">
+                Platform Banner Section Display
+              </h3>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${isAdBannerGlobalEnabled ? 'bg-[#34C759]/15 text-[#34C759]' : 'bg-[#8E8E93]/15 text-[#8E8E93]'}`}>
+                {isAdBannerGlobalEnabled ? '● ACTIVE (Displaying)' : '○ DISABLED (Hidden)'}
+              </span>
+            </div>
+            <p className="text-xs text-[#8E8E93] mt-0.5">
+              {isAdBannerGlobalEnabled
+                ? 'The top announcement bar is enabled. Turning this OFF completely removes the ad bar and makes the navbar start from the very top.'
+                : 'The entire advertisement section is currently hidden. The navigation bar starts cleanly from the top.'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => toggleAdBannerGlobal()}
+          className={`px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 cursor-pointer shrink-0 ${
+            isAdBannerGlobalEnabled
+              ? 'bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20 text-[#FF3B30] border border-[#FF3B30]/20'
+              : 'bg-[#34C759] hover:bg-[#2EB34F] text-white shadow-[0_4px_12px_rgba(52,199,89,0.3)]'
+          }`}
+        >
+          {isAdBannerGlobalEnabled ? 'Turn OFF Ad Section' : 'Turn ON Ad Section'}
         </button>
       </div>
 

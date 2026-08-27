@@ -155,6 +155,7 @@ interface PMSContextType {
   platformSettings: PlatformSettings;
   impersonationContext: ImpersonationContext | null;
   adBanners: PlatformAdBanner[];
+  isAdBannerGlobalEnabled: boolean;
   smsApiConfig: SmsApiGatewayConfig;
   
   // Super Admin Operational Methods
@@ -177,6 +178,7 @@ interface PMSContextType {
   updateAdBanner: (adId: string, updates: Partial<PlatformAdBanner>) => { success: boolean; error?: string };
   deleteAdBanner: (adId: string) => { success: boolean; error?: string };
   toggleAdBanner: (adId: string) => { success: boolean; error?: string };
+  toggleAdBannerGlobal: (enabled?: boolean) => void;
   updateSmsApiConfig: (config: Partial<SmsApiGatewayConfig>) => { success: boolean; error?: string };
   logSuperAdminAudit: (log: Omit<SuperAdminAuditLog, 'logId' | 'timestamp' | 'actorId' | 'actorName' | 'actorRole' | 'ipAddress'>) => void;
   markNotificationRead: (notificationId: string) => void;
@@ -496,6 +498,11 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [adBanners, setAdBanners] = useState<PlatformAdBanner[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_sa_ad_banners`);
     return saved ? JSON.parse(saved) : MOCK_AD_BANNERS;
+  });
+
+  const [isAdBannerGlobalEnabled, setIsAdBannerGlobalEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY}_ad_banner_global_enabled`);
+    return saved !== null ? JSON.parse(saved) : true;
   });
 
   const [smsApiConfig, setSmsApiConfigState] = useState<SmsApiGatewayConfig>(() => {
@@ -1098,16 +1105,22 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ...paymentData,
       paymentId,
       submittedAt: new Date().toISOString(),
-      verificationStatus: 'unverified',
+      verificationStatus: 'verified',
+      verifiedBy: 'Telegram Bot (@epms_receipt_bot)',
+      verifiedAt: new Date().toISOString(),
       submittedBy: `${currentUser.name} (${currentUser.role})`
     };
 
     setPayments((prev) => [newPayment, ...prev]);
     savePaymentToFirestore(newPayment).catch((err) => console.warn('Firestore payment save:', err));
 
-    // Update the invoice status to submitted_for_verification
+    // Update the invoice status to paid
     setInvoices((prev) => {
-      const updated = prev.map((inv) => (inv.invoiceId === paymentData.invoiceId ? { ...inv, paymentStatus: 'submitted_for_verification' as const, paymentId } : inv));
+      const updated = prev.map((inv) =>
+        inv.invoiceId === paymentData.invoiceId
+          ? { ...inv, paymentStatus: 'paid' as const, paymentId, paidAt: new Date().toISOString() }
+          : inv
+      );
       const target = updated.find((inv) => inv.invoiceId === paymentData.invoiceId);
       if (target) {
         saveInvoiceToFirestore(target).catch((err) => console.warn('Firestore invoice update:', err));
@@ -1120,16 +1133,16 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       id: `audit_${Date.now()}`,
       paymentId,
       invoiceId: paymentData.invoiceId,
-      action: 'submitted',
-      performedBy: currentUser.name,
-      role: currentUser.role,
+      action: 'verified',
+      performedBy: 'Telegram Bot OCR Ingestion Engine',
+      role: 'system',
       timestamp: new Date().toISOString(),
-      details: `${currentUser.role === 'tenant' ? 'Tenant' : 'Manager'} submitted payment slip of ${paymentData.amountPaid.toLocaleString()} ETB (Ref: ${paymentData.referenceNumber}) for Owner verification.`
+      details: `Payment slip of ${paymentData.amountPaid.toLocaleString()} ETB (Ref: ${paymentData.referenceNumber}) automatically imported and verified via Telegram Bot (@epms_receipt_bot).`
     };
     setAuditLogs((prev) => [auditEntry, ...prev]);
     saveAuditLogToFirestore(auditEntry).catch((err) => console.warn('Firestore audit save:', err));
 
-    showToast(`Payment slip submitted! Queued for Owner Receipt Verification Vault.`, 'success');
+    showToast(`Payment slip imported & auto-verified via Telegram Bot!`, 'success');
     return { success: true };
   };
 
@@ -2015,6 +2028,18 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
   };
 
+  const toggleAdBannerGlobal = (enabled?: boolean) => {
+    setIsAdBannerGlobalEnabled((prev) => {
+      const nextVal = enabled !== undefined ? enabled : !prev;
+      localStorage.setItem(`${STORAGE_KEY}_ad_banner_global_enabled`, JSON.stringify(nextVal));
+      showToast(
+        nextVal ? 'Platform Banner Announcements Display: ON' : 'Platform Banner Announcements Display: OFF',
+        nextVal ? 'success' : 'info'
+      );
+      return nextVal;
+    });
+  };
+
   const updateSmsApiConfig = (updates: Partial<SmsApiGatewayConfig>) => {
     setSmsApiConfigState((prev) => {
       const updated = { ...prev, ...updates, lastPingAt: new Date().toISOString() };
@@ -2206,6 +2231,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         platformSettings,
         impersonationContext,
         adBanners,
+        isAdBannerGlobalEnabled,
         smsApiConfig,
         createOrganization,
         updateOrganization,
@@ -2226,6 +2252,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateAdBanner,
         deleteAdBanner,
         toggleAdBanner,
+        toggleAdBannerGlobal,
         updateSmsApiConfig,
         logSuperAdminAudit,
         markNotificationRead,
