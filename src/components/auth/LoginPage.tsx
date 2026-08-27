@@ -1,46 +1,27 @@
 import React, { useState } from 'react';
 import { usePMS } from '../../context/PMSContext';
-import { UserRole } from '../../types/pms';
 import {
   Building2,
   Lock,
   User,
   Eye,
   EyeOff,
-  ShieldCheck,
   ArrowRight,
-  Sparkles,
-  CheckCircle2,
   AlertCircle,
   Globe,
   Briefcase,
-  Store,
-  Layers
+  Store
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login, language, setLanguage, t } = usePMS();
 
-  // Login Mode: 'client' (Client EPMS Portal) vs 'super_admin' (Platform Super Admin)
-  const [loginMode, setLoginMode] = useState<'client' | 'super_admin'>('client');
   const [username, setUsername] = useState<string>('BoleOwner');
   const [password, setPassword] = useState<string>('123');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const handleModeChange = (mode: 'client' | 'super_admin') => {
-    setLoginMode(mode);
-    setErrorMessage(null);
-    if (mode === 'super_admin') {
-      setUsername('SuperAdmin');
-      setPassword('123');
-    } else {
-      setUsername('BoleOwner');
-      setPassword('123');
-    }
-  };
 
   const handleQuickClientSelect = async (uname: string) => {
     setUsername(uname);
@@ -50,7 +31,7 @@ export const LoginPage: React.FC = () => {
     try {
       const result = await login(uname, '123');
       if (!result.success) {
-        setErrorMessage(result.error || 'Invalid credentials. Please verify your username and password.');
+        setErrorMessage(result.error || 'Invalid credentials. Please verify your property account username and password.');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'An error occurred during authentication.');
@@ -67,7 +48,7 @@ export const LoginPage: React.FC = () => {
     try {
       const result = await login(username, password);
       if (!result.success) {
-        setErrorMessage(result.error || 'Invalid credentials. Please verify your username and password.');
+        setErrorMessage(result.error || 'Invalid credentials. Please verify your property account username and password.');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'An error occurred during authentication.');
@@ -121,43 +102,12 @@ export const LoginPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1C1C1E]">
-              {loginMode === 'super_admin' ? 'EPMS Super Admin' : 'Enterprise PMS Login'}
+              Commercial PMS Login
             </h1>
             <p className="text-xs text-[#8E8E93] mt-0.5">
-              {loginMode === 'super_admin'
-                ? 'Centralized Multi-Tenant SaaS Control Plane'
-                : 'Commercial Property Management System for Building Owners & Managers'}
+              Property Management Portal for Commercial Building Owners &amp; Property Managers
             </p>
           </div>
-        </div>
-
-        {/* Portal Switcher Tabs: Client EPMS vs Super Admin */}
-        <div className="grid grid-cols-2 gap-1 bg-[#767680]/12 p-1 rounded-2xl">
-          <button
-            type="button"
-            onClick={() => handleModeChange('client')}
-            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
-              loginMode === 'client'
-                ? 'bg-white text-[#1C1C1E] shadow-sm ring-1 ring-black/5'
-                : 'text-[#8E8E93] hover:text-[#1C1C1E]'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5 text-[#007AFF]" />
-            <span>Client EPMS</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleModeChange('super_admin')}
-            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
-              loginMode === 'super_admin'
-                ? 'bg-[#007AFF] text-white shadow-sm ring-1 ring-blue-600'
-                : 'text-[#8E8E93] hover:text-[#1C1C1E]'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Super Admin</span>
-          </button>
         </div>
 
         {/* Error Callout */}
@@ -174,7 +124,7 @@ export const LoginPage: React.FC = () => {
             {/* Username */}
             <div>
               <label className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider block mb-1 px-1">
-                {loginMode === 'super_admin' ? 'Super Admin Username' : 'Username / Property Account'}
+                Property Account / Username
               </label>
               <div className="relative flex items-center">
                 <User className="w-4 h-4 text-[#8E8E93] absolute left-4 pointer-events-none" />
@@ -184,7 +134,7 @@ export const LoginPage: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder={loginMode === 'super_admin' ? 'SuperAdmin' : 'e.g. BoleOwner, KazanchisOwner...'}
+                  placeholder="e.g. BoleOwner, KazanchisOwner..."
                   className="w-full bg-[#F2F2F7] focus:bg-white text-[#1C1C1E] rounded-xl pl-11 pr-4 py-3 text-xs focus:ring-2 focus:ring-[#007AFF] outline-none transition-all border border-black/[0.04] font-medium"
                 />
               </div>
@@ -246,146 +196,131 @@ export const LoginPage: React.FC = () => {
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Authenticating with EPMS...</span>
+                <span>Authenticating with Property Gateway...</span>
               </>
             ) : (
               <>
-                <span>Sign In to {loginMode === 'super_admin' ? 'Super Admin' : 'EPMS'}</span>
+                <span>Sign In to Building Portal</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
         </form>
 
-        {/* 4 Client Property Directory Reference */}
-        {loginMode === 'client' && (
-          <div className="pt-3 border-t border-black/[0.06] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">
-                Client Property Accounts (Pass: 123)
-              </span>
+        {/* 4 Client Property Directory Quick Access */}
+        <div className="pt-3 border-t border-black/[0.06] space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">
+              Client Property Portals (Pass: 123)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-[11px]">
+            {/* Client 1: Bole Plaza */}
+            <div className="p-2.5 rounded-2xl bg-blue-50/50 border border-[#007AFF]/20 space-y-1.5 shadow-sm">
+              <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
+                <Store className="w-3.5 h-3.5 text-[#007AFF]" />
+                <span>1. Bole Plaza</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('BoleOwner')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#007AFF] hover:bg-blue-100 shadow-sm border border-[#007AFF]/10 cursor-pointer"
+                  title="Click to select BoleOwner"
+                >
+                  Owner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('BoleManager')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
+                  title="Click to select BoleManager"
+                >
+                  Manager
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              {/* Client 1: Bole Plaza */}
-              <div className="p-2.5 rounded-2xl bg-blue-50/50 border border-[#007AFF]/20 space-y-1.5 shadow-sm">
-                <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
-                  <Store className="w-3.5 h-3.5 text-[#007AFF]" />
-                  <span>1. Bole Plaza</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('BoleOwner')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#007AFF] hover:bg-blue-100 shadow-sm border border-[#007AFF]/10 cursor-pointer"
-                    title="Click to select BoleOwner"
-                  >
-                    Owner
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('BoleManager')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
-                    title="Click to select BoleManager"
-                  >
-                    Manager
-                  </button>
-                </div>
+            {/* Client 2: Kazanchis Towers */}
+            <div className="p-2.5 rounded-2xl bg-emerald-50/50 border border-[#059669]/20 space-y-1.5 shadow-sm">
+              <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
+                <Building2 className="w-3.5 h-3.5 text-[#059669]" />
+                <span>2. Kazanchis Tower</span>
               </div>
-
-              {/* Client 2: Kazanchis Towers */}
-              <div className="p-2.5 rounded-2xl bg-emerald-50/50 border border-[#059669]/20 space-y-1.5 shadow-sm">
-                <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
-                  <Building2 className="w-3.5 h-3.5 text-[#059669]" />
-                  <span>2. Kazanchis Tower</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('KazanchisOwner')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#059669] hover:bg-emerald-100 shadow-sm border border-[#059669]/10 cursor-pointer"
-                    title="Click to select KazanchisOwner"
-                  >
-                    Owner
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('KazanchisManager')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
-                    title="Click to select KazanchisManager"
-                  >
-                    Manager
-                  </button>
-                </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('KazanchisOwner')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#059669] hover:bg-emerald-100 shadow-sm border border-[#059669]/10 cursor-pointer"
+                  title="Click to select KazanchisOwner"
+                >
+                  Owner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('KazanchisManager')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
+                  title="Click to select KazanchisManager"
+                >
+                  Manager
+                </button>
               </div>
+            </div>
 
-              {/* Client 3: Sarbet Mall */}
-              <div className="p-2.5 rounded-2xl bg-purple-50/50 border border-[#7C3AED]/20 space-y-1.5 shadow-sm">
-                <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
-                  <Store className="w-3.5 h-3.5 text-[#7C3AED]" />
-                  <span>3. Sarbet Mall</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('SarbetOwner')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#7C3AED] hover:bg-purple-100 shadow-sm border border-[#7C3AED]/10 cursor-pointer"
-                    title="Click to select SarbetOwner"
-                  >
-                    Owner
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('SarbetManager')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
-                    title="Click to select SarbetManager"
-                  >
-                    Manager
-                  </button>
-                </div>
+            {/* Client 3: Sarbet Mall */}
+            <div className="p-2.5 rounded-2xl bg-purple-50/50 border border-[#7C3AED]/20 space-y-1.5 shadow-sm">
+              <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
+                <Store className="w-3.5 h-3.5 text-[#7C3AED]" />
+                <span>3. Sarbet Mall</span>
               </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('SarbetOwner')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#7C3AED] hover:bg-purple-100 shadow-sm border border-[#7C3AED]/10 cursor-pointer"
+                  title="Click to select SarbetOwner"
+                >
+                  Owner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('SarbetManager')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
+                  title="Click to select SarbetManager"
+                >
+                  Manager
+                </button>
+              </div>
+            </div>
 
-              {/* Client 4: CMC Mega Hub */}
-              <div className="p-2.5 rounded-2xl bg-orange-50/50 border border-[#EA580C]/20 space-y-1.5 shadow-sm">
-                <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
-                  <Briefcase className="w-3.5 h-3.5 text-[#EA580C]" />
-                  <span>4. CMC Hub</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('CmcOwner')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#EA580C] hover:bg-orange-100 shadow-sm border border-[#EA580C]/10 cursor-pointer"
-                    title="Click to select CmcOwner"
-                  >
-                    Owner
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickClientSelect('CmcManager')}
-                    className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
-                    title="Click to select CmcManager"
-                  >
-                    Manager
-                  </button>
-                </div>
+            {/* Client 4: CMC Mega Hub */}
+            <div className="p-2.5 rounded-2xl bg-orange-50/50 border border-[#EA580C]/20 space-y-1.5 shadow-sm">
+              <div className="font-bold text-[#1C1C1E] flex items-center gap-1.5 text-[10px]">
+                <Briefcase className="w-3.5 h-3.5 text-[#EA580C]" />
+                <span>4. CMC Hub</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('CmcOwner')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#EA580C] hover:bg-orange-100 shadow-sm border border-[#EA580C]/10 cursor-pointer"
+                  title="Click to select CmcOwner"
+                >
+                  Owner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickClientSelect('CmcManager')}
+                  className="px-2 py-1 rounded-lg bg-white font-mono font-bold text-[9px] text-[#34C759] hover:bg-green-100 shadow-sm border border-green-500/10 cursor-pointer"
+                  title="Click to select CmcManager"
+                >
+                  Manager
+                </button>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Super Admin Info */}
-        {loginMode === 'super_admin' && (
-          <div className="p-3 rounded-2xl bg-[#007AFF]/10 border border-[#007AFF]/20 text-xs space-y-1 text-[#007AFF]">
-            <div className="font-bold flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Platform Owner Credentials</span>
-            </div>
-            <p className="text-[11px] text-[#3A3A3C] leading-relaxed">
-              Username: <strong className="font-mono text-[#007AFF]">SuperAdmin</strong> &bull; Password: <strong className="font-mono text-[#007AFF]">123</strong>
-            </p>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

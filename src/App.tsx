@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PMSProvider, usePMS } from './context/PMSContext';
 import { Navbar } from './components/layout/Navbar';
 import { LoginPage } from './components/auth/LoginPage';
+import { PlatformLoginPage } from './components/auth/PlatformLoginPage';
 import { OwnerExecutiveDashboard } from './components/dashboard/OwnerExecutiveDashboard';
 import { ReceiptVerificationVault } from './components/vault/ReceiptVerificationVault';
 import { TheRedListTracker } from './components/redlist/TheRedListTracker';
@@ -55,8 +56,17 @@ function PMSAppContent() {
   const [isCreateOrgModalOpen, setIsCreateOrgModalOpen] = useState(false);
   const [selectedOrgDetailsId, setSelectedOrgDetailsId] = useState<string | null>(null);
 
-  // If not authenticated, render the iOS-themed Login Page
+  // If not authenticated, route to dedicated platform access portal or client PMS login
   if (!isAuthenticated) {
+    const isPlatformPath =
+      typeof window !== 'undefined' &&
+      (window.location.pathname.toLowerCase().startsWith('/platform-login') ||
+       window.location.pathname.toLowerCase().startsWith('/system-access'));
+
+    if (isPlatformPath) {
+      return <PlatformLoginPage />;
+    }
+
     return <LoginPage />;
   }
 

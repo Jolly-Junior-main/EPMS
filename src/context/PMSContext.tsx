@@ -86,6 +86,7 @@ interface PMSContextType {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   login: (usernameOrEmail: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
+  platformLogin: (usernameOrEmail: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRole }>;
   logout: () => void;
   switchUser: (role: UserRole) => void;
   guardError: { attemptedRoute: string; requiredRole: string; currentRole: string; message: string } | null;
@@ -310,6 +311,11 @@ const getInitialRouteInfo = () => {
   }
   const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
   
+  // Dedicated Super Admin Login endpoints
+  if (cleanPath === '/platform-login' || cleanPath === '/system-access') {
+    return { isAuth: false, user: MOCK_USERS.superadmin, route: '/platform-login', tab: 'sa_dashboard' };
+  }
+
   if (cleanPath === '/login') {
     return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
   }
@@ -330,18 +336,20 @@ const getInitialRouteInfo = () => {
 
   // If user has NO active session, NEVER grant access to any protected route
   if (!isSavedAuth || !savedUser) {
-    if (cleanPath !== '/login' && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', '/login');
     }
     return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
   }
 
-  // User IS authenticated: match requested path if authorized
+  // User IS authenticated: verify role clearance for requested path
   const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
   const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
 
   if (match) {
-    if (savedUser.role === 'super_admin' || savedUser.role === match.role) {
+    if (savedUser.role === 'super_admin') {
+      return { isAuth: true, user: savedUser, route: match.route, tab: match.tab };
+    } else if (match.role !== 'super_admin' && (savedUser.role === match.role || match.role === 'client')) {
       return { isAuth: true, user: savedUser, route: match.route, tab: match.tab };
     }
   }
@@ -385,14 +393,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // If user is NOT authenticated, block all back navigation to protected routes!
       if (!isAuth || !savedUser) {
         setIsAuthenticated(false);
-        if (window.location.pathname !== '/login') {
+        if (cleanPath !== '/platform-login' && cleanPath !== '/system-access' && cleanPath !== '/login') {
           window.history.replaceState(null, '', '/login');
         }
         return;
       }
 
-      // If authenticated and tries to go to /login via back button, stay on current dashboard
-      if (cleanPath === '/login') {
+      // If authenticated and tries to go to login pages via back button, stay on current dashboard
+      if (cleanPath === '/login' || cleanPath === '/platform-login' || cleanPath === '/system-access') {
         const targetPath = getTabPathForUser(activeTab, savedUser.role);
         window.history.replaceState(null, '', targetPath);
         return;
@@ -403,15 +411,21 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
 
       if (match) {
-        if (savedUser.role === 'super_admin' || savedUser.role === match.role) {
+        if (savedUser.role === 'super_admin' || (match.role !== 'super_admin' && savedUser.role === match.role)) {
           setIsAuthenticated(true);
           setCurrentUser(savedUser);
           setActiveRoleRoute(match.route);
           setActiveTab(match.tab);
         } else {
-          // Role mismatch, force user's own route
+          // Role mismatch (e.g. client trying to access superadmin), block and force user's own route
           const targetPath = getTabPathForUser(activeTab, savedUser.role);
           window.history.replaceState(null, '', targetPath);
+          setGuardError({
+            attemptedRoute: cleanPath,
+            requiredRole: 'SUPER_ADMIN',
+            currentRole: savedUser.role.toUpperCase(),
+            message: '403 Forbidden: Administrative clearance required to access this system resource.'
+          });
         }
       }
     };
@@ -759,19 +773,23 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     let matchedUser: UserProfile | undefined;
     let matchedRole: UserRole | undefined;
 
-    // Super Admin matching
+    // Reject any Super Admin login attempts from the public client login portal
     if (
-      cleanUser.includes('super') ||
+      cleanUser.includes('superadmin') ||
+      cleanUser.includes('super_admin') ||
       cleanUser === 'admin' ||
-      cleanUser === 'administrator' ||
+      cleanUser === 'root' ||
       cleanUser === 'platform' ||
       raw.includes('superadmin@')
     ) {
-      matchedUser = MOCK_USERS.superadmin;
-      matchedRole = 'super_admin';
+      return {
+        success: false,
+        error: 'Invalid credentials. Please verify your property account username and password.'
+      };
     }
+
     // Client 1: Bole Plaza matching
-    else if (cleanUser.includes('bole') || cleanUser.includes('abebe') || raw.includes('boleplaza') || cleanUser === '1') {
+    if (cleanUser.includes('bole') || cleanUser.includes('abebe') || raw.includes('boleplaza') || cleanUser === '1') {
       if (cleanUser.includes('man') || cleanUser.includes('hanna')) {
         matchedUser = MOCK_USERS.bole_manager;
         matchedRole = 'manager';
@@ -818,12 +836,13 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       matchedUser = MOCK_USERS.bole_manager;
       matchedRole = 'manager';
     } else {
-      // Search by email, name, role
+      // Search by email, name, role (excluding super_admin)
       const foundUser = Object.values(MOCK_USERS).find(
         (u) =>
-          u.email.toLowerCase() === raw ||
-          u.name.toLowerCase().includes(raw) ||
-          u.uid.toLowerCase() === raw
+          u.role !== 'super_admin' &&
+          (u.email.toLowerCase() === raw ||
+           u.name.toLowerCase().includes(raw) ||
+           u.uid.toLowerCase() === raw)
       );
       if (foundUser) {
         matchedUser = foundUser;
@@ -840,7 +859,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!matchedUser || !matchedRole) {
       return {
         success: false,
-        error: 'No account found. SuperAdmin: SuperAdmin/123. Clients: BoleOwner/123, KazanchisOwner/123, SarbetOwner/123, CmcOwner/123 (or Manager accounts).'
+        error: 'Invalid credentials. Please verify your property account username and password.'
       };
     }
 
@@ -855,14 +874,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setIsAuthenticated(true);
     setGuardError(null);
 
-    // Strict Post-Login Redirection Logic:
-    // - Super Admin (/superadmin): Multi-Tenant SaaS Control Plane
-    // - Building Owner (/owner): Revenue Analytics, Who Paid & Not Paid Ledger, Receipt Verification Vault
-    // - Property Manager (/manager): Tenant Directory, Document Vault, Invoices, Overdue Red List
-    if (matchedRole === 'super_admin') {
-      setActiveRoleRoute('/superadmin');
-      setActiveTab('sa_dashboard');
-    } else if (matchedRole === 'owner') {
+    if (matchedRole === 'owner') {
       setActiveRoleRoute('/owner');
       setActiveTab('dashboard');
     } else {
@@ -874,7 +886,99 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return { success: true, role: matchedRole };
   };
 
+  // -------------------------------------------------------------
+  // DEDICATED SUPER ADMIN PLATFORM LOGIN (/platform-login & /system-access)
+  // -------------------------------------------------------------
+  const platformLogin = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
+    const raw = usernameOrEmail.trim().toLowerCase();
+    const cleanUser = raw.replace(/[^a-z0-9]/g, '');
+
+    // Strict Super Admin credential validation
+    if (
+      cleanUser.includes('superadmin') ||
+      cleanUser.includes('super_admin') ||
+      cleanUser === 'admin' ||
+      cleanUser === 'root' ||
+      raw === 'superadmin@epms.cloud' ||
+      cleanUser === 'super'
+    ) {
+      const matchedUser = MOCK_USERS.superadmin;
+
+      try {
+        localStorage.setItem(`${STORAGE_KEY}_auth_state`, 'true');
+        localStorage.setItem(`${STORAGE_KEY}_user_profile`, JSON.stringify(matchedUser));
+      } catch (e) {
+        // ignore
+      }
+
+      setCurrentUser(matchedUser);
+      setIsAuthenticated(true);
+      setGuardError(null);
+      setActiveRoleRoute('/superadmin');
+      setActiveTab('sa_dashboard');
+
+      logSuperAdminAudit({
+        organizationId: 'platform_core',
+        organizationName: 'EPMS Platform Control',
+        action: 'SUPER_ADMIN_LOGIN',
+        resource: 'auth_gateway',
+        resourceId: 'root_session',
+        details: `Super Administrator [${matchedUser.name}] authenticated successfully via /platform-login`
+      });
+
+      showToast(`Root Access Granted: Welcome to Platform Control Plane, ${matchedUser.name}.`, 'success');
+      return { success: true, role: 'super_admin' };
+    }
+
+    // Unauthorized attempt by non-superadmin credentials
+    logSuperAdminAudit({
+      organizationId: 'security_alarm',
+      organizationName: 'EPMS Gatekeeper',
+      action: 'UNAUTHORIZED_LOGIN_ATTEMPT',
+      resource: 'platform_login',
+      resourceId: raw,
+      details: `Failed platform login attempt with identifier [${usernameOrEmail}] - insufficient administrative clearance`
+    });
+
+    return {
+      success: false,
+      error: 'Access Denied: Invalid administrator credentials or insufficient clearance.'
+    };
+  };
+
+  // -------------------------------------------------------------
+  // BACKEND / API SUPER ADMIN CLEARANCE VERIFICATION
+  // -------------------------------------------------------------
+  const verifySuperAdminClearance = (actionName: string): boolean => {
+    if (currentUser.role !== 'super_admin') {
+      logSuperAdminAudit({
+        organizationId: 'security_gate',
+        organizationName: 'EPMS Security Enforcement',
+        action: 'UNAUTHORIZED_API_ATTEMPT',
+        resource: 'platform_api',
+        resourceId: actionName,
+        details: `BLOCKED unauthorized API call to [${actionName}] by non-admin user [${currentUser.name}] (Role: ${currentUser.role})`
+      });
+      showToast('403 Forbidden: Super Administrator clearance required.', 'error');
+      return false;
+    }
+    return true;
+  };
+
   const logout = () => {
+    const wasSuperAdmin = currentUser.role === 'super_admin';
+
+    if (wasSuperAdmin) {
+      logSuperAdminAudit({
+        organizationId: 'platform_core',
+        organizationName: 'EPMS Platform Control',
+        action: 'SUPER_ADMIN_LOGOUT',
+        resource: 'auth_gateway',
+        resourceId: 'root_session',
+        details: `Super Administrator [${currentUser.name}] terminated control plane session.`
+      });
+    }
+
     try {
       localStorage.setItem(`${STORAGE_KEY}_auth_state`, 'false');
       localStorage.removeItem(`${STORAGE_KEY}_user_profile`);
@@ -883,8 +987,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
     setIsAuthenticated(false);
     setImpersonationContext(null);
+
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', '/login');
+      const redirectPath = wasSuperAdmin ? '/platform-login' : '/login';
+      window.history.replaceState(null, '', redirectPath);
     }
     showToast('Signed out of Enterprise PMS. Session securely terminated.', 'info');
   };
@@ -1607,6 +1713,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const createOrganization = (orgData: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'>) => {
+    if (!verifySuperAdminClearance('createOrganization')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     const newOrgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newSubId = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newAdminUid = `usr_admin_${Date.now()}`;
@@ -1663,6 +1773,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateOrganization = (orgId: string, updates: Partial<Organization>) => {
+    if (!verifySuperAdminClearance('updateOrganization')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     setOrganizations((prev) =>
       prev.map((org) => {
         if (org.organizationId === orgId) {
@@ -1685,6 +1799,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const suspendOrganization = (orgId: string, reason?: string) => {
+    if (!verifySuperAdminClearance('suspendOrganization')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     setOrganizations((prev) =>
       prev.map((org) => {
         if (org.organizationId === orgId) {
@@ -1708,6 +1826,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const activateOrganization = (orgId: string) => {
+    if (!verifySuperAdminClearance('activateOrganization')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     setOrganizations((prev) =>
       prev.map((org) => {
         if (org.organizationId === orgId) {
@@ -1731,6 +1853,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deleteOrganization = (orgId: string) => {
+    if (!verifySuperAdminClearance('deleteOrganization')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     const targetOrg = organizations.find((o) => o.organizationId === orgId);
     if (!targetOrg) return { success: false, error: 'Organization not found' };
 
@@ -1822,6 +1948,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const extendSubscription = (subId: string, monthsToAdd: number) => {
+    if (!verifySuperAdminClearance('extendSubscription')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     setSubscriptions((prev) =>
       prev.map((sub) => {
         if (sub.subscriptionId === subId) {
@@ -1855,6 +1985,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateSubscriptionPlan = (subId: string, newPlanTier: PlanTier) => {
+    if (!verifySuperAdminClearance('updateSubscriptionPlan')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     const targetPlan = plans.find((p) => p.tier === newPlanTier);
     if (!targetPlan) return { success: false, error: 'Plan tier not found' };
 
@@ -1895,6 +2029,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addTrialDays = (subId: string, days: number) => {
+    if (!verifySuperAdminClearance('addTrialDays')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     setSubscriptions((prev) =>
       prev.map((sub) => {
         if (sub.subscriptionId === subId) {
@@ -1928,6 +2066,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updatePlatformPlan = (planId: string, updates: Partial<PlatformPlan>) => {
+    if (!verifySuperAdminClearance('updatePlatformPlan')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
     setPlans((prev) =>
       prev.map((p) => {
         if (p.planId === planId) {
@@ -1966,6 +2108,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const resetClientPassword = (orgId: string, userUid: string, newPassword: string = '123') => {
+    if (!verifySuperAdminClearance('resetClientPassword')) {
+      return { success: false, message: '403 Forbidden' };
+    }
+
     const org = organizations.find((o) => o.organizationId === orgId);
     logSuperAdminAudit({
       organizationId: orgId,
@@ -1980,6 +2126,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const createCommercialUnitForClient = (orgId: string, unitData: { businessName: string; unitNumber: string; monthlyRentETB: number; managerName: string; managerPhone: string; managerEmail?: string }) => {
+    if (!verifySuperAdminClearance('createCommercialUnitForClient')) {
+      return { success: false, error: '403 Forbidden' };
+    }
+
     const org = organizations.find((o) => o.organizationId === orgId) || organizations[0];
     const unitId = `unit_comm_${Date.now()}`;
     const tenantId = `tnt_comm_${Date.now()}`;
@@ -2057,6 +2207,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const createAdBanner = (adData: Omit<PlatformAdBanner, 'adId' | 'createdAt'>) => {
+    if (!verifySuperAdminClearance('createAdBanner')) {
+      return { success: false, error: '403 Forbidden' };
+    }
+
     const newAd: PlatformAdBanner = {
       ...adData,
       adId: `ad_${Date.now()}`,
@@ -2074,6 +2228,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateAdBanner = (adId: string, updates: Partial<PlatformAdBanner>) => {
+    if (!verifySuperAdminClearance('updateAdBanner')) {
+      return { success: false, error: '403 Forbidden' };
+    }
+
     setAdBanners((prev) =>
       prev.map((ad) => (ad.adId === adId ? { ...ad, ...updates } : ad))
     );
@@ -2082,18 +2240,31 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deleteAdBanner = (adId: string) => {
+    if (!verifySuperAdminClearance('deleteAdBanner')) {
+      return { success: false, error: '403 Forbidden' };
+    }
+
     setAdBanners((prev) => prev.filter((ad) => ad.adId !== adId));
     showToast('Ad banner removed.', 'info');
     return { success: true };
   };
 
   const toggleAdBanner = (adId: string) => {
+    if (!verifySuperAdminClearance('toggleAdBanner')) {
+      return { success: false, error: '403 Forbidden' };
+    }
+
     setAdBanners((prev) =>
       prev.map((ad) => (ad.adId === adId ? { ...ad, isActive: !ad.isActive } : ad))
     );
+    return { success: true };
   };
 
   const toggleAdBannerGlobal = (enabled?: boolean) => {
+    if (!verifySuperAdminClearance('toggleAdBannerGlobal')) {
+      return;
+    }
+
     setIsAdBannerGlobalEnabled((prev) => {
       const nextVal = enabled !== undefined ? enabled : !prev;
       localStorage.setItem(`${STORAGE_KEY}_ad_banner_global_enabled`, JSON.stringify(nextVal));
@@ -2106,6 +2277,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateSmsApiConfig = (updates: Partial<SmsApiGatewayConfig>) => {
+    if (!verifySuperAdminClearance('updateSmsApiConfig')) {
+      return { success: false, error: '403 Forbidden' };
+    }
+
     setSmsApiConfigState((prev) => {
       const updated = { ...prev, ...updates, lastPingAt: new Date().toISOString() };
       return updated;
