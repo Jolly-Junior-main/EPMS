@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePMS } from '../../context/PMSContext';
 import {
   ShieldCheck,
@@ -69,7 +69,8 @@ export const PlatformLoginPage: React.FC = () => {
         setFailedAttempts(0);
       }
     } catch (err: any) {
-      setErrorMessage('A secure handshake error occurred. Please contact the platform root administrator.');
+      console.error('Platform login error:', err);
+      setErrorMessage(err?.message || 'Authentication error occurred. Please verify root credentials.');
     } finally {
       setIsLoading(false);
     }

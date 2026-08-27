@@ -586,6 +586,24 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return saved ? JSON.parse(saved) : null;
   });
 
+  // Audit logging utility for Super Admin operations
+  const logSuperAdminAudit = (log: Omit<SuperAdminAuditLog, 'logId' | 'timestamp' | 'actorId' | 'actorName' | 'actorRole' | 'ipAddress'>) => {
+    const actorId = currentUser?.uid || 'usr_root_superadmin';
+    const actorName = currentUser?.name || 'Super Administrator';
+    const actorRole = currentUser?.role || 'super_admin';
+
+    const newLog: SuperAdminAuditLog = {
+      ...log,
+      logId: `slog_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      actorId,
+      actorName,
+      actorRole,
+      ipAddress: '197.156.103.42'
+    };
+    setSuperAdminAuditLogs((prev) => [newLog, ...(prev || [])]);
+  };
+
   // Active Client Brand Theme
   const clientTheme: ClientBrandTheme = useMemo(() => {
     const orgId = currentUser.organizationId || 'org_bole_plaza';
@@ -1716,19 +1734,6 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // -------------------------------------------------------------
   // Super Admin Control Plane Operational Methods
   // -------------------------------------------------------------
-  const logSuperAdminAudit = (log: Omit<SuperAdminAuditLog, 'logId' | 'timestamp' | 'actorId' | 'actorName' | 'actorRole' | 'ipAddress'>) => {
-    const newLog: SuperAdminAuditLog = {
-      ...log,
-      logId: `slog_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      timestamp: new Date().toISOString(),
-      actorId: currentUser.uid,
-      actorName: currentUser.name,
-      actorRole: currentUser.role,
-      ipAddress: '197.156.103.42'
-    };
-    setSuperAdminAuditLogs((prev) => [newLog, ...prev]);
-  };
-
   const createOrganization = (orgData: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'>) => {
     if (!verifySuperAdminClearance('createOrganization')) {
       return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
