@@ -37,6 +37,7 @@ export const OrganizationDetailsModal: React.FC<OrgDetailsModalProps> = ({
     organizations,
     plans,
     subscriptions,
+    properties,
     platformInvoices,
     superAdminAuditLogs,
     extendSubscription,
@@ -228,6 +229,46 @@ export const OrganizationDetailsModal: React.FC<OrgDetailsModalProps> = ({
                   </div>
                 </div>
 
+                {/* Registered Buildings Portfolio */}
+                <div className="bg-[#F2F2F7]/60 dark:bg-[#2C2C2E]/60 border border-black/[0.05] dark:border-white/10 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-[#1C1C1E] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-[#007AFF]" />
+                      Registered Buildings ({properties.filter((p) => p.organizationId === org.organizationId).length || org.usage.buildingsCount})
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#007AFF]/10 text-[#007AFF]">
+                      {org.usage.unitsCount} Commercial Units Registered
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {properties
+                      .filter((p) => p.organizationId === org.organizationId)
+                      .map((prop, idx) => (
+                        <div
+                          key={prop.propertyId || idx}
+                          className="p-3 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/5 space-y-1"
+                        >
+                          <div className="font-bold text-xs text-[#1C1C1E] dark:text-white flex items-center justify-between">
+                            <span>{prop.name}</span>
+                            <span className="text-[10px] font-mono text-[#8E8E93]">{prop.totalUnits || 8} units</span>
+                          </div>
+                          <div className="text-[11px] text-[#8E8E93] flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-[#8E8E93] shrink-0" />
+                            <span className="truncate">{prop.location}</span>
+                          </div>
+                        </div>
+                      ))}
+
+                    {properties.filter((p) => p.organizationId === org.organizationId).length === 0 && (
+                      <div className="col-span-2 p-3 rounded-xl bg-white dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/5 flex items-center justify-between text-xs">
+                        <span className="font-semibold text-[#1C1C1E] dark:text-white">{org.tradeName || org.name} Commercial Building</span>
+                        <span className="text-[#8E8E93]">{org.usage.unitsCount} Units Provisioned</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Departure & Handover Certificate Card */}
                 {(org.status === 'departed' || org.departureRecord) && (
                   <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 rounded-2xl p-5 space-y-3">
@@ -303,7 +344,14 @@ export const OrganizationDetailsModal: React.FC<OrgDetailsModalProps> = ({
                     ACTIVE LICENSE
                   </span>
                   <h3 className="text-lg font-bold text-[#1C1C1E] dark:text-white mt-1">
-                    {currentPlan.name} ({currentSub.billingCycle})
+                    {currentPlan.name} •{' '}
+                    <span className="capitalize">
+                      {currentSub.billingCycle === 'monthly'
+                        ? 'Every Month (Monthly)'
+                        : currentSub.billingCycle === 'semi_annually'
+                        ? 'Every 6 Months (Semi-Annual)'
+                        : 'Every 12 Months (Annual)'}
+                    </span>
                   </h3>
                   <div className="text-xs text-[#8E8E93] mt-1">
                     Expires on <span className="font-bold text-[#1C1C1E] dark:text-white">{currentSub.expiryDate}</span> ({currentSub.daysRemaining} days remaining)

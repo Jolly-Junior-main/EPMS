@@ -160,7 +160,13 @@ interface PMSContextType {
   smsApiConfig: SmsApiGatewayConfig;
   
   // Super Admin Operational Methods
-  createOrganization: (org: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'>) => { success: boolean; error?: string };
+  createOrganization: (
+    org: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'> & {
+      billingCycle?: SubscriptionBillingCycle;
+      buildingsCount?: number;
+      unitsPerBuilding?: number;
+    }
+  ) => { success: boolean; error?: string };
   updateOrganization: (orgId: string, updates: Partial<Organization>) => { success: boolean; error?: string };
   suspendOrganization: (orgId: string, reason?: string) => { success: boolean; error?: string };
   activateOrganization: (orgId: string) => { success: boolean; error?: string };
@@ -1021,6 +1027,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           dynamicOrg.tempPassword ||
           '123';
 
+        const orgProps = properties.filter((p) => p.organizationId === dynamicOrg.organizationId);
+        const assignedPropId = orgProps[0]?.propertyId || `prop_${dynamicOrg.organizationId}`;
+        const complexAccess = orgProps.length > 0 ? orgProps.map((p) => p.propertyId) : [assignedPropId];
+
         targetAccount = {
           user: {
             uid: isManager ? `usr_mgr_${dynamicOrg.organizationId}` : dynamicOrg.primaryAdminUid,
@@ -1032,8 +1042,9 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             title: isManager ? `Property Manager • ${dynamicOrg.name}` : `Managing Director • ${dynamicOrg.name}`,
             organizationId: dynamicOrg.organizationId,
             organizationName: dynamicOrg.name,
-            assignedPropertyId: `prop_${dynamicOrg.organizationId}`,
-            complexAccess: [`prop_${dynamicOrg.organizationId}`]
+            assignedPropertyId: assignedPropId,
+            assignedPropertyName: orgProps[0]?.name || dynamicOrg.name,
+            complexAccess
           },
           role,
           pass: expectedPass
@@ -1902,9 +1913,44 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // -------------------------------------------------------------
   // Super Admin Control Plane Operational Methods
   // -------------------------------------------------------------
-  const createOrganization = (orgData: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'>) => {
+  const createOrganization = (
+    orgData: Omit<Organization, 'organizationId' | 'createdAt' | 'lastActivityAt' | 'usage'> & {
+      billingCycle?: SubscriptionBillingCycle;
+      buildingsCount?: number;
+      unitsPerBuilding?: number;
+    }
+  ) => {
     if (!verifySuperAdminClearance('createOrganization')) {
       return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
+    // 1. Strict Duplicate Prevention
+    const trimmedName = orgData.name.trim().toLowerCase();
+    const trimmedTin = orgData.tinNumber?.trim();
+    const trimmedAdminEmail = orgData.primaryAdminEmail.trim().toLowerCase();
+    const trimmedContactEmail = orgData.contactEmail.trim().toLowerCase();
+
+    const existingMatch = organizations.find((o) => {
+      const matchName = o.name.trim().toLowerCase() === trimmedName;
+      const matchTin = trimmedTin && o.tinNumber && o.tinNumber.trim() === trimmedTin;
+      const matchAdminEmail = o.primaryAdminEmail.trim().toLowerCase() === trimmedAdminEmail;
+      const matchContactEmail = o.contactEmail.trim().toLowerCase() === trimmedContactEmail;
+      return matchName || matchTin || matchAdminEmail || matchContactEmail;
+    });
+
+    if (existingMatch) {
+      const duplicateReason =
+        existingMatch.name.trim().toLowerCase() === trimmedName
+          ? `Legal name "${orgData.name}"`
+          : existingMatch.tinNumber === trimmedTin
+          ? `TIN number "${trimmedTin}"`
+          : `Email address "${trimmedAdminEmail}"`;
+
+      showToast(`Duplicate Rejected: An organization with ${duplicateReason} is already registered.`, 'error');
+      return {
+        success: false,
+        error: `Duplicate Profile Error: An organization with ${duplicateReason} already exists in the platform.`
+      };
     }
 
     const newOrgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -1912,6 +1958,60 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newAdminUid = `usr_admin_${Date.now()}`;
     const assignedPassword = orgData.tempPassword?.trim() || '123';
 
+    // 2. Multi-Building & Units Provisioning
+    const numBuildings = Math.max(1, orgData.buildingsCount || 1);
+    const unitsPerBldg = Math.max(1, orgData.unitsPerBuilding || 8);
+    const newProperties: Property[] = [];
+    const newUnits: Unit[] = [];
+    let totalUnitsCount = 0;
+    let totalOccupiedCount = 0;
+
+    for (let b = 1; b <= numBuildings; b++) {
+      const bldgPropId = b === 1 ? `prop_${newOrgId}` : `prop_${newOrgId}_b${b}`;
+      const bldgName =
+        numBuildings === 1
+          ? orgData.tradeName || orgData.name
+          : `${orgData.tradeName || orgData.name} - Building ${String.fromCharCode(64 + b)}`;
+
+      newProperties.push({
+        propertyId: bldgPropId,
+        organizationId: newOrgId,
+        organizationName: orgData.name,
+        name: bldgName,
+        location: orgData.address || `${orgData.city || 'Addis Ababa'}, Ethiopia`,
+        totalUnits: unitsPerBldg,
+        type: 'commercial'
+      });
+
+      const floorCount = Math.max(2, Math.ceil(unitsPerBldg / 2));
+      let unitsCreatedForBldg = 0;
+      for (let f = 1; f <= floorCount; f++) {
+        for (let u = 1; u <= 2; u++) {
+          if (unitsCreatedForBldg >= unitsPerBldg) break;
+          unitsCreatedForBldg++;
+          totalUnitsCount++;
+          const unitNum = numBuildings === 1 ? `U-${f}0${u}` : `B${b}-F${f}0${u}`;
+          const unitId = `unit_${newOrgId}_b${b}_${f}0${u}`;
+          const isOccupied = f === 1 && u === 1;
+          if (isOccupied) totalOccupiedCount++;
+
+          newUnits.push({
+            unitId,
+            organizationId: newOrgId,
+            propertyId: bldgPropId,
+            propertyName: bldgName,
+            unitNumber: unitNum,
+            floor: f,
+            type: 'commercial_office',
+            areaSqMeters: f === 1 ? 85 : 55,
+            monthlyBaseRentETB: f === 1 ? 55000 : 38000,
+            status: isOccupied ? 'occupied' : 'vacant'
+          });
+        }
+      }
+    }
+
+    // 3. Accurate Organization Usage
     const newOrg: Organization = {
       ...orgData,
       organizationId: newOrgId,
@@ -1921,16 +2021,28 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       createdAt: new Date().toISOString(),
       lastActivityAt: new Date().toISOString(),
       usage: {
-        buildingsCount: 1,
-        unitsCount: 8,
-        occupiedUnitsCount: 4,
+        buildingsCount: numBuildings,
+        unitsCount: totalUnitsCount,
+        occupiedUnitsCount: totalOccupiedCount,
         usersCount: 2,
         storageUsedMB: 1200,
         smsSentThisMonth: 15
       }
     };
 
+    // 4. Billing Cycle & Subscription Expiry Calculation
     const targetPlan = plans.find((p) => p.tier === orgData.planTier) || plans[0];
+    const billingCycle: SubscriptionBillingCycle = orgData.billingCycle || 'monthly';
+    const cycleMonths = billingCycle === 'monthly' ? 1 : billingCycle === 'semi_annually' ? 6 : 12;
+    const cycleDays = cycleMonths * 30;
+
+    const cyclePriceETB =
+      billingCycle === 'monthly'
+        ? targetPlan.monthlyPriceETB
+        : billingCycle === 'semi_annually'
+        ? targetPlan.sixMonthPriceETB || Math.round(targetPlan.monthlyPriceETB * 6 * 0.95)
+        : targetPlan.annualPriceETB || Math.round(targetPlan.monthlyPriceETB * 12 * 0.85);
+
     const newSub: Subscription = {
       subscriptionId: newSubId,
       organizationId: newOrgId,
@@ -1938,51 +2050,19 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       tier: orgData.planTier,
       status: orgData.status === 'trial' ? 'trial' : 'active',
       startDate: new Date().toISOString().split('T')[0],
-      expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      daysRemaining: 30,
-      amountETB: targetPlan.monthlyPriceETB,
-      billingCycle: 'monthly',
+      expiryDate: new Date(Date.now() + cycleDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      daysRemaining: cycleDays,
+      amountETB: cyclePriceETB,
+      billingCycle,
       autoRenew: true,
       paymentStatus: 'paid',
-      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      nextBillingDate: new Date(Date.now() + cycleDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     };
-
-    const newPropertyId = `prop_${newOrgId}`;
-    const newProperty: Property = {
-      propertyId: newPropertyId,
-      organizationId: newOrgId,
-      organizationName: orgData.name,
-      name: orgData.tradeName || orgData.name,
-      location: orgData.address || `${orgData.city || 'Addis Ababa'}, Ethiopia`,
-      totalUnits: 8,
-      type: 'commercial'
-    };
-
-    // Automatically provision initial commercial units for this building
-    const initialUnits: Unit[] = [];
-    for (let f = 1; f <= 4; f++) {
-      for (let u = 1; u <= 2; u++) {
-        const unitNum = `U-${f}0${u}`;
-        const unitId = `unit_${newOrgId}_${f}0${u}`;
-        initialUnits.push({
-          unitId,
-          organizationId: newOrgId,
-          propertyId: newPropertyId,
-          propertyName: newProperty.name,
-          unitNumber: unitNum,
-          floor: f,
-          type: 'commercial_office',
-          areaSqMeters: f === 1 ? 85 : 55,
-          monthlyBaseRentETB: f === 1 ? 55000 : 38000,
-          status: (f === 1 || (f === 2 && u === 1)) ? 'occupied' : 'vacant'
-        });
-      }
-    }
 
     setOrganizations((prev) => [newOrg, ...prev]);
     setSubscriptions((prev) => [newSub, ...prev]);
-    setProperties((prev) => [newProperty, ...prev]);
-    setUnits((prev) => [...initialUnits, ...prev]);
+    setProperties((prev) => [...newProperties, ...prev]);
+    setUnits((prev) => [...newUnits, ...prev]);
 
     // Save passwords for quick lookup
     setOrganizationPasswords((prev) => ({
@@ -2000,11 +2080,11 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       action: 'CREATE_ORGANIZATION',
       resource: 'organization',
       resourceId: newOrgId,
-      newValue: `Created ${newOrg.name} under ${newOrg.planTier.toUpperCase()} plan.`,
+      newValue: `Created ${newOrg.name} with ${numBuildings} building(s) and ${totalUnitsCount} units under ${billingCycle.toUpperCase()} ${newOrg.planTier.toUpperCase()} plan.`,
       details: `Primary Administrator: ${newOrg.primaryAdminName} (${newOrg.primaryAdminEmail}) with temporary password: ${assignedPassword}`
     });
 
-    showToast(`Client organization "${newOrg.name}" onboarded successfully! Credentials active.`, 'success');
+    showToast(`Client organization "${newOrg.name}" (${numBuildings} buildings, ${totalUnitsCount} units) onboarded successfully!`, 'success');
     return { success: true };
   };
 
@@ -2268,13 +2348,16 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const targetOrg = organizations.find((o) => o.organizationId === orgId);
     if (!targetOrg) return { success: false, error: 'Organization not found' };
 
+    const orgProps = properties.filter((p) => p.organizationId === orgId);
     const orgPropertyMap: Record<string, string> = {
       'org_bole_plaza': 'prop_bole_01',
       'org_kazanchis_towers': 'prop_kazanchis_02',
       'org_sarbet_mall': 'prop_sarbet_03',
       'org_cmc_hub': 'prop_cmc_04'
     };
-    const propId = orgPropertyMap[orgId] || 'prop_bole_01';
+    const propId = orgPropertyMap[orgId] || orgProps[0]?.propertyId || `prop_${orgId}`;
+    const allOrgPropIds = orgProps.map((p) => p.propertyId);
+    const complexAccess = allOrgPropIds.length > 0 ? allOrgPropIds : [propId, 'all'];
 
     const ctx: ImpersonationContext = {
       isImpersonating: true,
@@ -2302,7 +2385,8 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       organizationId: orgId,
       organizationName: targetOrg.name,
       assignedPropertyId: propId,
-      complexAccess: [propId, 'all']
+      assignedPropertyName: orgProps[0]?.name || targetOrg.name,
+      complexAccess
     });
 
     setSelectedPropertyId(propId);
