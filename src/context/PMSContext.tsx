@@ -165,6 +165,18 @@ interface PMSContextType {
   suspendOrganization: (orgId: string, reason?: string) => { success: boolean; error?: string };
   activateOrganization: (orgId: string) => { success: boolean; error?: string };
   deleteOrganization: (orgId: string) => { success: boolean; error?: string };
+  departOrganization: (
+    orgId: string,
+    departureData: {
+      reason: import('../types/superAdmin').OrganizationDepartureReason;
+      notes: string;
+      keysReturned: boolean;
+      depositSettled: boolean;
+      vacateUnits: boolean;
+      revokeAccess: boolean;
+    }
+  ) => { success: boolean; error?: string; vacatedUnitsCount?: number };
+  reactivateDepartedOrganization: (orgId: string) => { success: boolean; error?: string };
   startImpersonation: (orgId: string) => { success: boolean; error?: string };
   exitImpersonation: () => void;
   extendSubscription: (subId: string, monthsToAdd: number) => { success: boolean; error?: string };
@@ -357,7 +369,7 @@ const getInitialRouteInfo = () => {
   if (match) {
     if (savedUser.role === 'super_admin') {
       return { isAuth: true, user: savedUser, route: match.route, tab: match.tab };
-    } else if (match.role !== 'super_admin' && (savedUser.role === match.role || match.role === 'client')) {
+    } else if (match.role !== 'super_admin' && (savedUser.role === match.role || (match.role as string) === 'client')) {
       return { isAuth: true, user: savedUser, route: match.route, tab: match.tab };
     }
   }
@@ -480,7 +492,22 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'offline'>('syncing');
 
   // Core Data Collections
-  const [properties] = useState<Property[]>(MOCK_PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_properties`);
+      return saved ? JSON.parse(saved) : MOCK_PROPERTIES;
+    } catch {
+      return MOCK_PROPERTIES;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_properties`, JSON.stringify(properties));
+    } catch (e) {
+      // ignore
+    }
+  }, [properties]);
   const [units, setUnits] = useState<Unit[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_units`);
     return saved ? JSON.parse(saved) : MOCK_UNITS;
@@ -585,6 +612,23 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const saved = localStorage.getItem(`${STORAGE_KEY}_impersonation_ctx`);
     return saved ? JSON.parse(saved) : null;
   });
+
+  const [organizationPasswords, setOrganizationPasswords] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_org_passwords`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${STORAGE_KEY}_org_passwords`, JSON.stringify(organizationPasswords));
+    } catch (e) {
+      // ignore
+    }
+  }, [organizationPasswords]);
 
   // Audit logging utility for Super Admin operations
   const logSuperAdminAudit = (log: Omit<SuperAdminAuditLog, 'logId' | 'timestamp' | 'actorId' | 'actorName' | 'actorRole' | 'ipAddress'>) => {
@@ -932,32 +976,67 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // 4. Check in dynamic organizations created by Super Admin
     if (!targetAccount) {
-      const dynamicOrg = organizations.find(
-        (o) =>
-          o.primaryAdminEmail.toLowerCase() === raw ||
-          o.contactEmail.toLowerCase() === raw ||
+      const dynamicOrg = organizations.find((o) => {
+        const orgRawName = o.name.toLowerCase();
+        const orgCleanName = orgRawName.replace(/[^a-z0-9]/g, '');
+        const tradeCleanName = o.tradeName ? o.tradeName.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const adminCleanName = o.primaryAdminName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const adminEmail = o.primaryAdminEmail.toLowerCase();
+        const contactEmail = o.contactEmail.toLowerCase();
+        const phoneDigits = o.contactPhone.replace(/[^0-9]/g, '');
+
+        return (
+          adminEmail === raw ||
+          contactEmail === raw ||
           o.organizationId.toLowerCase() === raw ||
-          o.name.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanUser ||
-          (o.tradeName && o.tradeName.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanUser)
-      );
+          orgCleanName === cleanUser ||
+          tradeCleanName === cleanUser ||
+          adminCleanName === cleanUser ||
+          `${orgCleanName}owner` === cleanUser ||
+          `${orgCleanName}manager` === cleanUser ||
+          `${tradeCleanName}owner` === cleanUser ||
+          `${tradeCleanName}manager` === cleanUser ||
+          orgCleanName.startsWith(cleanUser) ||
+          cleanUser.startsWith(orgCleanName) ||
+          (cleanUser.length >= 3 && orgCleanName.includes(cleanUser)) ||
+          (phoneDigits.length >= 6 && cleanUser.includes(phoneDigits))
+        );
+      });
 
       if (dynamicOrg) {
+        // Check if organization has departed the building
+        if (dynamicOrg.status === 'departed') {
+          return {
+            success: false,
+            error: 'Access Denied: This organization has completed full building departure and its portal access has been revoked.'
+          };
+        }
+
+        const isManager = cleanUser.includes('man') || cleanUser.includes('manager');
+        const role: UserRole = isManager ? 'manager' : 'owner';
+        const expectedPass =
+          organizationPasswords[dynamicOrg.organizationId] ||
+          organizationPasswords[dynamicOrg.primaryAdminEmail.toLowerCase()] ||
+          organizationPasswords[dynamicOrg.name.toLowerCase().replace(/[^a-z0-9]/g, '')] ||
+          dynamicOrg.tempPassword ||
+          '123';
+
         targetAccount = {
           user: {
-            uid: dynamicOrg.primaryAdminUid,
-            name: dynamicOrg.primaryAdminName,
-            email: dynamicOrg.primaryAdminEmail,
-            role: 'owner',
+            uid: isManager ? `usr_mgr_${dynamicOrg.organizationId}` : dynamicOrg.primaryAdminUid,
+            name: isManager ? `${dynamicOrg.contactPerson || dynamicOrg.primaryAdminName} (Manager)` : dynamicOrg.primaryAdminName,
+            email: isManager ? dynamicOrg.contactEmail : dynamicOrg.primaryAdminEmail,
+            role,
             phone: dynamicOrg.contactPhone,
             avatar: dynamicOrg.logoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-            title: `Managing Director • ${dynamicOrg.name}`,
+            title: isManager ? `Property Manager • ${dynamicOrg.name}` : `Managing Director • ${dynamicOrg.name}`,
             organizationId: dynamicOrg.organizationId,
             organizationName: dynamicOrg.name,
             assignedPropertyId: `prop_${dynamicOrg.organizationId}`,
             complexAccess: [`prop_${dynamicOrg.organizationId}`]
           },
-          role: 'owner',
-          pass: '123'
+          role,
+          pass: expectedPass
         };
       }
     }
@@ -1430,7 +1509,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       invoiceId: paymentData.invoiceId,
       action: 'verified',
       performedBy: 'Telegram Bot OCR Ingestion Engine',
-      role: 'system',
+      role: 'admin',
       timestamp: new Date().toISOString(),
       details: `Payment slip of ${paymentData.amountPaid.toLocaleString()} ETB (Ref: ${paymentData.referenceNumber}) automatically imported and verified via Telegram Bot (@epms_receipt_bot).`
     };
@@ -1831,18 +1910,20 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newOrgId = `org_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newSubId = `sub_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const newAdminUid = `usr_admin_${Date.now()}`;
+    const assignedPassword = orgData.tempPassword?.trim() || '123';
 
     const newOrg: Organization = {
       ...orgData,
       organizationId: newOrgId,
       subscriptionId: newSubId,
       primaryAdminUid: newAdminUid,
+      tempPassword: assignedPassword,
       createdAt: new Date().toISOString(),
       lastActivityAt: new Date().toISOString(),
       usage: {
         buildingsCount: 1,
-        unitsCount: 10,
-        occupiedUnitsCount: 8,
+        unitsCount: 8,
+        occupiedUnitsCount: 4,
         usersCount: 2,
         storageUsedMB: 1200,
         smsSentThisMonth: 15
@@ -1869,26 +1950,49 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newPropertyId = `prop_${newOrgId}`;
     const newProperty: Property = {
       propertyId: newPropertyId,
+      organizationId: newOrgId,
+      organizationName: orgData.name,
       name: orgData.tradeName || orgData.name,
-      type: 'commercial_plaza',
-      address: orgData.address || `${orgData.city || 'Addis Ababa'}, Ethiopia`,
-      city: orgData.city || 'Addis Ababa',
-      subCity: orgData.address || 'Central Sub-City',
-      totalFloors: 5,
-      totalUnits: 10,
-      grossAreaSqm: 3500,
-      imageUrl: orgData.logoUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&auto=format&fit=crop&q=80',
-      financials: {
-        totalMonthlyExpectedETB: 350000,
-        monthlyCollectedETB: 350000,
-        collectionRatePercent: 100,
-        occupancyRatePercent: 80
-      }
+      location: orgData.address || `${orgData.city || 'Addis Ababa'}, Ethiopia`,
+      totalUnits: 8,
+      type: 'commercial'
     };
+
+    // Automatically provision initial commercial units for this building
+    const initialUnits: Unit[] = [];
+    for (let f = 1; f <= 4; f++) {
+      for (let u = 1; u <= 2; u++) {
+        const unitNum = `U-${f}0${u}`;
+        const unitId = `unit_${newOrgId}_${f}0${u}`;
+        initialUnits.push({
+          unitId,
+          organizationId: newOrgId,
+          propertyId: newPropertyId,
+          propertyName: newProperty.name,
+          unitNumber: unitNum,
+          floor: f,
+          type: 'commercial_office',
+          areaSqMeters: f === 1 ? 85 : 55,
+          monthlyBaseRentETB: f === 1 ? 55000 : 38000,
+          status: (f === 1 || (f === 2 && u === 1)) ? 'occupied' : 'vacant'
+        });
+      }
+    }
 
     setOrganizations((prev) => [newOrg, ...prev]);
     setSubscriptions((prev) => [newSub, ...prev]);
     setProperties((prev) => [newProperty, ...prev]);
+    setUnits((prev) => [...initialUnits, ...prev]);
+
+    // Save passwords for quick lookup
+    setOrganizationPasswords((prev) => ({
+      ...prev,
+      [newOrgId]: assignedPassword,
+      [newOrg.primaryAdminEmail.toLowerCase()]: assignedPassword,
+      [newOrg.contactEmail.toLowerCase()]: assignedPassword,
+      [newOrg.name.toLowerCase().replace(/[^a-z0-9]/g, '')]: assignedPassword,
+      ...(newOrg.tradeName ? { [newOrg.tradeName.toLowerCase().replace(/[^a-z0-9]/g, '')]: assignedPassword } : {})
+    }));
 
     logSuperAdminAudit({
       organizationId: newOrgId,
@@ -1897,10 +2001,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       resource: 'organization',
       resourceId: newOrgId,
       newValue: `Created ${newOrg.name} under ${newOrg.planTier.toUpperCase()} plan.`,
-      details: `Primary Administrator: ${newOrg.primaryAdminName} (${newOrg.primaryAdminEmail})`
+      details: `Primary Administrator: ${newOrg.primaryAdminName} (${newOrg.primaryAdminEmail}) with temporary password: ${assignedPassword}`
     });
 
-    showToast(`Client organization "${newOrg.name}" onboarded successfully!`, 'success');
+    showToast(`Client organization "${newOrg.name}" onboarded successfully! Credentials active.`, 'success');
     return { success: true };
   };
 
@@ -2005,6 +2109,158 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     showToast(`Organization "${targetOrg.name}" archived.`, 'info');
+    return { success: true };
+  };
+
+  const departOrganization = (
+    orgId: string,
+    departureData: {
+      reason: import('../types/superAdmin').OrganizationDepartureReason;
+      notes: string;
+      keysReturned: boolean;
+      depositSettled: boolean;
+      vacateUnits: boolean;
+      revokeAccess: boolean;
+    }
+  ) => {
+    if (!verifySuperAdminClearance('departOrganization')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
+    const targetOrg = organizations.find((o) => o.organizationId === orgId);
+    if (!targetOrg) return { success: false, error: 'Organization not found' };
+
+    // 1. Vacate all units associated with this organization or property
+    let vacatedUnitsCount = 0;
+    if (departureData.vacateUnits) {
+      setUnits((prev) =>
+        prev.map((u) => {
+          if (u.organizationId === orgId || u.propertyId === `prop_${orgId}`) {
+            if (u.status === 'occupied') {
+              vacatedUnitsCount++;
+            }
+            return {
+              ...u,
+              status: 'vacant' as const,
+              currentTenantId: undefined
+            };
+          }
+          return u;
+        })
+      );
+    }
+
+    // 2. Mark tenants associated with this organization as 'inactive'
+    setTenants((prev) =>
+      prev.map((t) => {
+        if (t.organizationId === orgId || t.assignedUnitId?.includes(orgId)) {
+          return {
+            ...t,
+            status: 'inactive' as const
+          };
+        }
+        return t;
+      })
+    );
+
+    // 3. Build departure record
+    const departureRecord: import('../types/superAdmin').OrganizationDepartureRecord = {
+      departedAt: new Date().toISOString(),
+      departureReason: departureData.reason,
+      departureNotes: departureData.notes || 'Full building exit and handover inspection completed.',
+      handoverCompleted: true,
+      keysReturned: departureData.keysReturned,
+      depositSettled: departureData.depositSettled,
+      vacatedUnitsCount,
+      processedByAdminName: currentUser.name || 'Super Administrator'
+    };
+
+    // 4. Update organization status
+    setOrganizations((prev) =>
+      prev.map((org) => {
+        if (org.organizationId === orgId) {
+          return {
+            ...org,
+            status: 'departed' as const,
+            lastActivityAt: new Date().toISOString(),
+            departureRecord,
+            usage: {
+              ...org.usage,
+              occupiedUnitsCount: 0
+            }
+          };
+        }
+        return org;
+      })
+    );
+
+    // 5. Cancel subscription
+    setSubscriptions((prev) =>
+      prev.map((sub) =>
+        sub.organizationId === orgId
+          ? { ...sub, status: 'cancelled' as const, autoRenew: false }
+          : sub
+      )
+    );
+
+    // 6. Revoke login access if requested
+    if (departureData.revokeAccess) {
+      setOrganizationPasswords((prev) => {
+        const next = { ...prev };
+        delete next[orgId];
+        delete next[targetOrg.primaryAdminEmail.toLowerCase()];
+        delete next[targetOrg.contactEmail.toLowerCase()];
+        delete next[targetOrg.name.toLowerCase().replace(/[^a-z0-9]/g, '')];
+        if (targetOrg.tradeName) {
+          delete next[targetOrg.tradeName.toLowerCase().replace(/[^a-z0-9]/g, '')];
+        }
+        return next;
+      });
+    }
+
+    // 7. Audit log
+    logSuperAdminAudit({
+      organizationId: orgId,
+      organizationName: targetOrg.name,
+      action: 'DEPART_ORGANIZATION_HANDOVER',
+      resource: 'organization',
+      resourceId: orgId,
+      previousValue: `Status: ${targetOrg.status}`,
+      newValue: 'Status: departed',
+      details: `Organization completed full building departure. Reason: ${departureData.reason}. Vacated ${vacatedUnitsCount} units. Keys returned: ${departureData.keysReturned}. Deposit settled: ${departureData.depositSettled}. Notes: ${departureData.notes}`
+    });
+
+    showToast(`Organization "${targetOrg.name}" marked as Departed. All units marked vacant.`, 'info');
+    return { success: true, vacatedUnitsCount };
+  };
+
+  const reactivateDepartedOrganization = (orgId: string) => {
+    if (!verifySuperAdminClearance('reactivateDepartedOrganization')) {
+      return { success: false, error: '403 Forbidden: Super Administrator clearance required.' };
+    }
+
+    setOrganizations((prev) =>
+      prev.map((org) => {
+        if (org.organizationId === orgId) {
+          return {
+            ...org,
+            status: 'active' as const,
+            lastActivityAt: new Date().toISOString()
+          };
+        }
+        return org;
+      })
+    );
+
+    logSuperAdminAudit({
+      organizationId: orgId,
+      action: 'REACTIVATE_ORGANIZATION',
+      resource: 'organization',
+      resourceId: orgId,
+      details: 'Reactivated previously departed organization.'
+    });
+
+    showToast('Organization reactivated successfully.', 'success');
     return { success: true };
   };
 
@@ -2286,14 +2542,18 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const tenantId = `tnt_comm_${Date.now()}`;
     const invoiceId = `inv_comm_${Date.now()}`;
 
+    const targetProperty = properties.find((p) => p.organizationId === orgId) || properties[0];
+
     const newUnit: Unit = {
       unitId,
       organizationId: org ? org.organizationId : 'org_bole_plaza',
-      propertyId: properties[0]?.propertyId || 'prop_bole_01',
+      propertyId: targetProperty?.propertyId || 'prop_bole_01',
+      propertyName: targetProperty?.name || 'Commercial Plaza',
       unitNumber: unitData.unitNumber || `U-${Math.floor(100 + Math.random() * 900)}`,
       floor: 1,
-      sqm: 60,
-      monthlyRentETB: unitData.monthlyRentETB,
+      type: 'commercial_retail',
+      areaSqMeters: 60,
+      monthlyBaseRentETB: unitData.monthlyRentETB,
       status: 'occupied',
       currentTenantId: tenantId
     };
@@ -2306,13 +2566,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       phone: unitData.managerPhone,
       email: unitData.managerEmail || `${unitData.businessName.toLowerCase().replace(/[^a-z0-9]/g, '')}@epms.et`,
       assignedUnitId: unitId,
-      unitNumber: newUnit.unitNumber,
+      propertyId: newUnit.propertyId,
       leaseStartDate: new Date().toISOString().split('T')[0],
       leaseEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       monthlyRentETB: unitData.monthlyRentETB,
       securityDepositETB: unitData.monthlyRentETB * 2,
       status: 'active',
-      documents: []
+      documents: [],
+      createdAt: new Date().toISOString()
     };
 
     const newInvoice: Invoice = {
@@ -2325,6 +2586,8 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       amountDue: unitData.monthlyRentETB,
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       billingPeriod: 'Current Month',
+      billingFrequency: 'monthly',
+      description: `Monthly commercial lease for Unit ${newUnit.unitNumber}`,
       issuedDate: new Date().toISOString().split('T')[0],
       paymentStatus: 'pending'
     };
@@ -2630,6 +2893,8 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         suspendOrganization,
         activateOrganization,
         deleteOrganization,
+        departOrganization,
+        reactivateDepartedOrganization,
         startImpersonation,
         exitImpersonation,
         extendSubscription,

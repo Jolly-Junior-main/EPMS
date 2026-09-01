@@ -565,7 +565,7 @@ export const TenantsManager: React.FC = () => {
             </div>
 
             {/* Document Upload Form */}
-            <form onSubmit={handleUploadDocSubmit} className="p-4 bg-[#F2F2F7] rounded-2xl border border-black/[0.04] space-y-3">
+            <form onSubmit={handleUploadDocument} className="p-4 bg-[#F2F2F7] rounded-2xl border border-black/[0.04] space-y-3">
               <div className="text-xs font-semibold text-[#1C1C1E] flex items-center gap-1.5">
                 <Upload className="w-4 h-4 text-[#007AFF]" />
                 Upload New Contract or Certificate to Storage

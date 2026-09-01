@@ -1,6 +1,6 @@
 import { UserRole } from './pms';
 
-export type OrganizationStatus = 'active' | 'trial' | 'suspended' | 'archived';
+export type OrganizationStatus = 'active' | 'trial' | 'suspended' | 'archived' | 'departed';
 export type PlanTier = 'starter' | 'professional' | 'business' | 'enterprise';
 export type SubscriptionStatus = 'trial' | 'active' | 'expiring_soon' | 'expired' | 'suspended' | 'cancelled';
 export type PlatformBillingStatus = 'paid' | 'pending' | 'failed' | 'refunded' | 'cancelled';
@@ -8,6 +8,25 @@ export type SupportTicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type SupportTicketStatus = 'open' | 'in_progress' | 'waiting_for_client' | 'resolved' | 'closed';
 
 export type SubscriptionBillingCycle = 'monthly' | 'semi_annually' | 'annually';
+
+export type OrganizationDepartureReason =
+  | 'lease_expired'
+  | 'relocation'
+  | 'early_termination'
+  | 'eviction'
+  | 'business_closure'
+  | 'other';
+
+export interface OrganizationDepartureRecord {
+  departedAt: string;
+  departureReason: OrganizationDepartureReason;
+  departureNotes: string;
+  handoverCompleted: boolean;
+  keysReturned: boolean;
+  depositSettled: boolean;
+  vacatedUnitsCount: number;
+  processedByAdminName: string;
+}
 
 export interface PlanLimits {
   maxBuildings: number;
@@ -79,10 +98,12 @@ export interface Organization {
   primaryAdminUid: string;
   primaryAdminName: string;
   primaryAdminEmail: string;
+  tempPassword?: string;
   createdAt: string;
   lastActivityAt: string;
   usage: OrganizationUsage;
   customLimits?: Partial<PlanLimits>;
+  departureRecord?: OrganizationDepartureRecord;
 }
 
 export interface PlatformInvoice {
@@ -103,6 +124,9 @@ export interface PlatformInvoice {
   downloadUrl?: string;
 }
 
+export type PlatformInvoiceStatus = PlatformBillingStatus;
+export type SuperAdminAuditAction = string;
+
 export interface SuperAdminAuditLog {
   logId: string;
   timestamp: string;
@@ -112,7 +136,18 @@ export interface SuperAdminAuditLog {
   organizationId?: string;
   organizationName?: string;
   action: string;
-  resource: 'organization' | 'subscription' | 'plan' | 'user' | 'building' | 'setting' | 'impersonation' | 'security';
+  resource:
+    | 'organization'
+    | 'subscription'
+    | 'plan'
+    | 'user'
+    | 'building'
+    | 'setting'
+    | 'impersonation'
+    | 'security'
+    | 'auth_gateway'
+    | 'platform_login'
+    | 'platform_api';
   resourceId?: string;
   previousValue?: string;
   newValue?: string;

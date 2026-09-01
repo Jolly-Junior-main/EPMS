@@ -320,6 +320,10 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <p className="text-[10px] text-center text-[#8E8E93] pt-1">
+            ✨ Newly created organization? Log in with your <strong>Organization Name</strong> (e.g. <em>[Name]Owner</em>), <strong>Admin Email</strong>, or <strong>Phone</strong> with password <strong>123</strong>.
+          </p>
         </div>
       </div>
     </div>

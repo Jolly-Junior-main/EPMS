@@ -84,10 +84,12 @@ export const OrganizationDetailsModal: React.FC<OrgDetailsModalProps> = ({
                       ? 'bg-[#34C759]/10 text-[#34C759]'
                       : org.status === 'trial'
                       ? 'bg-[#007AFF]/10 text-[#007AFF]'
+                      : org.status === 'departed'
+                      ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20'
                       : 'bg-[#FF3B30]/10 text-[#FF3B30]'
                   }`}
                 >
-                  {org.status}
+                  {org.status === 'departed' ? 'Departed / Vacated' : org.status}
                 </span>
               </div>
               <h2 className="text-xl font-bold text-[#1C1C1E] dark:text-white mt-1">
@@ -225,6 +227,69 @@ export const OrganizationDetailsModal: React.FC<OrgDetailsModalProps> = ({
                     </span>
                   </div>
                 </div>
+
+                {/* Departure & Handover Certificate Card */}
+                {(org.status === 'departed' || org.departureRecord) && (
+                  <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                        Official Building Exit & Handover Certificate
+                      </h4>
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-200 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 uppercase">
+                        Departed Property
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <span className="text-purple-700/70 dark:text-purple-300/70 block text-[11px]">Departure Date:</span>
+                        <span className="font-bold text-purple-950 dark:text-purple-100">
+                          {org.departureRecord ? new Date(org.departureRecord.departedAt).toLocaleDateString() : 'Recorded'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700/70 dark:text-purple-300/70 block text-[11px]">Reason:</span>
+                        <span className="font-bold text-purple-950 dark:text-purple-100 capitalize">
+                          {org.departureRecord?.departureReason.replace('_', ' ') || 'Lease Expired'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700/70 dark:text-purple-300/70 block text-[11px]">Vacated Units:</span>
+                        <span className="font-bold text-purple-950 dark:text-purple-100">
+                          {org.departureRecord?.vacatedUnitsCount ?? 'All'} Units Vacated
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700/70 dark:text-purple-300/70 block text-[11px]">Facility Keys Returned:</span>
+                        <span className="font-bold text-purple-950 dark:text-purple-100">
+                          {org.departureRecord?.keysReturned ? '✓ Verified & Handed Over' : 'Pending'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700/70 dark:text-purple-300/70 block text-[11px]">Deposit &amp; Utilities Settled:</span>
+                        <span className="font-bold text-purple-950 dark:text-purple-100">
+                          {org.departureRecord?.depositSettled ? '✓ Reconciled & Settled' : 'Pending'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700/70 dark:text-purple-300/70 block text-[11px]">Handover Officer:</span>
+                        <span className="font-bold text-purple-950 dark:text-purple-100">
+                          {org.departureRecord?.processedByAdminName || 'Super Administrator'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {org.departureRecord?.departureNotes && (
+                      <div className="pt-2 border-t border-purple-200/50 dark:border-purple-900/30 text-xs">
+                        <span className="text-purple-700/70 dark:text-purple-300/70 block text-[11px] font-semibold">Inspection Notes:</span>
+                        <p className="text-purple-950 dark:text-purple-100 italic mt-0.5">
+                          "{org.departureRecord.departureNotes}"
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

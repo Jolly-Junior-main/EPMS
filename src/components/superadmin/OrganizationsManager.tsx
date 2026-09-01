@@ -24,9 +24,12 @@ import {
   KeyRound,
   Lock,
   Clock,
-  Store
+  Store,
+  LogOut,
+  RotateCcw
 } from 'lucide-react';
 import { CreateCommercialUnitModal } from './CreateCommercialUnitModal';
+import { OrganizationDepartureModal } from './OrganizationDepartureModal';
 
 interface OrganizationsManagerProps {
   onOpenCreateModal: () => void;
@@ -43,6 +46,8 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
     suspendOrganization,
     activateOrganization,
     deleteOrganization,
+    departOrganization,
+    reactivateDepartedOrganization,
     startImpersonation,
     resetClientPassword,
     t
@@ -53,6 +58,7 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
   const [planFilter, setPlanFilter] = useState<'all' | PlanTier>('all');
   const [activeMenuOrgId, setActiveMenuOrgId] = useState<string | null>(null);
   const [resetModalOrg, setResetModalOrg] = useState<Organization | null>(null);
+  const [departureModalOrg, setDepartureModalOrg] = useState<Organization | null>(null);
   const [newPasswordInput, setNewPasswordInput] = useState('123');
   const [isCreateSalonOpen, setIsCreateSalonOpen] = useState(false);
 
@@ -176,7 +182,7 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           {/* Status Filter */}
           <div className="flex items-center gap-1 bg-[#767680]/12 dark:bg-white/5 p-1 rounded-xl">
-            {(['all', 'active', 'trial', 'suspended'] as const).map((status) => (
+            {(['all', 'active', 'trial', 'suspended', 'departed'] as const).map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -335,68 +341,103 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
                               ? 'bg-[#34C759]/10 text-[#34C759]'
                               : org.status === 'trial'
                               ? 'bg-[#007AFF]/10 text-[#007AFF]'
+                              : org.status === 'departed'
+                              ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20'
                               : 'bg-[#FF3B30]/10 text-[#FF3B30]'
                           }`}
                         >
                           {org.status === 'active' && <CheckCircle2 className="w-3 h-3" />}
                           {org.status === 'trial' && <Clock className="w-3 h-3" />}
+                          {org.status === 'departed' && <LogOut className="w-3 h-3" />}
                           {org.status === 'suspended' && <XCircle className="w-3 h-3" />}
-                          {org.status}
+                          {org.status === 'departed' ? 'Departed / Vacated' : org.status}
                         </span>
                       </td>
 
                       {/* Actions */}
                       <td className="py-4 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Impersonation Button */}
-                          <button
-                            onClick={() => startImpersonation(org.organizationId)}
-                            className="px-3 py-1.5 rounded-xl bg-[#007AFF]/10 hover:bg-[#007AFF] hover:text-white text-[#007AFF] text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm"
-                            title="Enter client environment as Super Admin"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            Open
-                          </button>
-
-                          {/* Reset Password Button */}
-                          <button
-                            onClick={() => {
-                              setResetModalOrg(org);
-                              setNewPasswordInput('123');
-                            }}
-                            className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
-                            title="Reset Client Admin / Manager Password"
-                          >
-                            <KeyRound className="w-3 h-3" />
-                            Reset Pass
-                          </button>
-
-                          {/* Profile Button */}
-                          <button
-                            onClick={() => onSelectOrgForDetails(org.organizationId)}
-                            className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 text-[#1C1C1E] dark:text-white transition-all cursor-pointer"
-                            title="View full organization profile"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-
-                          {/* Suspend / Activate Toggle */}
-                          {org.status === 'suspended' ? (
-                            <button
-                              onClick={() => activateOrganization(org.organizationId)}
-                              className="p-1.5 rounded-xl hover:bg-[#34C759]/10 text-[#34C759] transition-all cursor-pointer"
-                              title="Reactivate Organization"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                            </button>
+                          {org.status === 'departed' ? (
+                            <>
+                              <button
+                                onClick={() => reactivateDepartedOrganization(org.organizationId)}
+                                className="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                title="Re-lease space & reactivate organization"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                                Re-Lease
+                              </button>
+                              <button
+                                onClick={() => onSelectOrgForDetails(org.organizationId)}
+                                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 text-[#1C1C1E] dark:text-white transition-all cursor-pointer"
+                                title="View handover and departure records"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            </>
                           ) : (
-                            <button
-                              onClick={() => suspendOrganization(org.organizationId)}
-                              className="p-1.5 rounded-xl hover:bg-[#FF3B30]/10 text-[#FF3B30] transition-all cursor-pointer"
-                              title="Suspend Organization"
-                            >
-                              <ShieldAlert className="w-4 h-4" />
-                            </button>
+                            <>
+                              {/* Impersonation Button */}
+                              <button
+                                onClick={() => startImpersonation(org.organizationId)}
+                                className="px-3 py-1.5 rounded-xl bg-[#007AFF]/10 hover:bg-[#007AFF] hover:text-white text-[#007AFF] text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-sm"
+                                title="Enter client environment as Super Admin"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                Open
+                              </button>
+
+                              {/* Reset Password Button */}
+                              <button
+                                onClick={() => {
+                                  setResetModalOrg(org);
+                                  setNewPasswordInput('123');
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                title="Reset Client Admin / Manager Password"
+                              >
+                                <KeyRound className="w-3 h-3" />
+                                Reset Pass
+                              </button>
+
+                              {/* Depart Building Button */}
+                              <button
+                                onClick={() => setDepartureModalOrg(org)}
+                                className="px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                title="Building Departure: Vacate all units & revoke access"
+                              >
+                                <LogOut className="w-3 h-3" />
+                                Depart
+                              </button>
+
+                              {/* Profile Button */}
+                              <button
+                                onClick={() => onSelectOrgForDetails(org.organizationId)}
+                                className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 text-[#1C1C1E] dark:text-white transition-all cursor-pointer"
+                                title="View full organization profile"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+
+                              {/* Suspend / Activate Toggle */}
+                              {org.status === 'suspended' ? (
+                                <button
+                                  onClick={() => activateOrganization(org.organizationId)}
+                                  className="p-1.5 rounded-xl hover:bg-[#34C759]/10 text-[#34C759] transition-all cursor-pointer"
+                                  title="Reactivate Organization"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => suspendOrganization(org.organizationId)}
+                                  className="p-1.5 rounded-xl hover:bg-[#FF3B30]/10 text-[#FF3B30] transition-all cursor-pointer"
+                                  title="Suspend Organization"
+                                >
+                                  <ShieldAlert className="w-4 h-4" />
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>
@@ -478,6 +519,13 @@ export const OrganizationsManager: React.FC<OrganizationsManagerProps> = ({
       <CreateCommercialUnitModal
         isOpen={isCreateSalonOpen}
         onClose={() => setIsCreateSalonOpen(false)}
+      />
+
+      {/* Building Departure & Handover Modal */}
+      <OrganizationDepartureModal
+        organization={departureModalOrg}
+        isOpen={!!departureModalOrg}
+        onClose={() => setDepartureModalOrg(null)}
       />
     </div>
   );

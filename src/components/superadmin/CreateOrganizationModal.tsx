@@ -76,7 +76,8 @@ export const CreateOrganizationModal: React.FC<CreateOrgModalProps> = ({ isOpen,
       subscriptionId: '',
       primaryAdminUid: '',
       primaryAdminName: adminName || contactPerson,
-      primaryAdminEmail: adminEmail || contactEmail
+      primaryAdminEmail: adminEmail || contactEmail,
+      tempPassword: tempPassword.trim() || '123'
     });
 
     onClose();

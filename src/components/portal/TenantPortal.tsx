@@ -126,12 +126,13 @@ export const TenantPortal: React.FC = () => {
     if (!selectedInvoiceId || payAmount <= 0 || !payRef.trim()) return;
 
     const receiptSvg = generateBankReceiptSvg({
-      referenceNumber: payRef.trim(),
-      amountPaid: payAmount,
-      tenantName: currentTenant.legalName,
-      unitNumber: assignedUnit.unitNumber,
-      paymentMethod: payMethod,
-      timestamp: new Date().toISOString()
+      refNumber: payRef.trim(),
+      amountETB: payAmount,
+      payerName: currentTenant.legalName,
+      roomNumber: assignedUnit.unitNumber,
+      paymentType: payMethod,
+      bankName: payMethod.replace('_', ' ').toUpperCase(),
+      date: new Date().toISOString()
     });
 
     logPayment({
