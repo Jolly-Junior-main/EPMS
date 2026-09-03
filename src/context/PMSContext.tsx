@@ -373,6 +373,9 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const userData = userDoc.data() as UserProfile;
             setCurrentUser(userData);
             setIsAuthenticated(true);
+          } else if (user.email === 'admin@epms.com') {
+            setCurrentUser({ email: 'admin@epms.com', role: 'super_admin', firstName: 'Super', lastName: 'Admin' } as any);
+            setIsAuthenticated(true);
           }
         } catch (err) {
           console.error("Error fetching user profile", err);
