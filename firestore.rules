@@ -1,9 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Universal read and write access for multi-browser real-time synchronization
-    match /{document=**} {
-      allow read, write: if true;
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'SUPER_ADMIN';
+    }
+    
+    function isUserInOrg(orgId) {
+      return isAuthenticated() && request.auth.token.organizationId == orgId;
+    }
+
+    match /plans/{planId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+    
+    match /adBanners/{adId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isSuperAdmin() || (isAuthenticated() && request.auth.uid == userId) || (isAuthenticated() && request.auth.token.organizationId == resource.data.organizationId);
+      allow write: if isSuperAdmin();
+    }
+
+    match /organizations/{orgId} {
+      allow read: if isSuperAdmin() || isUserInOrg(orgId);
+      allow write: if isSuperAdmin();
+      
+      match /{collection}/{document=**} {
+        allow read, write: if isSuperAdmin() || isUserInOrg(orgId);
+      }
+    }
+    
+    // Catch-all for top level isolated collections
+    match /{collection}/{docId} {
+      allow read: if isSuperAdmin() || (isAuthenticated() && resource.data.organizationId == request.auth.token.organizationId);
+      allow create: if isSuperAdmin() || (isAuthenticated() && request.resource.data.organizationId == request.auth.token.organizationId);
+      allow update: if isSuperAdmin() || (isAuthenticated() && resource.data.organizationId == request.auth.token.organizationId && request.resource.data.organizationId == request.auth.token.organizationId);
+      allow delete: if isSuperAdmin() || (isAuthenticated() && resource.data.organizationId == request.auth.token.organizationId);
     }
   }
 }

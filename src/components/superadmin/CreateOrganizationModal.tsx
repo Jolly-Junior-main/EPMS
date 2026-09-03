@@ -119,7 +119,7 @@ export const CreateOrganizationModal: React.FC<CreateOrgModalProps> = ({ isOpen,
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -132,7 +132,7 @@ export const CreateOrganizationModal: React.FC<CreateOrgModalProps> = ({ isOpen,
 
     const selectedPlanObj = plans.find((p) => p.tier === selectedPlanTier) || plans[0];
 
-    const result = createOrganization({
+    const result = await createOrganization({
       name: name.trim(),
       tradeName: tradeName.trim() || undefined,
       tinNumber: tinNumber.trim() || '00' + Math.floor(10000000 + Math.random() * 90000000),

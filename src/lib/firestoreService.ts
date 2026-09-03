@@ -8,6 +8,7 @@ import {
   onSnapshot,
   writeBatch,
   query,
+  where,
   orderBy,
   serverTimestamp
 } from 'firebase/firestore';
@@ -125,7 +126,7 @@ export async function seedFirestoreIfEmpty(): Promise<{ seeded: boolean; counts:
 /**
  * Real-time subscriptions helper
  */
-export function subscribeToPMSCollections(callbacks: {
+export function subscribeToPMSCollections(organizationId: string | null | undefined, callbacks: {
   onTenants?: (data: Tenant[]) => void;
   onUnits?: (data: Unit[]) => void;
   onInvoices?: (data: Invoice[]) => void;
@@ -138,7 +139,10 @@ export function subscribeToPMSCollections(callbacks: {
 
   try {
     if (callbacks.onTenants) {
-      const q = query(collection(db, COLLECTIONS.TENANTS));
+      let q = query(collection(db, COLLECTIONS.TENANTS));
+      if (organizationId && organizationId !== 'platform_core') {
+        q = query(collection(db, COLLECTIONS.TENANTS), where('organizationId', '==', organizationId));
+      }
       unsubscribers.push(
         onSnapshot(q, (snap) => {
           const list = snap.docs.map((d) => d.data() as Tenant);
@@ -148,7 +152,10 @@ export function subscribeToPMSCollections(callbacks: {
     }
 
     if (callbacks.onUnits) {
-      const q = query(collection(db, COLLECTIONS.UNITS));
+      let q = query(collection(db, COLLECTIONS.UNITS));
+      if (organizationId && organizationId !== 'platform_core') {
+        q = query(collection(db, COLLECTIONS.UNITS), where('organizationId', '==', organizationId));
+      }
       unsubscribers.push(
         onSnapshot(q, (snap) => {
           const list = snap.docs.map((d) => d.data() as Unit);
@@ -158,7 +165,10 @@ export function subscribeToPMSCollections(callbacks: {
     }
 
     if (callbacks.onInvoices) {
-      const q = query(collection(db, COLLECTIONS.INVOICES));
+      let q = query(collection(db, COLLECTIONS.INVOICES));
+      if (organizationId && organizationId !== 'platform_core') {
+        q = query(collection(db, COLLECTIONS.INVOICES), where('organizationId', '==', organizationId));
+      }
       unsubscribers.push(
         onSnapshot(q, (snap) => {
           const list = snap.docs.map((d) => d.data() as Invoice);
@@ -168,7 +178,10 @@ export function subscribeToPMSCollections(callbacks: {
     }
 
     if (callbacks.onPayments) {
-      const q = query(collection(db, COLLECTIONS.PAYMENTS));
+      let q = query(collection(db, COLLECTIONS.PAYMENTS));
+      if (organizationId && organizationId !== 'platform_core') {
+        q = query(collection(db, COLLECTIONS.PAYMENTS), where('organizationId', '==', organizationId));
+      }
       unsubscribers.push(
         onSnapshot(q, (snap) => {
           const list = snap.docs.map((d) => d.data() as Payment);
@@ -178,7 +191,10 @@ export function subscribeToPMSCollections(callbacks: {
     }
 
     if (callbacks.onSMSLogs) {
-      const q = query(collection(db, COLLECTIONS.SMS_LOGS));
+      let q = query(collection(db, COLLECTIONS.SMS_LOGS));
+      if (organizationId && organizationId !== 'platform_core') {
+        q = query(collection(db, COLLECTIONS.SMS_LOGS), where('organizationId', '==', organizationId));
+      }
       unsubscribers.push(
         onSnapshot(q, (snap) => {
           const list = snap.docs.map((d) => d.data() as SMSLog);
@@ -188,7 +204,10 @@ export function subscribeToPMSCollections(callbacks: {
     }
 
     if (callbacks.onAuditLogs) {
-      const q = query(collection(db, COLLECTIONS.AUDIT_LOGS));
+      let q = query(collection(db, COLLECTIONS.AUDIT_LOGS));
+      if (organizationId && organizationId !== 'platform_core') {
+        q = query(collection(db, COLLECTIONS.AUDIT_LOGS), where('organizationId', '==', organizationId));
+      }
       unsubscribers.push(
         onSnapshot(q, (snap) => {
           const list = snap.docs.map((d) => d.data() as VerificationAuditLog);

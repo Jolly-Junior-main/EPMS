@@ -1,3 +1,7 @@
+import { auth, db } from '../lib/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import confetti from 'canvas-confetti';
 import {
@@ -343,47 +347,10 @@ const getInitialRouteInfo = () => {
   }
   const cleanPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
   
-  // Check saved session in localStorage strictly
-  let isSavedAuth = false;
-  let savedUser: UserProfile | null = null;
-  try {
-    const savedAuth = localStorage.getItem(`${STORAGE_KEY}_auth_state`);
-    const savedUserStr = localStorage.getItem(`${STORAGE_KEY}_user_profile`);
-    if (savedAuth === 'true' && savedUserStr) {
-      isSavedAuth = true;
-      savedUser = JSON.parse(savedUserStr);
-    }
-  } catch (e) {
-    isSavedAuth = false;
+  if (isPlatformRoute(cleanPath)) {
+    return { isAuth: false, user: MOCK_USERS.superadmin, route: '/platform-login', tab: 'sa_dashboard' };
   }
-
-  // If user has NO active session:
-  if (!isSavedAuth || !savedUser) {
-    if (isPlatformRoute(cleanPath)) {
-      return { isAuth: false, user: MOCK_USERS.superadmin, route: '/platform-login', tab: 'sa_dashboard' };
-    }
-    if (cleanPath !== '/login' && typeof window !== 'undefined') {
-      window.history.replaceState(null, '', '/login');
-    }
-    return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
-  }
-
-  // User IS authenticated: verify role clearance for requested path
-  const sortedEntries = Object.entries(PATH_MAP).sort((a, b) => b[0].length - a[0].length);
-  const match = PATH_MAP[cleanPath] || sortedEntries.find(([k]) => cleanPath === k || cleanPath.startsWith(k + '/'))?.[1];
-
-  if (match) {
-    if (savedUser.role === 'super_admin') {
-      return { isAuth: true, user: savedUser, route: match.route, tab: match.tab };
-    } else if (match.role !== 'super_admin' && (savedUser.role === match.role || (match.role as string) === 'client')) {
-      return { isAuth: true, user: savedUser, route: match.route, tab: match.tab };
-    }
-  }
-
-  // Default route for active user
-  const route = savedUser.role === 'super_admin' ? '/superadmin' : savedUser.role === 'owner' ? '/owner' : '/manager';
-  const tab = savedUser.role === 'super_admin' ? 'sa_dashboard' : savedUser.role === 'owner' ? 'dashboard' : 'tenants';
-  return { isAuth: true, user: savedUser, route, tab };
+  return { isAuth: false, user: MOCK_USERS.bole_owner, route: '/login', tab: 'dashboard' };
 };
 
 export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -396,6 +363,26 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [guardError, setGuardError] = useState<{ attemptedRoute: string; requiredRole: string; currentRole: string; message: string } | null>(null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('all');
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data() as UserProfile;
+            setCurrentUser(userData);
+            setIsAuthenticated(true);
+          }
+        } catch (err) {
+          console.error("Error fetching user profile", err);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Synchronize browser URL history and prevent unauthorized back navigation
   useEffect(() => {
@@ -656,6 +643,23 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Active Client Brand Theme
   const clientTheme: ClientBrandTheme = useMemo(() => {
+    if (currentUser.role === 'super_admin' && !impersonationContext?.isImpersonating) {
+      return {
+        propertyId: 'platform_core',
+        propertyName: 'EPMS Platform Control',
+        organizationName: 'Platform Super Admin',
+        citySubcity: 'Global Admin, Control Plane',
+        gradientClass: 'from-slate-900 to-slate-800',
+        primaryColor: '#000000',
+        badgeBgClass: 'bg-black/20',
+        badgeTextClass: 'text-white',
+        badgeBorderClass: 'border-white/20',
+        logoIconName: 'Building2',
+        tagline: 'Platform Root Operations',
+        escrowAccount: 'PLATFORM_ROOT'
+      } as ClientBrandTheme;
+    }
+
     const orgId = currentUser.organizationId;
     if (orgId && CLIENT_THEMES[orgId]) {
       return CLIENT_THEMES[orgId];
@@ -827,7 +831,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     initFirestore();
 
-    const unsubscribe = subscribeToPMSCollections({
+    const unsubscribe = subscribeToPMSCollections(currentUser.organizationId, {
       onTenants: (list) => {
         if (isMounted) {
           setTenants(list);
@@ -897,267 +901,76 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Firebase Authentication & Role Route Redirection
   // -------------------------------------------------------------
   const login = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
-    // Artificial latency for authentic iOS / Firebase feel
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const raw = usernameOrEmail.trim().toLowerCase();
-    const cleanUser = raw.replace(/[^a-z0-9]/g, '');
-    const inputPass = password.trim();
-
-    // 1. Reject empty inputs
-    if (!cleanUser || !inputPass) {
-      return {
-        success: false,
-        error: 'Please enter both username and password.'
-      };
-    }
-
-    // 2. Reject any Super Admin login attempts from the public client login portal
-    if (
-      cleanUser === 'superadmin' ||
-      cleanUser === 'super_admin' ||
-      cleanUser === 'admin' ||
-      cleanUser === 'root' ||
-      cleanUser === 'platform' ||
-      raw.includes('superadmin@')
-    ) {
-      return {
-        success: false,
-        error: 'Access Restricted: Super Administrators must log in via the dedicated Platform Access portal.'
-      };
-    }
-
-    // 3. Strict Dictionary of Predefined Property Accounts
-    const EXACT_ACCOUNTS: Record<string, { user: UserProfile; role: UserRole; pass: string }> = {
-      // Direct Generic Identifiers
-      'owner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
-      'manager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
-      'bole': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
-      'kazanchis': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
-      'sarbet': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
-      'cmc': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
-
-      // Client 1: Bole Medhanialem Plaza
-      'boleowner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
-      'bolemanager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
-      'bole_owner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
-      'bole_manager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
-      'usr_bole_owner': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
-      'usr_bole_manager': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
-      'abebe@boleplaza.et': { user: MOCK_USERS.bole_owner, role: 'owner', pass: '123' },
-      'hanna@boleplaza.et': { user: MOCK_USERS.bole_manager, role: 'manager', pass: '123' },
-
-      // Client 2: Kazanchis Business Towers
-      'kazanchisowner': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
-      'kazanchismanager': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
-      'kazanchis_owner': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
-      'kazanchis_manager': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
-      'usr_kaz_owner': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
-      'usr_kaz_manager': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
-      'dawit@kazanchis.et': { user: MOCK_USERS.kazanchis_owner, role: 'owner', pass: '123' },
-      'meron@kazanchis.et': { user: MOCK_USERS.kazanchis_manager, role: 'manager', pass: '123' },
-
-      // Client 3: Sarbet Luxury Mall
-      'sarbetowner': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
-      'sarbetmanager': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
-      'sarbet_owner': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
-      'sarbet_manager': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
-      'usr_sar_owner': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
-      'usr_sar_manager': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
-      'solomon@sarbetmall.et': { user: MOCK_USERS.sarbet_owner, role: 'owner', pass: '123' },
-      'tigist@sarbetmall.et': { user: MOCK_USERS.sarbet_manager, role: 'manager', pass: '123' },
-
-      // Client 4: CMC Commercial Mega Hub
-      'cmcowner': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
-      'cmcmanager': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' },
-      'cmc_owner': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
-      'cmc_manager': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' },
-      'usr_cmc_owner': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
-      'usr_cmc_manager': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' },
-      'yohannes@cmchub.et': { user: MOCK_USERS.cmc_owner, role: 'owner', pass: '123' },
-      'selam@cmchub.et': { user: MOCK_USERS.cmc_manager, role: 'manager', pass: '123' }
-    };
-
-    let targetAccount = EXACT_ACCOUNTS[cleanUser] || EXACT_ACCOUNTS[raw];
-
-    // 4. Check in dynamic organizations created by Super Admin
-    if (!targetAccount) {
-      const dynamicOrg = organizations.find((o) => {
-        const orgRawName = o.name.toLowerCase();
-        const orgCleanName = orgRawName.replace(/[^a-z0-9]/g, '');
-        const tradeCleanName = o.tradeName ? o.tradeName.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-        const adminCleanName = o.primaryAdminName.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const adminEmail = o.primaryAdminEmail.toLowerCase();
-        const contactEmail = o.contactEmail.toLowerCase();
-        const phoneDigits = o.contactPhone.replace(/[^0-9]/g, '');
-
-        return (
-          adminEmail === raw ||
-          contactEmail === raw ||
-          o.organizationId.toLowerCase() === raw ||
-          orgCleanName === cleanUser ||
-          tradeCleanName === cleanUser ||
-          adminCleanName === cleanUser ||
-          `${orgCleanName}owner` === cleanUser ||
-          `${orgCleanName}manager` === cleanUser ||
-          `${tradeCleanName}owner` === cleanUser ||
-          `${tradeCleanName}manager` === cleanUser ||
-          orgCleanName.startsWith(cleanUser) ||
-          cleanUser.startsWith(orgCleanName) ||
-          (cleanUser.length >= 3 && orgCleanName.includes(cleanUser)) ||
-          (phoneDigits.length >= 6 && cleanUser.includes(phoneDigits))
-        );
-      });
-
-      if (dynamicOrg) {
-        // Check if organization has departed the building
-        if (dynamicOrg.status === 'departed') {
-          return {
-            success: false,
-            error: 'Access Denied: This organization has completed full building departure and its portal access has been revoked.'
-          };
-        }
-
-        const isManager = cleanUser.includes('man') || cleanUser.includes('manager');
-        const role: UserRole = isManager ? 'manager' : 'owner';
-        const expectedPass =
-          organizationPasswords[dynamicOrg.organizationId] ||
-          organizationPasswords[dynamicOrg.primaryAdminEmail.toLowerCase()] ||
-          organizationPasswords[dynamicOrg.name.toLowerCase().replace(/[^a-z0-9]/g, '')] ||
-          dynamicOrg.tempPassword ||
-          '123';
-
-        const orgProps = properties.filter((p) => p.organizationId === dynamicOrg.organizationId);
-        const assignedPropId = orgProps[0]?.propertyId || `prop_${dynamicOrg.organizationId}`;
-        const complexAccess = orgProps.length > 0 ? orgProps.map((p) => p.propertyId) : [assignedPropId];
-
-        targetAccount = {
-          user: {
-            uid: isManager ? `usr_mgr_${dynamicOrg.organizationId}` : dynamicOrg.primaryAdminUid,
-            name: isManager ? `${dynamicOrg.contactPerson || dynamicOrg.primaryAdminName} (Manager)` : dynamicOrg.primaryAdminName,
-            email: isManager ? dynamicOrg.contactEmail : dynamicOrg.primaryAdminEmail,
-            role,
-            phone: dynamicOrg.contactPhone,
-            avatar: dynamicOrg.logoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-            title: isManager ? `Property Manager • ${dynamicOrg.name}` : `Managing Director • ${dynamicOrg.name}`,
-            organizationId: dynamicOrg.organizationId,
-            organizationName: dynamicOrg.name,
-            assignedPropertyId: assignedPropId,
-            assignedPropertyName: orgProps[0]?.name || dynamicOrg.name,
-            complexAccess
-          },
-          role,
-          pass: expectedPass
-        };
-      }
-    }
-
-    // 5. Strict Rejection if account does not exist
-    if (!targetAccount) {
-      return {
-        success: false,
-        error: 'Invalid username. Please use a specific registered property account (e.g. BoleOwner, BoleManager, KazanchisOwner, SarbetOwner, CmcOwner).'
-      };
-    }
-
-    // 6. Strict Password Validation
-    if (inputPass !== targetAccount.pass && inputPass !== '123') {
-      return {
-        success: false,
-        error: 'Invalid password. Please enter the correct password.'
-      };
-    }
-
-    const matchedUser = targetAccount.user;
-    const matchedRole = targetAccount.role;
-
-    // Authenticate and set session in memory and localStorage
     try {
-      localStorage.setItem(`${STORAGE_KEY}_auth_state`, 'true');
-      localStorage.setItem(`${STORAGE_KEY}_user_profile`, JSON.stringify(matchedUser));
-    } catch (e) {
-      // ignore storage error
+      const userCred = await signInWithEmailAndPassword(auth, usernameOrEmail, password);
+      const userDoc = await getDoc(doc(db, 'users', userCred.user.uid));
+      
+      if (!userDoc.exists()) {
+         await firebaseSignOut(auth);
+         return { success: false, error: 'User profile not found.' };
+      }
+      
+      const userData = userDoc.data() as UserProfile;
+      
+      if (userData.role === 'super_admin' || userData.role === 'SUPER_ADMIN') {
+         await firebaseSignOut(auth);
+         return { success: false, error: 'Access Restricted: Super Administrators must log in via the dedicated Platform Access portal.' };
+      }
+      
+      setCurrentUser(userData);
+      setIsAuthenticated(true);
+      setGuardError(null);
+      
+      const targetRoute = userData.role === 'owner' ? '/owner' : '/manager';
+      const targetTab = userData.role === 'owner' ? 'dashboard' : 'tenants';
+      
+      setActiveRoleRoute(targetRoute);
+      setActiveTab(targetTab);
+      
+      if (typeof window !== 'undefined') {
+        window.history.pushState(null, '', targetRoute);
+      }
+      
+      showToast(`Welcome, ${userData.name}! Authenticated successfully.`, 'success');
+      return { success: true, role: userData.role };
+    } catch (err: any) {
+      console.error(err);
+      return { success: false, error: err.message || 'Authentication failed. Invalid credentials.' };
     }
-    setCurrentUser(matchedUser);
-    setIsAuthenticated(true);
-    setGuardError(null);
-
-    const targetRoute = matchedRole === 'owner' ? '/owner' : '/manager';
-    const targetTab = matchedRole === 'owner' ? 'dashboard' : 'tenants';
-
-    setActiveRoleRoute(targetRoute);
-    setActiveTab(targetTab);
-
-    if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', targetRoute);
-    }
-
-    showToast(`Welcome, ${matchedUser.name}! Authenticated as [${matchedRole.toUpperCase()}].`, 'success');
-    return { success: true, role: matchedRole };
   };
 
   // -------------------------------------------------------------
   // DEDICATED SUPER ADMIN PLATFORM LOGIN (/platform-login & /system-access)
   // -------------------------------------------------------------
   const platformLogin = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
-    const raw = usernameOrEmail.trim().toLowerCase();
-    const cleanUser = raw.replace(/[^a-z0-9]/g, '');
-
-    // Strict Super Admin credential validation
-    if (
-      cleanUser.includes('superadmin') ||
-      cleanUser.includes('super_admin') ||
-      cleanUser === 'admin' ||
-      cleanUser === 'root' ||
-      raw === 'superadmin@epms.cloud' ||
-      cleanUser === 'super'
-    ) {
-      const matchedUser = MOCK_USERS.superadmin;
-
-      try {
-        localStorage.setItem(`${STORAGE_KEY}_auth_state`, 'true');
-        localStorage.setItem(`${STORAGE_KEY}_user_profile`, JSON.stringify(matchedUser));
-      } catch (e) {
-        // ignore
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, usernameOrEmail, password);
+      const token = await userCred.user.getIdTokenResult();
+      
+      if (token.claims.role !== 'SUPER_ADMIN') {
+         await firebaseSignOut(auth);
+         return { success: false, error: 'Access Denied: Insufficient administrative clearance.' };
       }
-
-      setCurrentUser(matchedUser);
+      
+      const userDoc = await getDoc(doc(db, 'users', userCred.user.uid));
+      const userData = userDoc.exists() ? (userDoc.data() as UserProfile) : MOCK_USERS.superadmin;
+      
+      setCurrentUser(userData);
       setIsAuthenticated(true);
       setGuardError(null);
       setActiveRoleRoute('/superadmin');
       setActiveTab('sa_dashboard');
-
+      
       if (typeof window !== 'undefined') {
         window.history.pushState(null, '', '/superadmin');
       }
-
-      logSuperAdminAudit({
-        organizationId: 'platform_core',
-        organizationName: 'EPMS Platform Control',
-        action: 'SUPER_ADMIN_LOGIN',
-        resource: 'auth_gateway',
-        resourceId: 'root_session',
-        details: `Super Administrator [${matchedUser.name}] authenticated successfully via /platform-login`
-      });
-
-      showToast(`Root Access Granted: Welcome to Platform Control Plane, ${matchedUser.name}.`, 'success');
+      
+      showToast(`Root Access Granted: Welcome, ${userData.name}.`, 'success');
       return { success: true, role: 'super_admin' };
+    } catch (err: any) {
+      console.error(err);
+      return { success: false, error: 'Access Denied: Invalid administrator credentials or insufficient clearance.' };
     }
-
-    // Unauthorized attempt by non-superadmin credentials
-    logSuperAdminAudit({
-      organizationId: 'security_alarm',
-      organizationName: 'EPMS Gatekeeper',
-      action: 'UNAUTHORIZED_LOGIN_ATTEMPT',
-      resource: 'platform_login',
-      resourceId: raw,
-      details: `Failed platform login attempt with identifier [${usernameOrEmail}] - insufficient administrative clearance`
-    });
-
-    return {
-      success: false,
-      error: 'Access Denied: Invalid administrator credentials or insufficient clearance.'
-    };
   };
 
   // -------------------------------------------------------------
@@ -1650,11 +1463,19 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       // Trigger celebratory confetti for approving ledger payment!
       try {
-        confetti({
-          particleCount: 80,
-          spread: 60,
-          origin: { y: 0.6 }
-        });
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.6 }
+          });
+        } else if (confetti && typeof (confetti as any).default === 'function') {
+          (confetti as any).default({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.6 }
+          });
+        }
       } catch {
         // fallback
       }

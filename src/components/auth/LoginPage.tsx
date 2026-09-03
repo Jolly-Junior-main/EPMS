@@ -326,6 +326,17 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Super Admin Access Portal Link */}
+      <div className="mt-8 text-center relative z-10 animate-in fade-in">
+        <a 
+          href="/platform-login"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white/80 hover:text-white transition-all cursor-pointer shadow-lg"
+        >
+          <Lock className="w-3 h-3" />
+          Platform Root Administration
+        </a>
+      </div>
     </div>
   );
 };
