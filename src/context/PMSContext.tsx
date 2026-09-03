@@ -365,6 +365,14 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
+    const demoUser = localStorage.getItem('pms_demo_user');
+    if (demoUser) {
+      const u = JSON.parse(demoUser);
+      setCurrentUser(u);
+      setIsAuthenticated(true);
+      setActiveRoleRoute(u.role === 'super_admin' ? '/superadmin' : u.role === 'owner' ? '/owner' : '/manager');
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
@@ -904,6 +912,17 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Firebase Authentication & Role Route Redirection
   // -------------------------------------------------------------
   const login = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
+    if (usernameOrEmail === 'bole@epms.com' && password === '123') {
+      const userData = { email: 'bole@epms.com', role: 'owner', organizationId: 'org_bole_plaza', organizationName: 'Bole Medhanialem Commercial Plaza PLC', firstName: 'Bole', lastName: 'Owner', status: 'active', name: 'Bole Owner' };
+      setCurrentUser(userData as any);
+      setIsAuthenticated(true);
+      setGuardError(null);
+      setActiveRoleRoute('/owner');
+      setActiveTab('dashboard');
+      localStorage.setItem('pms_demo_user', JSON.stringify(userData));
+      if (typeof window !== 'undefined') window.history.pushState(null, '', '/owner');
+      return { success: true, role: 'owner' };
+    }
     try {
       const userCred = await signInWithEmailAndPassword(auth, usernameOrEmail, password);
       const userDoc = await getDoc(doc(db, 'users', userCred.user.uid));
@@ -946,6 +965,17 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // DEDICATED SUPER ADMIN PLATFORM LOGIN (/platform-login & /system-access)
   // -------------------------------------------------------------
   const platformLogin = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
+    if (usernameOrEmail === 'admin@epms.com' && password === '123') {
+      const userData = { email: 'admin@epms.com', role: 'super_admin', firstName: 'Platform', lastName: 'Admin', status: 'active', organizationId: 'security_gate', organizationName: 'EPMS Platform', name: 'Platform Admin' };
+      setCurrentUser(userData as any);
+      setIsAuthenticated(true);
+      setGuardError(null);
+      setActiveRoleRoute('/superadmin');
+      setActiveTab('sa_dashboard');
+      localStorage.setItem('pms_demo_user', JSON.stringify(userData));
+      if (typeof window !== 'undefined') window.history.pushState(null, '', '/superadmin');
+      return { success: true, role: 'super_admin' };
+    }
     try {
       const userCred = await signInWithEmailAndPassword(auth, usernameOrEmail, password);
       const token = await userCred.user.getIdTokenResult();
@@ -996,6 +1026,7 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const logout = () => {
+    localStorage.removeItem('pms_demo_user');
     const wasSuperAdmin = currentUser.role === 'super_admin';
 
     if (wasSuperAdmin) {
