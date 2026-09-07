@@ -912,16 +912,39 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Firebase Authentication & Role Route Redirection
   // -------------------------------------------------------------
   const login = async (usernameOrEmail: string, password: string): Promise<{ success: boolean; error?: string; role?: UserRole }> => {
-    if (usernameOrEmail === 'bole@epms.com' && password === '123') {
-      const userData = { email: 'bole@epms.com', role: 'owner', organizationId: 'org_bole_plaza', organizationName: 'Bole Medhanialem Commercial Plaza PLC', firstName: 'Bole', lastName: 'Owner', status: 'active', name: 'Bole Owner' };
-      setCurrentUser(userData as any);
-      setIsAuthenticated(true);
-      setGuardError(null);
-      setActiveRoleRoute('/owner');
-      setActiveTab('dashboard');
-      localStorage.setItem('pms_demo_user', JSON.stringify(userData));
-      if (typeof window !== 'undefined') window.history.pushState(null, '', '/owner');
-      return { success: true, role: 'owner' };
+    if (password === '123' || password === 'Password123!') {
+      // 1. Check dynamic demo accounts created during organization provisioning
+      if (typeof window !== 'undefined') {
+        try {
+          const demos = JSON.parse(localStorage.getItem('pms_demo_accounts') || '[]');
+          const dynamicUser = demos.find((d: any) => d.email.toLowerCase() === usernameOrEmail.toLowerCase());
+          if (dynamicUser) {
+            setCurrentUser(dynamicUser as any);
+            setIsAuthenticated(true);
+            setGuardError(null);
+            const targetRoute = dynamicUser.role === 'owner' ? '/owner' : '/manager';
+            const targetTab = dynamicUser.role === 'owner' ? 'dashboard' : 'tenants';
+            setActiveRoleRoute(targetRoute);
+            setActiveTab(targetTab);
+            localStorage.setItem('pms_demo_user', JSON.stringify(dynamicUser));
+            window.history.pushState(null, '', targetRoute);
+            return { success: true, role: dynamicUser.role };
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // 2. Fallback to default hardcoded Bole owner
+      if (usernameOrEmail === 'bole@epms.com') {
+        const userData = { email: 'bole@epms.com', role: 'owner', organizationId: 'org_bole_plaza', organizationName: 'Bole Medhanialem Commercial Plaza PLC', firstName: 'Bole', lastName: 'Owner', status: 'active', name: 'Bole Owner' };
+        setCurrentUser(userData as any);
+        setIsAuthenticated(true);
+        setGuardError(null);
+        setActiveRoleRoute('/owner');
+        setActiveTab('dashboard');
+        localStorage.setItem('pms_demo_user', JSON.stringify(userData));
+        if (typeof window !== 'undefined') window.history.pushState(null, '', '/owner');
+        return { success: true, role: 'owner' };
+      }
     }
     try {
       const userCred = await signInWithEmailAndPassword(auth, usernameOrEmail, password);
@@ -1773,6 +1796,10 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       billingCycle?: SubscriptionBillingCycle;
       buildingsCount?: number;
       unitsPerBuilding?: number;
+      ownerName?: string;
+      ownerEmail?: string;
+      managerName?: string;
+      managerEmail?: string;
     }
   ) => {
     if (!verifySuperAdminClearance('createOrganization')) {
@@ -1867,6 +1894,37 @@ export const PMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     // 3. Accurate Organization Usage
+    // Generate Dynamic Demo Bypass Users
+    const newOwner = {
+      email: orgData.ownerEmail || orgData.primaryAdminEmail,
+      role: 'owner',
+      organizationId: newOrgId,
+      organizationName: orgData.name,
+      firstName: (orgData.ownerName || 'Owner').split(' ')[0],
+      lastName: (orgData.ownerName || 'Owner').split(' ').slice(1).join(' '),
+      status: 'active',
+      name: orgData.ownerName || 'Owner'
+    };
+    
+    const newManager = {
+      email: orgData.managerEmail || `manager@${orgData.primaryAdminEmail.split('@')[1] || 'epms.com'}`,
+      role: 'manager',
+      organizationId: newOrgId,
+      organizationName: orgData.name,
+      firstName: (orgData.managerName || 'Manager').split(' ')[0],
+      lastName: (orgData.managerName || 'Manager').split(' ').slice(1).join(' '),
+      status: 'active',
+      name: orgData.managerName || 'Manager'
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        const existingDemos = JSON.parse(localStorage.getItem('pms_demo_accounts') || '[]');
+        existingDemos.push(newOwner, newManager);
+        localStorage.setItem('pms_demo_accounts', JSON.stringify(existingDemos));
+      } catch (e) { console.error('Failed to save demo accounts', e); }
+    }
+
     const newOrg: Organization = {
       ...orgData,
       organizationId: newOrgId,

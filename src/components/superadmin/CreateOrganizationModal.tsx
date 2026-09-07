@@ -46,9 +46,12 @@ export const CreateOrganizationModal: React.FC<CreateOrgModalProps> = ({ isOpen,
   const [logoUrl, setLogoUrl] = useState('');
 
   // Primary Admin Fields
-  const [adminName, setAdminName] = useState('');
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPhone, setAdminPhone] = useState('+251');
+  const [ownerName, setOwnerName] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
+  const [ownerPhone, setOwnerPhone] = useState('+251');
+  const [managerName, setManagerName] = useState('');
+  const [managerEmail, setManagerEmail] = useState('');
+  const [managerPhone, setManagerPhone] = useState('+251');
   const [tempPassword, setTempPassword] = useState('123');
 
   // Plan, Buildings & Billing Cycle Selection
