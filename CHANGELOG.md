@@ -10,3 +10,5 @@
 - **2026-08-05 16:12:00**: feat(sms): integrate automated overdue payment reminder SMS gateway
 
 - **2026-06-25 16:01:00**: perf(db): optimize Firestore collection indexing for property queries
+
+- **2026-09-15 10:53:00**: feat(maintenance): add maintenance ticket workflow with photo uploads
